@@ -613,11 +613,6 @@ class CourseTabView(EdxFragmentView):
         else:
             masquerade = None
 
-        if course and not check_course_open_for_learner(request.user, course):
-            # Disable student view button if user is staff and
-            # course is not yet visible to students.
-            supports_preview_menu = False
-
         context = {
             'course': course,
             'tab': tab,
@@ -954,6 +949,13 @@ def _progress(request, course_key, student_id):
     if student_id is None or student_id == request.user.id:
         # This will be a no-op for non-staff users, returning request.user
         masquerade, student = setup_masquerade(request, course_key, staff_access, reset_masquerade_data=True)
+
+        # The pre-fetching of groups is done to make auth checks not require an
+        # additional DB lookup (this kills the Progress page in particular).
+        student = User.objects.prefetch_related("groups").get(id=student.id)
+
+        # prefetch above wipes away masquerade
+        masquerade, student = setup_masquerade(request, course_key, staff_access, reset_masquerade_data=True)
     else:
         try:
             coach_access = has_ccx_coach_role(request.user, course_key)
@@ -969,12 +971,12 @@ def _progress(request, course_key, student_id):
         except User.DoesNotExist:
             raise Http404
 
+        # The pre-fetching of groups is done to make auth checks not require an
+        # additional DB lookup (this kills the Progress page in particular).
+        student = User.objects.prefetch_related("groups").get(id=student.id)
+
     # NOTE: To make sure impersonation by instructor works, use
     # student instead of request.user in the rest of the function.
-
-    # The pre-fetching of groups is done to make auth checks not require an
-    # additional DB lookup (this kills the Progress page in particular).
-    student = User.objects.prefetch_related("groups").get(id=student.id)
     if request.user.id != student.id:
         # refetch the course as the assumed student
         course = get_course_with_access(student, 'load', course_key, check_if_enrolled=True)

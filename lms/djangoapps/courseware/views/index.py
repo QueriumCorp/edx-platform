@@ -438,13 +438,6 @@ class CoursewareIndex(View):
         # entrance exam data
         self._add_entrance_exam_to_context(courseware_context)
 
-        # staff masquerading data
-        if not check_course_open_for_learner(self.effective_user, self.course):
-            # Disable student view button if user is staff and
-            # course is not yet visible to students.
-            courseware_context['disable_student_access'] = True
-            courseware_context['supports_preview_menu'] = False
-
         if self.section:
             # chromeless data
             if self.section.chrome:
