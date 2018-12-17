@@ -43,7 +43,7 @@ class HideEmptyTransformer(BlockStructureTransformer):
         def filter(block_key):
             has_children = block_structure.get_xblock_field(block_key, 'has_children')
             children = block_structure.get_xblock_field(block_key, 'children')
-            return has_children and not children
+            return has_children and not any(child in block_structure for child in children)
 
         for _ in block_structure.topological_traversal(
             filter_func=block_structure.create_removal_filter(filter)
