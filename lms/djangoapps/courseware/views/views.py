@@ -13,7 +13,7 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import prefetch_related_objects, Q
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.template.context_processors import csrf
@@ -952,10 +952,7 @@ def _progress(request, course_key, student_id):
 
         # The pre-fetching of groups is done to make auth checks not require an
         # additional DB lookup (this kills the Progress page in particular).
-        student = User.objects.prefetch_related("groups").get(id=student.id)
-
-        # prefetch above wipes away masquerade
-        masquerade, student = setup_masquerade(request, course_key, staff_access, reset_masquerade_data=True)
+        prefetch_related_objects([student], 'groups')
     else:
         try:
             coach_access = has_ccx_coach_role(request.user, course_key)
