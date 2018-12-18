@@ -5,11 +5,14 @@ API function for retrieving course blocks data
 import lms.djangoapps.course_blocks.api as course_blocks_api
 from lms.djangoapps.course_blocks.transformers.hidden_content import HiddenContentTransformer
 from openedx.core.djangoapps.content.block_structure.transformers import BlockStructureTransformers
+from openedx.core.lib.mobile_utils import is_request_from_mobile_app
 
 from .serializers import BlockDictSerializer, BlockSerializer
 from .transformers.blocks_api import BlocksAPITransformer
 from .transformers.block_completion import BlockCompletionTransformer
 from .transformers.milestones import MilestonesAndSpecialExamsTransformer
+from .transformers.hide_empty import HideEmptyTransformer
+
 
 
 def get_blocks(
@@ -59,22 +62,29 @@ def get_blocks(
     include_gated_sections = 'show_gated_sections' in requested_fields
 
     if user is not None:
-        transformers += course_blocks_api.get_course_block_access_transformers(user)
-        transformers += [MilestonesAndSpecialExamsTransformer(
-            include_special_exams=include_special_exams,
-            include_gated_sections=include_gated_sections)]
-        transformers += [HiddenContentTransformer()]
-    transformers += [
+        transformers.extend(course_blocks_api.get_course_block_access_transformers(user))
+        transformers += [
+            MilestonesAndSpecialExamsTransformer(
+                include_special_exams=include_special_exams,
+                include_gated_sections=include_gated_sections
+            ),
+            HiddenContentTransformer()
+        ]
+
+    if is_request_from_mobile_app(request):
+        transformers.append(HideEmptyTransformer())
+
+    transformers.append(
         BlocksAPITransformer(
             block_counts,
             student_view_data,
             depth,
             nav_depth
         )
-    ]
+    )
 
     if include_completion:
-        transformers += [BlockCompletionTransformer()]
+        transformers.append(BlockCompletionTransformer())
 
     # transform
     blocks = course_blocks_api.get_course_blocks(user, usage_key, transformers)
