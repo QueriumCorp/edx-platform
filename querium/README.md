@@ -7,20 +7,20 @@ This folder contains oAuth code for facilitating single sign-on to Openstax.org.
 ### Work with a feature branch off querium.dev
 ```
 # Create querium.dev/oauth branch off querium.dev
-git checkout -b querium.dev/oauth querium.dev
-
+git checkout -b querium.dev-oauth querium.dev
+git branch --set-upstream-to=origin/querium.dev-oauth querium.dev-oauth
 
 # Merge features into querium.dev
 git checkout querium.dev
-git merge querium.dev/oauth
+git merge querium.dev-oauth
 
 # Alternative merge, without Fast-forward
 git checkout querium.dev
-git merge --no-ff querium.dev/oauth
+git merge --no-ff querium.dev-oauth
 
 # Push your changes to Github
 git push origin querium.dev
-git push origin querium.dev/oauth
+git push origin querium.dev-oauth
 
 ```
 
@@ -31,7 +31,7 @@ git checkout querium.dev
 git pull
 
 # next, merge querium.dev into your feature branch
-git checkout querium.dev/oauth
+git checkout querium.dev-oauth
 git merge querium.dev
 ```
 
