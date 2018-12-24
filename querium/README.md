@@ -4,6 +4,9 @@
 This folder contains oAuth code for facilitating single sign-on to Openstax.org.
 
 ## Guide for working with Git
+![Git Work Flow](https://github.com/QueriumCorp/edx-platform.roverplatform.com/blob/querium.dev/querium/doc/git-workflow.png)
+
+
 ### Work with a feature branch off querium.dev
 ```
 # Create querium.dev/oauth branch off querium.dev
