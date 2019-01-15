@@ -1,3 +1,9 @@
+<!-- mcdaniel jan-2019: hide the optional additional registration fields  -->
+<style>
+  .form-field.checkbox-optional_fields_toggle {
+    visibility: hidden;
+  }
+</style>
 <div class="js-form-feedback" aria-live="assertive" tabindex="-1">
 </div>
 
@@ -52,7 +58,7 @@
     <% } %>
 
     <%= context.fields %>
-
+		<!-- mcdaniel jan-2019: hide the optional additional registration fields  -->
     <div class="form-field checkbox-optional_fields_toggle">
         <input type="checkbox" id="toggle_optional_fields" class="input-block checkbox"">
         <label for="toggle_optional_fields">
