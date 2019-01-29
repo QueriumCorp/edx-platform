@@ -41,7 +41,7 @@
         <li class="action-item action-lock">
             <label for="<%- uniqueId %>"><span class="sr"><%- gettext('Lock this asset') %></span></label>
             <input type="checkbox" id="<%- uniqueId %>" class="lock-checkbox" data-tooltip="<%- gettext('Lock/unlock file') %>" />
-            <div class="action-button"><span class="icon fa fa-lock" aria-hidden="true"></span><span class="icon fa fa-unlock-alt" aria-hidden="true"></span></div>
+            <div class="action-button"><i class="fa fa-eye-slash" aria-hidden="true"></i><span class="icon fa fa-unlock-alt" aria-hidden="true"></span></div>
         </li>
     </ul>
 </td>

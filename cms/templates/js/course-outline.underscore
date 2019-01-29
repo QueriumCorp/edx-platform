@@ -45,7 +45,7 @@ if (prereq) {
 }
 if (staffOnlyMessage) {
     messageType = 'staff-only';
-    messageText = gettext('Contains staff only content');
+    messageText = gettext('Hidden from students');
     addStatusMessage(messageType, messageText);
 } else {
     if (visibilityState === 'needs_attention' && xblockInfo.isVertical()) {
@@ -336,4 +336,3 @@ if (is_proctored_exam) {
   <span class="draggable-drop-indicator draggable-drop-indicator-after"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
 </li>
 <% } %>
-
