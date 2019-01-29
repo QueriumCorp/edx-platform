@@ -294,12 +294,12 @@ if (is_proctored_exam) {
             <div class="no-content add-section">
                 <p><%- gettext("You haven't added any content to this course yet.") %>
                     <a href="#" class="button button-new" data-category="<%- childCategory %>"
-                       data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName %>"
+                       data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName.replace('Subsection', 'Assignment').replace('Section', 'Chapter') %>"
                        title="<%- interpolate(
-                             gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName }, true
+                             gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Subsection', 'Assignment').replace('Section', 'Chapter') }, true
                        ) %>"
                     >
-                        <span class="icon fa fa-plus" aria-hidden="true"></span>Add New
+                        <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Subsection', 'Assignment') %>
                     </a>
                 </p>
             </div>
@@ -321,10 +321,10 @@ if (is_proctored_exam) {
                           <a href="#" class="button button-new" data-category="<%- childCategory %>"
                              data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName %>"
                              title="<%- interpolate(
-                                   gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName }, true
+                                   gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Subsection', 'Assignment').replace('Section', 'Chapter') }, true
                              ) %>"
                           >
-                              <span class="icon fa fa-plus" aria-hidden="true"></span>Add New
+                              <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Subsection', 'Assignment').replace('Section', 'Chapter') %>
                           </a>
                       </div>
                       <% } %>
@@ -336,4 +336,3 @@ if (is_proctored_exam) {
   <span class="draggable-drop-indicator draggable-drop-indicator-after"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
 </li>
 <% } %>
-
