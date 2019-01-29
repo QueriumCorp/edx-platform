@@ -268,9 +268,9 @@ if (is_proctored_exam) {
                             <span class="icon fa fa-eye-slash" aria-hidden="true"></span>
                             <span class="status-hide-after-due-value">
                             <% if (course.get('self_paced')) { %>
-                                <%- gettext("Subsection is hidden after course end date") %> </span>
+                                <%- gettext("Assignment is hidden after course end date") %> </span>
                             <% } else { %>
-                                <%- gettext("Subsection is hidden after due date") %> </span>
+                                <%- gettext("Assignment is hidden after due date") %> </span>
                             <% } %>
                         <% } %>
                     </p>
