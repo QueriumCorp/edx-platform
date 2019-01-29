@@ -280,7 +280,7 @@ if (is_proctored_exam) {
                 <div class="status-messages">
                 <% for (var i=0; i<statusMessages.length; i++) { %>
                     <div class="status-message">
-                        <span class="icon fa <%- statusMessages[i].iconClass %>" aria-hidden="true"></span>
+                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
                         <p class="status-message-copy"><%- statusMessages[i].text %></p>
                     </div>
                 <% } %>
@@ -336,3 +336,4 @@ if (is_proctored_exam) {
   <span class="draggable-drop-indicator draggable-drop-indicator-after"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
 </li>
 <% } %>
+
