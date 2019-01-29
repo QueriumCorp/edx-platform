@@ -53,7 +53,7 @@ if (staffOnlyMessage) {
         if (published && releasedToStudents) {
             messageText = gettext('Unpublished changes to live content');
         } else if (!published) {
-            messageText = gettext('Unpublished units will not be released');
+            messageText = gettext('Unpublished questions will not be released');
         } else {
             messageText = gettext('Unpublished changes to content that will release in the future');
         }
@@ -63,7 +63,7 @@ if (staffOnlyMessage) {
     if (selectedPartitionIndex !== -1 && !isNaN(selectedPartitionIndex) && xblockInfo.isVertical()) {
         messageType = 'partition-groups';
         messageText = edx.StringUtils.interpolate(
-                gettext('Access to this unit is restricted to: {selectedGroupsLabel}'),
+                gettext('Access to this question is restricted to: {selectedGroupsLabel}'),
                 {
                     selectedGroupsLabel: selectedGroupsLabel
                 }
@@ -72,7 +72,7 @@ if (staffOnlyMessage) {
     } else if (hasPartitionGroups && xblockInfo.isVertical()) {
         addStatusMessage(
             'partition-groups',
-            gettext('Access to some content in this unit is restricted to specific groups of learners')
+            gettext('Access to some content in this question is restricted to specific groups of learners')
         );
     }
 }
@@ -130,7 +130,7 @@ if (is_proctored_exam) {
             <% if (includesChildren) { %>
                 <h3 class="<%- xblockType %>-header-details expand-collapse <%- isCollapsed ? 'expand' : 'collapse' %> ui-toggle-expansion"
                     title="<%- interpolate(
-                          gettext('Collapse/Expand this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName }, true
+                          gettext('Collapse/Expand this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Section', 'Chapter').replace('Subsection', 'Assignment').replace('Unit', 'Question').replace('section', 'chapter').replace('subsection', 'assignment').replace('unit', 'question') }, true
                     ) %>"
                 >
                     <span class="icon fa fa-caret-down" aria-hidden="true"></span>
@@ -230,7 +230,7 @@ if (is_proctored_exam) {
                         <% var number_of_highlights = (xblockInfo.get('highlights') || []).length; %>
                             <button class="block-highlights-value highlights-button action-button">
                                 <span class="number-highlights"><%- number_of_highlights %></span>
-                                <%- gettext('Section Highlights') %>
+                                Chapter Highlights
                             </button>
                     </div>
                 <% } %>
@@ -294,12 +294,12 @@ if (is_proctored_exam) {
             <div class="no-content add-section">
                 <p><%- gettext("You haven't added any content to this course yet.") %>
                     <a href="#" class="button button-new" data-category="<%- childCategory %>"
-                       data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName.replace('Subsection', 'Assignment').replace('Section', 'Chapter') %>"
+                       data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName.replace('Section', 'Chapter').replace('Subsection', 'Assignment').replace('Unit', 'Question').replace('section', 'chapter').replace('subsection', 'assignment').replace('unit', 'question') %>"
                        title="<%- interpolate(
-                             gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Subsection', 'Assignment').replace('Section', 'Chapter') }, true
+                             gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Section', 'Chapter').replace('Subsection', 'Assignment').replace('Unit', 'Question').replace('section', 'chapter').replace('subsection', 'assignment').replace('unit', 'question') }, true
                        ) %>"
                     >
-                        <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Subsection', 'Assignment') %>
+                        <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Section', 'Chapter').replace('Subsection', 'Assignment').replace('Unit', 'Question').replace('section', 'chapter').replace('subsection', 'assignment').replace('unit', 'question') %>
                     </a>
                 </p>
             </div>
@@ -321,10 +321,10 @@ if (is_proctored_exam) {
                           <a href="#" class="button button-new" data-category="<%- childCategory %>"
                              data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName %>"
                              title="<%- interpolate(
-                                   gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Subsection', 'Assignment').replace('Section', 'Chapter') }, true
+                                   gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Section', 'Chapter').replace('Subsection', 'Assignment').replace('Unit', 'Question').replace('section', 'chapter').replace('subsection', 'assignment').replace('unit', 'question') }, true
                              ) %>"
                           >
-                              <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Subsection', 'Assignment').replace('Section', 'Chapter') %>
+                              <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Section', 'Chapter').replace('Subsection', 'Assignment').replace('Unit', 'Question').replace('section', 'chapter').replace('subsection', 'assignment').replace('unit', 'question') %>
                           </a>
                       </div>
                       <% } %>
