@@ -299,7 +299,7 @@ if (is_proctored_exam) {
                              gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName }, true
                        ) %>"
                     >
-                        <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel %>
+                        <span class="icon fa fa-plus" aria-hidden="true"></span>Add New
                     </a>
                 </p>
             </div>
@@ -324,7 +324,7 @@ if (is_proctored_exam) {
                                    gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName }, true
                              ) %>"
                           >
-                              <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel %>
+                              <span class="icon fa fa-plus" aria-hidden="true"></span>Add New
                           </a>
                       </div>
                       <% } %>
@@ -336,3 +336,4 @@ if (is_proctored_exam) {
   <span class="draggable-drop-indicator draggable-drop-indicator-after"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
 </li>
 <% } %>
+
