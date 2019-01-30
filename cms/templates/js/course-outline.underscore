@@ -130,7 +130,7 @@ if (is_proctored_exam) {
             <% if (includesChildren) { %>
                 <h3 class="<%- xblockType %>-header-details expand-collapse <%- isCollapsed ? 'expand' : 'collapse' %> ui-toggle-expansion"
                     title="<%- interpolate(
-                          gettext('Collapse/Expand this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
+                          gettext('Edit the title of this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
                     ) %>"
                 >
                     <span class="icon fa fa-caret-down" aria-hidden="true"></span>
