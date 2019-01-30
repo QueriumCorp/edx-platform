@@ -106,7 +106,7 @@ if (is_proctored_exam) {
 
     <div class="outline-item-row">
         <% if (xblockInfo.isPublishable()) { %>
-            <a href="#" data-tooltip="<%- gettext('Publish') %>" class="rover-publish publish-button action-button">
+            <a href="#" data-tooltip="Publish this assignment" class="rover-publish publish-button action-button">
               <div class="outline-item-left">
                 <span class="rover-white-text icon fa fa-upload" aria-hidden="true"></span>
                 <span class="sr action-button-text"><%- gettext('Publish') %></span>
@@ -152,7 +152,10 @@ if (is_proctored_exam) {
                 <ul class="actions-list">
                     <% if (xblockInfo.isDuplicable()) { %>
                         <li class="action-item action-duplicate">
-                            <a href="#" data-tooltip="<%- gettext('Duplicate') %>" class="duplicate-button action-button">
+                            <a href="#" data-tooltip="<%- interpolate(
+                                  gettext('Duplicate this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
+                            ) %>"
+                                        class="duplicate-button action-button">
                                 <span class="icon fa fa-copy" aria-hidden="true"></span>
                                 <span class="sr action-button-text"><%- gettext('Duplicate') %></span>
                             </a>
@@ -160,7 +163,10 @@ if (is_proctored_exam) {
                     <% } %>
                     <% if (xblockInfo.isDeletable()) { %>
                         <li class="action-item action-delete">
-                            <a href="#" data-tooltip="<%- gettext('Delete') %>" class="delete-button action-button">
+                            <a href="#" data-tooltip="<%- interpolate(
+                                  gettext('Delete this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
+                            ) %>"
+                                        class="delete-button action-button">
                                 <span class="icon fa fa-trash-o" aria-hidden="true"></span>
                                 <span class="sr action-button-text"><%- gettext('Delete') %></span>
                             </a>
@@ -195,9 +201,9 @@ if (is_proctored_exam) {
                                     <!-- McDaniel Nov-2018: begin copied snippet -->
                                     <% if (xblockInfo.isEditableOnCourseOutline()) { %>
                                         <span class="action-item action-configure">
-                                            <a href="#" data-tooltip="<%- gettext('Configure') %>" class="rover-link configure-button action-button">
+                                            <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
                                                 <span class="icon fa fa-calendar" aria-hidden="true"></span>
-                                                <span class="sr action-button-text"><%- gettext('Configure') %></span>
+                                                <span class="sr action-button-text">Set assignment due date</span>
                                                 <%- gettext('Released:') %>
                                                 <% if (xblockInfo.get('release_date')) { %>
                                                     <%- xblockInfo.get('release_date') %>
