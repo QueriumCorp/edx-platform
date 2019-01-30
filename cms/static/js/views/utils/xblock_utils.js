@@ -142,7 +142,7 @@ define(['jquery', 'underscore', 'gettext', 'common/js/components/utils/view_util
                     );
                 },
                 messageBody;
-            xblockType = xblockType || 'component'; // eslint-disable-line no-param-reassign
+            xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') || 'component'; // eslint-disable-line no-param-reassign
             messageBody = StringUtils.interpolate(
                     gettext('Deleting this {xblock_type} is permanent and cannot be undone.'),
                     {xblock_type: xblockType},
