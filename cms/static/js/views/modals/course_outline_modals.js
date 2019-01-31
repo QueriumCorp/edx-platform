@@ -635,9 +635,10 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         templateName: 'grading-editor',
         className: 'edit-settings-grading',
 
+        /* mcdaniel jan-2019: change default grading behavior from 'notgraded' to 'Homework' */
         afterRender: function() {
             AbstractEditor.prototype.afterRender.call(this);
-            this.setValue(this.model.get('format') || 'notgraded');
+            this.setValue(this.model.get('format') || 'Homework');
         },
 
         setValue: function(value) {
