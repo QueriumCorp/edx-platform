@@ -115,7 +115,7 @@ if (is_proctored_exam) {
         <% }  else { %>
         <div>
           <div class="outline-item-left">
-            <span class="rover-white-text icon fa fa-check" aria-hidden="true"></span>
+            <span class="<%- isCollapsed ? '' : 'rover-hidden' %> rover-white-text icon fa fa-check" aria-hidden="true"></span>
           </div>  <!-- class="outline-item-left" -->
 
         </div>
