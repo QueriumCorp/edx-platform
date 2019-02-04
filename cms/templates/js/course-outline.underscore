@@ -108,7 +108,7 @@ if (is_proctored_exam) {
     <div class="outline-item-row">
         <% if (isPublishable) { %>
             <a href="#" data-tooltip="Publish this assignment" class="rover-publish publish-button action-button">
-              <div class="outline-item-left" style="background-color: #f47641; width: 30px;">
+              <div class="outline-item-left outline-item-left-editmode">
                 <span class="rover-white-text icon fa fa-upload" aria-hidden="true"></span>
                 <span class="sr action-button-text"><%- gettext('Publish') %></span>
               </div>  <!-- class="outline-item-left" -->
@@ -116,15 +116,13 @@ if (is_proctored_exam) {
         <% }  else { %>
         <div>
           <div class="outline-item-left">
-            <span class="<%- isCollapsed ? '' : 'rover-hidden' %> rover-white-text icon fa fa-check" aria-hidden="true"></span>
+            <span class="rover-white-text icon fa fa-check" aria-hidden="true"></span>
           </div>  <!-- class="outline-item-left" -->
 
         </div>
         <% } %>
 
-
-
-        <div class="outline-item-right <%- isPublishable ? 'rover-border-orange' : '' %>">
+        <div class="outline-item-right <%- isPublishable ? 'rover-publishable-content' : '' %>">
         <span class="draggable-drop-indicator draggable-drop-indicator-before"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
         <% if (xblockInfo.isHeaderVisible()) { %>
         <div class="<%- xblockType %>-header">
