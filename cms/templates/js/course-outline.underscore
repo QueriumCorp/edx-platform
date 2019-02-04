@@ -1,4 +1,5 @@
 <%
+var isPublishable = xblockInfo.isPublishable();
 var releasedToStudents = xblockInfo.get('released_to_students');
 var visibilityState = xblockInfo.get('visibility_state');
 var published = xblockInfo.get('published');
@@ -45,7 +46,7 @@ if (prereq) {
 }
 if (staffOnlyMessage) {
     messageType = 'staff-only';
-    messageText = gettext('Hidden from students');
+    messageText = 'Hidden from students';
     addStatusMessage(messageType, messageText);
 } else {
     if (visibilityState === 'needs_attention' && xblockInfo.isVertical()) {
@@ -105,9 +106,9 @@ if (is_proctored_exam) {
     data-parent="<%- parentInfo.get('id') %>" data-locator="<%- xblockInfo.get('id') %>">
 
     <div class="outline-item-row">
-        <% if (xblockInfo.isPublishable()) { %>
+        <% if (isPublishable) { %>
             <a href="#" data-tooltip="Publish this assignment" class="rover-publish publish-button action-button">
-              <div class="outline-item-left">
+              <div class="outline-item-left" style="background-color: #f47641; width: 30px;">
                 <span class="rover-white-text icon fa fa-upload" aria-hidden="true"></span>
                 <span class="sr action-button-text"><%- gettext('Publish') %></span>
               </div>  <!-- class="outline-item-left" -->
@@ -123,7 +124,7 @@ if (is_proctored_exam) {
 
 
 
-        <div class="outline-item-right">
+        <div class="outline-item-right <%- isPublishable ? 'rover-border-orange' : '' %>">
         <span class="draggable-drop-indicator draggable-drop-indicator-before"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
         <% if (xblockInfo.isHeaderVisible()) { %>
         <div class="<%- xblockType %>-header">
