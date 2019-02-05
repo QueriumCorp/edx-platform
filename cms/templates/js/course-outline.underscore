@@ -105,7 +105,7 @@ if (is_proctored_exam) {
 <li class="rover-outline-item outline-item outline-<%- xblockType %> <%- visibilityClass %> is-draggable <%- includesChildren ? 'is-collapsible' : '' %> <%- isCollapsed ? 'is-collapsed' : '' %>"
     data-parent="<%- parentInfo.get('id') %>" data-locator="<%- xblockInfo.get('id') %>">
 
-    <div class="outline-item-row">
+    <div class="outline-item-row <%- isCollapsed ? '' : 'rover-box-shadow' %>">
         <% if (isPublishable) { %>
             <a href="#" data-tooltip="Publish this assignment" class="rover-publish publish-button action-button">
               <div class="outline-item-left outline-item-left-editmode">
