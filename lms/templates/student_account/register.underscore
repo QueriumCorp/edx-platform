@@ -3,15 +3,28 @@
   .form-field.checkbox-optional_fields_toggle {
     visibility: hidden;
   }
+
+  .rover-hidden {
+    visibility: hidden !important;
+  }
+
+  .required-fields {
+    visibility: hidden;
+  }
+
+  .login-providers {
+    margin-top: 150px;
+  }
+
 </style>
 <div class="js-form-feedback" aria-live="assertive" tabindex="-1">
 </div>
 
 <% if (!context.syncLearnerProfileData) { %>
-	<div class="toggle-form">
-		<span class="text"><%- edx.StringUtils.interpolate(gettext('Already have a {platformName} account?'), {platformName: context.platformName }) %></span>
-		<a href="#login" class="form-toggle" data-type="login"><%- gettext("Sign in.") %></a>
-	</div>
+        <div class="toggle-form">
+                <span class="text"><%- edx.StringUtils.interpolate(gettext('Already have a {platformName} account?'), {platformName: context.platformName }) %></span>
+                <a href="#login" class="form-toggle" data-type="login"><%- gettext("Sign in.") %></a>
+        </div>
 <% } %>
 
 <form id="register" class="register-form" autocomplete="off" tabindex="-1" method="POST">
@@ -45,7 +58,8 @@
                     </button>
                 <% } %>
             </div>
-            <div class="section-title lines">
+            <!-- mcdaniel feb-2019: hide the manual registration title  -->
+            <div class="rover-hidden section-title lines">
                 <h3>
                     <span class="text"><%- gettext("or create a new one here") %></span>
                 </h3>
@@ -58,8 +72,9 @@
     <% } %>
 
     <%= context.fields %>
-		<!-- mcdaniel jan-2019: hide the optional additional registration fields  -->
-    <div class="form-field checkbox-optional_fields_toggle">
+
+    <!-- mcdaniel jan-2019: hide the optional additional registration fields  -->
+    <div class="rover-hidden form-field checkbox-optional_fields_toggle">
         <input type="checkbox" id="toggle_optional_fields" class="input-block checkbox"">
         <label for="toggle_optional_fields">
             <span class="label-text">
@@ -68,8 +83,8 @@
         </label>
     </div>
 
-
-    <button type="submit" class="action action-primary action-update js-register register-button">
-    	<% if ( context.registerFormSubmitButtonText ) { %><%- context.registerFormSubmitButtonText %><% } else { %><%- gettext("Create Account") %><% } %>
+    <!-- mcdaniel feb-2019: hide the manual registration submit button  -->
+    <button type="submit" class="rover-hidden action action-primary action-update js-register register-button">
+        <% if ( context.registerFormSubmitButtonText ) { %><%- context.registerFormSubmitButtonText %><% } else { %><%- gettext("Create Account") %><% } %>
     </button>
 </form>
