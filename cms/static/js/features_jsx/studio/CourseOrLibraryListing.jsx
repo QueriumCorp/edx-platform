@@ -103,14 +103,6 @@ export function CourseOrLibraryListing(props) {
             <a className={linkClass} href={item.url}>
               <h3 className="course-title" id={`title-${idBase}-${i}`}>{item.display_name}</h3>
               <div className="course-metadata custom-course-section">
-                <span className="course-org metadata-item">
-                  <span className="label">{gettext('Organization:')}</span>
-                  <span className="value">{item.org}</span>
-                </span>
-                <span className="course-num metadata-item">
-                  <span className="label">{gettext('Course Number:')}</span>
-                  <span className="value">{item.number}</span>
-                </span>
                 { item.run &&
                 <span className="course-run metadata-item">
                   <span className="label">{gettext('Course Run:')}</span>
@@ -141,7 +133,7 @@ export function CourseOrLibraryListing(props) {
                   className="button view-button"
                   aria-labelledby={`view-live-${idBase}-${i} title-${idBase}-${i}`}
                   id={`view-live-${idBase}-${i}`}
-                >{gettext('Manage Live Course Section')}</a>
+                >{gettext('Student View')}</a>
               </li>
             </ul>
             }
