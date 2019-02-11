@@ -7,7 +7,8 @@ Installation / Updates (as per Lawrence McDaniel)
 
 * Add any changes to /edx/app/edx_ansible/server-vars.yml
 
-``
+.. code-block:: bash
+
   sudo ./edx.platform-stop.sh
   sudo rm -rf /edx/app/edxapp/edx-platform
   sudo /edx/bin/update edx-platform querium.dev
@@ -15,7 +16,7 @@ Installation / Updates (as per Lawrence McDaniel)
   sudo ./edx.install-config.sh
   sudo ./edx.compile-assets.sh
   sudo ./edx.platform-restart-full.sh
-``
+
 
 
 
