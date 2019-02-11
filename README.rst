@@ -5,7 +5,7 @@ This is the main edX platform which consists of LMS and Studio.
 Installation / Updates (as per Lawrence McDaniel)
 ------------
 
-* Add any changes to /edx/app/edx_ansible/server-vars.yml
+*Add any changes to /edx/app/edx_ansible/server-vars.yml*
 
 .. code-block:: bash
 
