@@ -2,23 +2,21 @@ Querium  Open edX Platform Fork
 This is the main edX platform which consists of LMS and Studio.
 
 
-Installation
+Installation / Updates (as per Lawrence McDaniel)
 ------------
 
-Please refer to the following wiki pages in our `configuration repo`_ to
-install edX:
+* Add any changes to /edx/app/edx_ansible/server-vars.yml
 
--  `edX Developer Stack`_: These instructions are for developers who want
-   to contribute or make changes to the edX source code.
--  `edX Full Stack`_: Using Vagrant/Virtualbox this will setup all edX
-   services on a single server in a production like configuration.
--  `edX Ubuntu 16.04 64-bit Installation`_: This will install edX on an
-   existing Ubuntu 16.04 server.
+.. code:: bash
+  sudo ./edx.platform-stop.sh
+  sudo rm -rf /edx/app/edxapp/edx-platform
+  sudo /edx/bin/update edx-platform querium.dev
+  sudo ./edx.install-theme.sh
+  sudo ./edx.install-config.sh
+  sudo ./edx.compile-assets.sh
+  sudo ./edx.platform-restart-full.sh
 
-.. _configuration repo: https://github.com/edx/configuration
-.. _edX Developer Stack: https://github.com/edx/devstack
-.. _edX Full Stack: https://openedx.atlassian.net/wiki/display/OpenOPS/Running+Fullstack
-.. _edX Ubuntu 16.04 64-bit Installation: https://openedx.atlassian.net/wiki/display/OpenOPS/Native+Open+edX+Ubuntu+16.04+64+bit+Installation
+
 
 
 License
