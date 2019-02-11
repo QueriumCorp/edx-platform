@@ -13,4 +13,4 @@ urlpatterns = [
     #url(u'admin/', admin.site.urls),
     url(u'salesforce/v1/', include(u'openstax_integrator.salesforce.urls')),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
