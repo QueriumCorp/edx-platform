@@ -23,6 +23,14 @@ REST api
 - https://[your domain]/salesforce/v1/docs/schema/
 - https://[your domain]/salesforce/v1/docs/swagger/
 
+REST api Documentation
+--------
+This module provides documentation in two formats: Django REST api "schema", and Swagger. Swagger is overwhelmingly the better option, especially is you're new to this api.
+
+![Swagger api documentation home screen](docs/swagger-screen-1.png)
+![Swagger api documentation example resource](docs/swagger-screen-2.png)
+
+
 Django command-line utilities
 --------
 Local:
@@ -38,13 +46,28 @@ Open edX:
 sudo -H -u edxapp bash << EOF
 cd ~
 source /edx/app/edxapp/edxapp_env
-
 python /edx/app/edxapp/edx-platform/manage.py cms sfconfigtest --settings=aws   # test your Django admin Salesforce configuration parameters
-python /edx/app/edxapp/edx-platform/manage.py cms sfpull --settings=aws         # download & synch salesforce contactID values
-python /edx/app/edxapp/edx-platform/manage.py cms sfpush --settings=aws         # upload/update instructor "contacts" to salesforce.com
-
 EOF
 ```
+![open edx django migrations](docs/sfconfigtest.png)
+
+
+```
+sudo -H -u edxapp bash << EOF
+cd ~
+source /edx/app/edxapp/edxapp_env
+python /edx/app/edxapp/edx-platform/manage.py cms sfpull --settings=aws         # download & synch salesforce contactID values
+EOF
+```
+
+```
+sudo -H -u edxapp bash << EOF
+cd ~
+source /edx/app/edxapp/edxapp_env
+python /edx/app/edxapp/edx-platform/manage.py cms sfpush --settings=aws         # upload/update instructor "contacts" to salesforce.com
+EOF
+```
+
 
 Open edX Installation
 --------
@@ -71,11 +94,14 @@ Open edX Installation
     source /edx/app/edxapp/edxapp_env
     python /edx/app/edxapp/edx-platform/manage.py cms makemigrations salesforce --settings=aw
     ```
+    ![django makemigrations initial](docs/django-makemigrations-initial.png)
+
 
 4. Run full Open edX migrations with this command from the Ubuntu command line as root
     ```
     sudo /root/edx.platform-migrations.sh
     ```
+    ![open edx django migrations](docs/platform-migrations-installation.png)
 
 5. Follow the instructions below for Django Admin / Salesforce / Configurations / New: https://am.roveropenstax.com/admin/salesforce/configuration/
 
