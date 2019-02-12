@@ -1,0 +1,46 @@
+salesforce integration questions:
+
+
+1. definition for row-level data?
+ 	- all records every time?
+	- limit recordset based on some criteria (like, already loaded? no change?)
+
+	* instructors only. 
+	* have to be in USA. 	<--- 
+	* not be a high school instructor
+
+
+
+2. execution frequency
+	- once daily?
+	- what time? at night. 1:00am
+
+
+
+3. security
+	- how often are credentials replaced?
+	- any other security concerns?
+
+
+
+4. any noteworthy observations from michael regarding the tooling?
+
+
+
+5. what constraints exist regarding partially populated records?
+	- what is xxx field is null?
+	- priorities for implementing fields?
+
+
+6. any noteworthy cost constraints other than needing to batch api call once daily?
+
+7. do openstax have any interest in consolidating or controlling scheduling of their api calls to salesforce?
+
+8. there's a tracking code that can optionally be added to the simple_salesforce calls. any preference on the value that i include?
+
+9. campaign id: will be provided once per semester.
+
+10: we should add salesforce_id to open edx user master record
+
+11. need to know what is the popup software to grab: estimated enrollment, soft ask questions.
+
