@@ -1,6 +1,5 @@
 # openstax_integrator
 
-[![Build Status](https://travis-ci.org/lpm0073/openstax_integrator.svg?branch=master)](https://travis-ci.org/lpm0073/openstax_integrator)
 [![Built with](https://img.shields.io/badge/Built_with-Cookiecutter_Django_Rest-F7B633.svg)](https://github.com/agconti/cookiecutter-django-rest)
 
 Integrations for Rover OpenStax. **THIS IS THE REPO FOR LOCAL DEVELOPMENT**. openstax_integrator is intended to be packaged and installed to the Open edX platform via pip. [Built from Django REST Framework Cookie Cutter](https://github.com/agconti/cookiecutter-django-rest)
@@ -106,17 +105,10 @@ Local Installation
 Django Admin console
 --------
 The salesforce integrations are fully maintainable from within the AM Django admin console.
-![django admin console](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_screenshot.png)
+![django admin console](docs/django_admin_screenshot.png)
 
 Staff and/or Super Users can perform CRUD operations on contacts (aka Instructors).
-![django admin contacts](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_contact.png)
+![django admin contacts](docs/django_admin_contact.png)
 
 Staff and/or Super Users can manage salesforce.com connectivity data. Modifications to the salesforce.com configuration parameters take effect immediately. You can test your salesforce.com connection parameters by using the Django command line utility ```python manage.py verifyconnectivity```
-![django admin configuration](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_configuration.png)
-
-
-
-
-Back-port to Python 2.7
---------
-Open edX runs on Python 2.7 (yikes!). [You can read here](https://github.com/QueriumCorp/openstax-integrator/blob/python2.7/docs/legacy_installed.txt) about more about specific version requirements of installed pip packages.
+![django admin configuration](docs/django_admin_configuration.png)
