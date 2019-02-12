@@ -36,8 +36,9 @@ Installation
     ```
     ![open edx django migrations](docs/platform-migrations-installation.png)
 
-5. Follow the instructions below for Django Admin / Salesforce / Configurations / New: https://am.roveropenstax.com/admin/salesforce/configuration/
+5. Add a salesforce configuration using Django Admin Console: https://am.roveropenstax.com/admin/salesforce/configuration/
 
+    ![django admin configuration](docs/django-admin-config.png)
 
 
 
