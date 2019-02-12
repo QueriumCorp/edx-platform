@@ -55,7 +55,7 @@ Permissions: access to all REST api end points are limited to authenticated user
 
 ![salesforce Integrations diagram](docs/salesforce-integrations-diagram.png)
 ![salesforce Integrations definitions](docs/salesforce-integrations-definitions.png)
-![salesforce db Manager](docs/docs/salesforce_db_mgr_screenshot.png)
+![salesforce db Manager](docs/salesforce_db_mgr_screenshot.png)
 
 
 Swagger Online Documentation
