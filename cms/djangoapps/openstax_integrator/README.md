@@ -2,7 +2,7 @@
 
 [![Built with](https://img.shields.io/badge/Built_with-Cookiecutter_Django_Rest-F7B633.svg)](https://github.com/agconti/cookiecutter-django-rest)
 
-Integrations for Rover OpenStax. **THIS IS THE REPO FOR LOCAL DEVELOPMENT**. openstax_integrator is intended to be packaged and installed to the Open edX platform via pip. [Built from Django REST Framework Cookie Cutter](https://github.com/agconti/cookiecutter-django-rest)
+**Integrations for Rover OpenStax.**
 
 
 # salesforce.com
