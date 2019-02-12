@@ -49,6 +49,10 @@ Runs locally (DEBUG=True) as a self-contained Django project containing all nece
 
 Permissions: access to all REST api end points are limited to authenticated users marked as "Staff".
 
+![salesforce Integrations diagram](docs/salesforce-integrations-diagram.png)
+![salesforce Integrations definitions](docs/salesforce-integrations-definitions.png)
+
+
 Swagger Online Documentation
 --------
 This module provides documentation in two formats: Django REST api "schema", and Swagger. Swagger is overwhelmingly the better option, especially is you're new to this api.
