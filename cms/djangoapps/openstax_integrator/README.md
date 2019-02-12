@@ -59,6 +59,8 @@ source /edx/app/edxapp/edxapp_env
 python /edx/app/edxapp/edx-platform/manage.py cms sfpull --settings=aws         # download & synch salesforce contactID values
 EOF
 ```
+![open edx django migrations](docs/sfpull.png)
+
 
 ```
 sudo -H -u edxapp bash << EOF
