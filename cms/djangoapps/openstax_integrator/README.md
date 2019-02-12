@@ -61,15 +61,6 @@ This module provides documentation in two formats: Django REST api "schema", and
 
 manage.py command-line utilities
 --------
-Local:
-```
-pipenv
-python manage.py sfconfigtest   # test your Django admin Salesforce configuration parameters
-python manage.py sfpull         # download & synch salesforce contactID values
-python manage.py sfpush         # upload/update instructor "contacts" to salesforce.com
-```
-
-Open edX:
 ```
 sudo -H -u edxapp bash << EOF
 cd ~
