@@ -37,4 +37,4 @@ implemented using [rest_framework ViewSets](https://www.django-rest-framework.or
 
 
 # salesforce.com Destination
-![salesforce object manager](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/salesforce_db_mgr_screenshot.png)
+![salesforce object manager](docs/salesforce_db_mgr_screenshot.png)
