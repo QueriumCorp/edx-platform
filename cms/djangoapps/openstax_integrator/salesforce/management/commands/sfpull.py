@@ -4,14 +4,7 @@ import os
 from django.core.management.base import BaseCommand
 from openstax_integrator.salesforce.models import Contact, Campaign
 from openstax_integrator.salesforce.connector import Connection
-
-if os.environ[u"DJANGO_CONFIGURATION"] != u"Local":
-    # if our run-time environment is something other than Local
-    # then use the Open edX CourseCreator model
-    from  cms.djangoapps.course_creators.models import CourseCreator
-else:
-    # otherwise use our local simplified representation
-    from openstax_integrator.course_creators.models import CourseCreator
+from course_creators.models import CourseCreator
 
 
 class Command(BaseCommand):
