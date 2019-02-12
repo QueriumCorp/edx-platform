@@ -47,19 +47,8 @@ python /edx/app/edxapp/edx-platform/manage.py cms sfpush --settings=aws         
 EOF
 ```
 
-Django Admin console
+Open edX Installation
 --------
-The salesforce integrations are fully maintainable from within the AM Django admin console.
-![django admin console](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_screenshot.png)
-
-Staff and/or Super Users can perform CRUD operations on contacts (aka Instructors).
-![django admin contacts](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_contact.png)
-
-Staff and/or Super Users can manage salesforce.com connectivity data. Modifications to the salesforce.com configuration parameters take effect immediately. You can test your salesforce.com connection parameters by using the Django command line utility ```python manage.py verifyconnectivity```
-![django admin configuration](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_configuration.png)
-
-
-# Open edX Installation
 1. Copy this folder into /edx/app/edxapp/edx-platform/cms/djangoapps/
 
 2. add the following to cms.env.json
@@ -92,7 +81,8 @@ Staff and/or Super Users can manage salesforce.com connectivity data. Modificati
 5. Follow the instructions below for Django Admin / Salesforce / Configurations / New: https://am.roveropenstax.com/admin/salesforce/configuration/
 
 
-# Local Installation
+Local Installation
+--------
 1. pip install yadda yadda
 2. add these settings to INSTALLED_APPS
     ```
@@ -113,5 +103,20 @@ Staff and/or Super Users can manage salesforce.com connectivity data. Modificati
     ```
 3. add Django configurations for dev and production
 
-# Back-port to Python 2.7
+Django Admin console
+--------
+The salesforce integrations are fully maintainable from within the AM Django admin console.
+![django admin console](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_screenshot.png)
+
+Staff and/or Super Users can perform CRUD operations on contacts (aka Instructors).
+![django admin contacts](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_contact.png)
+
+Staff and/or Super Users can manage salesforce.com connectivity data. Modifications to the salesforce.com configuration parameters take effect immediately. You can test your salesforce.com connection parameters by using the Django command line utility ```python manage.py verifyconnectivity```
+![django admin configuration](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_configuration.png)
+
+
+
+
+Back-port to Python 2.7
+--------
 Open edX runs on Python 2.7 (yikes!). [You can read here](https://github.com/QueriumCorp/openstax-integrator/blob/python2.7/docs/legacy_installed.txt) about more about specific version requirements of installed pip packages.
