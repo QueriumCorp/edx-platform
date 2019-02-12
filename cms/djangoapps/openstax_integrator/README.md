@@ -29,18 +29,20 @@ Django command-line utilities
 Local:
 ```
 pipenv
-python manage.py processcontacts      # upload/update instructor "contacts" to salesforce.com
-python manage.py verifyconnectivity   # test your Django admin Salesforce configuration parameters
+python manage.py sfconfigtest   # test your Django admin Salesforce configuration parameters
+python manage.py sfpull         # download & synch salesforce contactID values
+python manage.py sfpush         # upload/update instructor "contacts" to salesforce.com
 ```
 
 Open edX:
 ```
 sudo -H -u edxapp bash << EOF
+cd ~
 source /edx/app/edxapp/edxapp_env
-cd /edx/app/edxapp/edx-platform
 
-python manage.py processcontacts      # upload/update instructor "contacts" to salesforce.com
-python manage.py verifyconnectivity   # test your Django admin Salesforce configuration parameters
+python /edx/app/edxapp/edx-platform/manage.py cms sfconfigtest --settings=aws   # test your Django admin Salesforce configuration parameters
+python /edx/app/edxapp/edx-platform/manage.py cms sfpull --settings=aws         # download & synch salesforce contactID values
+python /edx/app/edxapp/edx-platform/manage.py cms sfpush --settings=aws         # upload/update instructor "contacts" to salesforce.com
 
 EOF
 ```
