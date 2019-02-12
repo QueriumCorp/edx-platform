@@ -84,6 +84,13 @@ Staff and/or Super Users can manage salesforce.com connectivity data. Modificati
     python /edx/app/edxapp/edx-platform/manage.py cms makemigrations salesforce --settings=aw
     ```
 
+4. Run full Open edX migrations with this command from the Ubuntu command line as root
+    ```
+    sudo /root/edx.platform-migrations.sh
+    ```
+
+5. Follow the instructions below for Django Admin / Salesforce / Configurations / New: https://am.roveropenstax.com/admin/salesforce/configuration/
+
 
 # Local Installation
 1. pip install yadda yadda
