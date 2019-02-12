@@ -1,8 +1,6 @@
-# openstax_integrator
+# openstax_integrator: Integrations for Rover OpenStax.
 
 [![Built with](https://img.shields.io/badge/Built_with-Cookiecutter_Django_Rest-F7B633.svg)](https://github.com/agconti/cookiecutter-django-rest)
-
-**Integrations for Rover OpenStax.**
 
 Installation
 --------
