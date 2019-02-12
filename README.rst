@@ -18,6 +18,13 @@ Installation / Updates (as per Lawrence McDaniel)
   sudo ./edx.platform-restart-full.sh
 
 
+Custom Modules (as per Lawrence McDaniel)
+------------
+
+`Salesforce Integration Module`_: Rest api, django admin console, and manage.py command line tools to capture and upload salesforce tracking data for Open Stax marketing team.
+
+.. _Salesforce Integration Module: https://github.com/QueriumCorp/edx-platform.roverplatform.com/blob/querium.master/cms/djangoapps/openstax_integrator
+
 
 
 License
@@ -27,6 +34,7 @@ The code in this repository is licensed under version 3 of the AGPL
 unless otherwise noted. Please see the `LICENSE`_ file for details.
 
 .. _LICENSE: https://github.com/edx/edx-platform/blob/master/LICENSE
+
 
 
 The Open edX Portal
