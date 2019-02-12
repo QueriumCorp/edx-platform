@@ -12,6 +12,7 @@ Installation
            "openstax_integrator.salesforce"
         ],
     ```
+    ![cms.env.json configuration](docs/cms.env.json-config.png)
 
 3. Add the following to /edx/app/edxapp/edx-platform/cms/urls.py on or around row 35
     ```
@@ -19,6 +20,8 @@ Installation
         # make this the first array entry. there will be around 75 existing entries in this array.
         url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
     ```
+
+    ![cms urls.py configuration](docs/cms-urls.py-config.png)
 
 4. Run initial database migrations with this command. This is a Django thing to complete the app "registration").
     ```
