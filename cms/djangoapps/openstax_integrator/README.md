@@ -4,26 +4,54 @@
 
 **Integrations for Rover OpenStax.**
 
+Installation
+--------
+1. Copy this folder into /edx/app/edxapp/edx-platform/cms/djangoapps/
 
-# salesforce.com
+2. add the following to cms.env.json
+    ```
+    "ADDL_INSTALLED_APPS": [
+           "openstax_integrator.salesforce"
+        ],
+    ```
+
+3. Add the following to /edx/app/edxapp/edx-platform/cms/urls.py on or around row 35
+    ```
+    urlpatterns = [
+        # make this the first array entry. there will be around 75 existing entries in this array.
+        url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
+    ```
+
+4. Run initial database migrations with this command. This is a Django thing to complete the app "registration").
+    ```
+    sudo -H -u edxapp -s bash
+    cd ~
+    source /edx/app/edxapp/edxapp_env
+    python /edx/app/edxapp/edx-platform/manage.py cms makemigrations salesforce --settings=aw
+    ```
+    ![django makemigrations initial](docs/django-makemigrations-initial.png)
+
+
+4. Run full Open edX migrations with this command from the Ubuntu command line as root
+    ```
+    sudo /root/edx.platform-migrations.sh
+    ```
+    ![open edx django migrations](docs/platform-migrations-installation.png)
+
+5. Follow the instructions below for Django Admin / Salesforce / Configurations / New: https://am.roveropenstax.com/admin/salesforce/configuration/
+
+
+
+
+Integrations for salesforce.com
+--------
 Provides a REST api to extract and manage sales data on instructors. The api is read-only to Open edX staff and provide full CRUD to superusers. Also provides a command-line utility callable from manage.py that pushes instructor sales data to salesforce.com.
 
 Runs locally (DEBUG=True) as a self-contained Django project containing all necessary replicas of Open edX models. This same project can be packaged and installed to Open edX using pip.
 
 Permissions: access to all REST api end points are limited to authenticated users marked as "Staff".
 
-REST api
---------
-- https://[your domain]/salesforce/v1/contacts/all
-- https://[your domain]/salesforce/v1/contacts/new
-- https://[your domain]/salesforce/v1/contacts/pending
-- https://[your domain]/salesforce/v1/campaigns/
-- https://[your domain]/salesforce/v1/coursecreators/
-- https://[your domain]/salesforce/v1/docs/
-- https://[your domain]/salesforce/v1/docs/schema/
-- https://[your domain]/salesforce/v1/docs/swagger/
-
-REST api Documentation
+Swagger Online Documentation
 --------
 This module provides documentation in two formats: Django REST api "schema", and Swagger. Swagger is overwhelmingly the better option, especially is you're new to this api.
 
@@ -31,7 +59,7 @@ This module provides documentation in two formats: Django REST api "schema", and
 ![Swagger api documentation example resource](docs/swagger-screen-2.png)
 
 
-Django command-line utilities
+manage.py command-line utilities
 --------
 Local:
 ```
@@ -70,65 +98,6 @@ python /edx/app/edxapp/edx-platform/manage.py cms sfpush --settings=aws         
 EOF
 ```
 
-
-Open edX Installation
---------
-1. Copy this folder into /edx/app/edxapp/edx-platform/cms/djangoapps/
-
-2. add the following to cms.env.json
-    ```
-    "ADDL_INSTALLED_APPS": [
-           "openstax_integrator.salesforce"
-        ],
-    ```
-
-3. Add the following to /edx/app/edxapp/edx-platform/cms/urls.py on or around row 35
-    ```
-    urlpatterns = [
-        # make this the first array entry. there will be around 75 existing entries in this array.
-        url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
-    ```
-
-4. Run initial database migrations with this command. This is a Django thing to complete the app "registration").
-    ```
-    sudo -H -u edxapp -s bash
-    cd ~
-    source /edx/app/edxapp/edxapp_env
-    python /edx/app/edxapp/edx-platform/manage.py cms makemigrations salesforce --settings=aw
-    ```
-    ![django makemigrations initial](docs/django-makemigrations-initial.png)
-
-
-4. Run full Open edX migrations with this command from the Ubuntu command line as root
-    ```
-    sudo /root/edx.platform-migrations.sh
-    ```
-    ![open edx django migrations](docs/platform-migrations-installation.png)
-
-5. Follow the instructions below for Django Admin / Salesforce / Configurations / New: https://am.roveropenstax.com/admin/salesforce/configuration/
-
-
-Local Installation
---------
-1. pip install yadda yadda
-2. add these settings to INSTALLED_APPS
-    ```
-    INSTALLED_APPS += (
-        ...
-        # Third party apps
-        'rest_framework',            # utilities for rest apis
-        'rest_framework.authtoken',  # token authentication
-        'django_filters',            # for filtering rest endpoints
-        'rest_framework_swagger',
-
-        # This project
-        'openstax_integrator.users',
-        'openstax_integrator.salesforce',
-        'openstax_integrator.course_creators',
-        ...
-    )
-    ```
-3. add Django configurations for dev and production
 
 Django Admin console
 --------
