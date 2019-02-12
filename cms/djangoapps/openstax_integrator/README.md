@@ -59,8 +59,33 @@ Staff and/or Super Users can manage salesforce.com connectivity data. Modificati
 ![django admin configuration](https://raw.githubusercontent.com/QueriumCorp/openstax-integrator/master/docs/django_admin_configuration.png)
 
 
+# Open edX Installation
+1. Copy this folder into /edx/app/edxapp/edx-platform/cms/djangoapps/
 
-# Installation
+2. add the following to cms.env.json
+    ```
+    "ADDL_INSTALLED_APPS": [
+           "openstax_integrator.salesforce"
+        ],
+    ```
+
+3. Add the following to /edx/app/edxapp/edx-platform/cms/urls.py on or around row 35
+    ```
+    urlpatterns = [
+        # make this the first array entry. there will be around 75 existing entries in this array.
+        url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
+    ```
+
+4. Run initial database migrations with this command. This is a Django thing to complete the app "registration").
+    ```
+    sudo -H -u edxapp -s bash
+    cd ~
+    source /edx/app/edxapp/edxapp_env
+    python /edx/app/edxapp/edx-platform/manage.py cms makemigrations salesforce --settings=aw
+    ```
+
+
+# Local Installation
 1. pip install yadda yadda
 2. add these settings to INSTALLED_APPS
     ```
