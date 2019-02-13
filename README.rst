@@ -30,13 +30,10 @@ Custom Modules (as per Lawrence McDaniel)
 .. _Openstax oAuth Backend: https://github.com/QueriumCorp/openstax-oauth-backend
 
 
-## social_core
-This folder contains oAuth code for facilitating single sign-on to Openstax.org.
+`Guide for working with Git`_: Guide for working with Git
+.. _Guide for working with Git: https://www.git-tower.com/blog/git-cheat-sheet/
 
-## Guide for working with Git
-[Git Cheat Sheet](https://www.git-tower.com/blog/git-cheat-sheet/)
-
-![Git Work Flow](https://github.com/QueriumCorp/edx-platform.roverplatform.com/blob/querium.dev/querium/doc/git-workflow.png)
+.. image:: querium.dev/querium/doc/git-workflow.png
 
 
 Work with a feature branch off querium.dev
