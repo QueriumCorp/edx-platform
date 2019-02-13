@@ -67,12 +67,12 @@ class Command(BaseCommand):
                 result = sf.bulk.CampaignMember.update(sf_campaign_members)
                 # result should look like [{'errors': [], 'success': True, 'created': False, 'id': 'object_id_1'}]
 
-                if result[u'errors'].count() == 0:
+                if result[0][u'success']:
                     response = self.style.SUCCESS(u"Successfully updated {} schools".format(records_updated))
                     self.stdout.write(response)
                 else:
                     self.stdout.write(self.style.ERROR(u"Some errors were encountered while processing updates:"))
-                    for err in result[u'errors']:
+                    for err in result[0][u'errors']:
                         self.stdout.write(self.style.ERROR(err))
             else:
                 self.stdout.write(self.style.NOTICE(u"No matching CampaignMember records found. Nothing to do. Exiting."))
