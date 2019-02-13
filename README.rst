@@ -62,32 +62,6 @@ Work with a feature branch off querium.dev
   git push origin querium.dev-oauth
 
 
-Update your feature branch with the current contents of querium.dev
-------------
-.. code-block:: bash
-
-  # first, update your local repository with the current contents of querium.dev
-  git checkout querium.dev
-  git pull
-
-  # next, merge querium.dev into your feature branch
-  git checkout querium.dev-oauth
-  git merge querium.dev
-
-
-Consolidate superfluous commits
-------------
-.. code-block:: bash
-
-  git checkout querium.dev-[FEATURE-BRANCH]
-
-  # Review the local commit log, identify the quantity and keys of the commits to "squash"
-  git log
-
-  # Suppose you've determined that you want to squash the last 5 commits ....
-  git reset --soft HEAD~5 &&
-  git commit
-
 
 Merge querium.dev into querium.master
 ------------
