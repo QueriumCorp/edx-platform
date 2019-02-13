@@ -127,6 +127,7 @@ pyuca==1.1                          # For more accurate sorting of translated co
 reportlab==3.1.44                   # Used for shopping cart's pdf invoice/receipt generation
 rest-condition                      # DRF's recommendation for supporting complex permissions
 rfc6266-parser                      # Used to generate Content-Disposition headers.
+simple-salesforce                   # McDaniel Feb-2019: used by cms/djangoapps/openstax_integrator
 social-auth-app-django
 social-auth-core
 pysrt==0.4.7                        # Support for SubRip subtitle files, used in the video XModule
