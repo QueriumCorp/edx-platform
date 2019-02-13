@@ -33,7 +33,7 @@ Custom Modules (as per Lawrence McDaniel)
 `Guide for working with Git`_: Guide for working with Git
 .. _Guide for working with Git: https://www.git-tower.com/blog/git-cheat-sheet/
 
-.. image:: querium.dev/querium/doc/git-workflow.png
+.. image:: querium/doc/git-workflow.png
 
 
 Work with a feature branch off querium.dev
