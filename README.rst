@@ -33,6 +33,8 @@ Custom Modules (as per Lawrence McDaniel)
 `Guide for working with Git`_: Guide for working with Git
 .. _Guide for working with Git: https://www.git-tower.com/blog/git-cheat-sheet/
 
+Git Work Flow
+------------
 .. image:: querium/doc/git-workflow.png
 
 
@@ -40,17 +42,18 @@ Work with a feature branch off querium.dev
 ------------
 .. code-block:: bash
 
-  # Create querium.dev-oauth branch off querium.dev
+  # how to create a new feature branch named "querium.dev-oauth" from querium.dev
   git checkout -b querium.dev-oauth querium.dev
   git branch --set-upstream-to=origin/querium.dev-oauth querium.dev-oauth
 
-  # Merge features into querium.dev
+  # How to merge querium.dev-oauth modifications into querium.dev
   git checkout querium.dev
-  git merge querium.dev-oauth
-
-  # Alternative merge, without Fast-forward
+  git pull                            # to synch your local repo with remote
+  git checkout querium.dev-oauth
+  git pull                            # to sunch your locla repo with remote
+  git rebase -i querium.dev           # rebase querium.dev-oauth to querium.dev
   git checkout querium.dev
-  git merge --no-ff querium.dev-oauth
+  git merge querium.dev-oauth         # merge querium.dev-oauth into querium.dev
 
   # Push your changes to Github
   git push origin querium.dev
