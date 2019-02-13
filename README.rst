@@ -87,30 +87,21 @@ Consolidate superfluous commits
   git commit
 
 
-Deploy querium.dev to querium.master
+Merge querium.dev into querium.master
 ------------
 .. code-block:: bash
 
-  # ensure that your local querium.master is up to date
   git checkout querium.master
-  git pull
-
-  # step 1:merge querium.master into querium.dev, check for merge conflicts
+  git pull                            # to synch your local repo with remote
   git checkout querium.dev
-  git pull
-  git merge querium.master
-  git push origin querium.dev
-
-
-  # * resolve any conflicts that might have surfaced *
-
-  # step 2: deploy to querium.master
+  git pull                            # to sunch your local repo with remote
+  git rebase -i querium.master        # rebase querium.dev to querium.master
   git checkout querium.master
-  git pull
-  git merge querium.dev
+  git merge querium.dev               # merge querium.dev into querium.master
+
+  # Push your changes to Github
   git push origin querium.master
-
-
+  git push origin querium.dev
 
 
 License
