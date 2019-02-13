@@ -4,9 +4,9 @@
 
 Common REST api End points
 --------
-All campaigns: https://am.roveropenstax.com/salesforce/v1/campaigns
-All users who have ever requested Course Creator status: https://am.roveropenstax.com/salesforce/v1/coursecreators
-All salesforce contacts: https://am.roveropenstax.com/salesforce/v1/contacts/all
+- All campaigns: https://am.roveropenstax.com/salesforce/v1/campaigns
+- All users who have ever requested Course Creator status: https://am.roveropenstax.com/salesforce/v1/coursecreators
+- All salesforce contacts: https://am.roveropenstax.com/salesforce/v1/contacts/all
 
 Installation
 --------
