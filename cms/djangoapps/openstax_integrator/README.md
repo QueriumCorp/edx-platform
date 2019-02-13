@@ -2,6 +2,12 @@
 
 [![Built with](https://img.shields.io/badge/Built_with-Cookiecutter_Django_Rest-F7B633.svg)](https://github.com/agconti/cookiecutter-django-rest)
 
+Common REST api End points
+--------
+All campaigns: https://am.roveropenstax.com/salesforce/v1/campaigns
+All users who have ever requested Course Creator status: https://am.roveropenstax.com/salesforce/v1/coursecreators
+All salesforce contacts: https://am.roveropenstax.com/salesforce/v1/contacts/all
+
 Installation
 --------
 1. Copy this folder into /edx/app/edxapp/edx-platform/cms/djangoapps/
@@ -68,10 +74,12 @@ This module provides documentation in two formats: Django REST api "schema", and
 
 manage.py command-line utilities
 --------
+Example usage:
 ```
 sudo -H -u edxapp bash << EOF
 cd ~
 source /edx/app/edxapp/edxapp_env
+
 python /edx/app/edxapp/edx-platform/manage.py cms sfconfigtest --settings=aws   # test your Django admin Salesforce configuration parameters
 EOF
 ```
@@ -82,7 +90,8 @@ EOF
 sudo -H -u edxapp bash << EOF
 cd ~
 source /edx/app/edxapp/edxapp_env
-python /edx/app/edxapp/edx-platform/manage.py cms sfpull --settings=aws         # download & synch salesforce contactID values
+python /edx/app/edxapp/edx-platform/manage.py cms sfpull --insert --settings=aws         # download & synch salesforce contactID values
+python /edx/app/edxapp/edx-platform/manage.py cms sfpull --update --settings=aws         # download & synch salesforce contactID values
 EOF
 ```
 ![open edx django migrations](docs/sfpull.png)
