@@ -35,6 +35,8 @@ Custom Modules (as per Lawrence McDaniel)
 
 Git Work Flow
 ------------
+*Note: arrows in the diagram below noted as "git merge (fast-forward)" have been modified to "git rebase" in the code samples below.*
+
 .. image:: querium/doc/git-workflow.png
 
 
