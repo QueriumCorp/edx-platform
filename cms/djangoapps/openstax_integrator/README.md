@@ -4,7 +4,12 @@
 
 Interfaces are a complex topic. This project hopes to minimize brain damage and cost by conforming to the following project design principals:
 
-- Whenever possible try to leverage other widely-supported open source projects. This project is created principally with Cookie Cutter Django REST, Django REST Framework, and Django REST Swagger. Open edX itself uses Django REST Framework which also simplifies certain project matters.
+- Whenever possible try to leverage other widely-supported open source projects. This project is created principally with
+  - Cookie Cutter Django REST: a template to jumpstart projects using Django REST Framework
+  - Django REST Framework: a popular pip package for implementing a REST api
+  - Django REST Swagger: a popular pip package to quickly generate online documentation for Django REST api
+  - simple_salesforce: a package to simplify connecting to and interchanging data with salesforce.com
+Open edX itself uses Django REST Framework which also simplifies certain project matters.
 - Salesforce contacts and their respective custom tracking data can be added / updated / deleted at any time by using the REST api resources that are exposed by this project. This hopefully enables us to maintain isolation between this code base, which is limited to marshaling data between open edx and salesforce, versus this project's clients which actually capture the source data that we track in salesforce.
 - Try to make the functionality as self-documenting as possible. This is substantially accomplished with Django REST Swagger which uses introspection of the project's REST api resources and verbs to generate browsable online documentation of the vast majority of this project's functionality. Additionally, there are two command line utilities to push and pull salesforce data which are implemented via Django's manage.py, and these two utilities both leverage manage.py's command line help documentation capabilities.
 - Try to keep all configuration data out of the source code. This module is published to the Django Admin Console, which provides several administrative screens that you can use to modify interface configuration data such as credentials, as well as to manually resolve user-level data anomolies that may occasionally surface.
