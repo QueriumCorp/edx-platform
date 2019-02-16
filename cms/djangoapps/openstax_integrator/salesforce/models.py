@@ -8,12 +8,31 @@ from course_creators.models import CourseCreator
 
 # Create your models here.
 class Campaign(models.Model):
+
+    class Meta(object):
+        ordering = [u'active']
+
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    active = models.BooleanField(default=True,
+                                 null=False,
+                                 help_text=_(u"True if this is the current campaign to which new salesforce contacts should be added."))
+
     name = models.CharField(max_length=50)
+    salesforce_id = models.CharField(max_length=50,
+                                     default=None,
+                                     blank=True,
+                                     null=True,
+                                     help_text=_(u"Example: 7010m0000002pARAAY from the following URL: https://cs65.lightning.force.com/lightning/r/Campaign/7010m0000002pARAAY/view"))
 
     def __str__(self):
         return self.name
 
 class Contact(models.Model):
+    u"""
+    Creates the salesforce integration custom tracking fields table.
+    """
 
     class Meta(object):
         ordering = [u'-created']

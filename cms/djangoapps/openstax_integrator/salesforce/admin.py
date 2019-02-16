@@ -1,9 +1,18 @@
 from __future__ import absolute_import
 from django.contrib import admin
-
 from .models import Campaign, Contact, Configuration
 
 
+class ConfigurationAdmin(admin.ModelAdmin):
+    readonly_fields=(u'created', u'updated', )
+
+class CampaignAdmin(admin.ModelAdmin):
+    list_display = (
+        u'name',
+        u'active',
+        u'salesforce_id',
+    )
+    readonly_fields=(u'created', u'updated', )
 
 class ContactAdmin(admin.ModelAdmin):
     list_display = (
@@ -22,10 +31,8 @@ class ContactAdmin(admin.ModelAdmin):
     )
     readonly_fields=(u'created', u'updated', )
 
-class ConfigurationAdmin(admin.ModelAdmin):
-    readonly_fields=(u'created', u'updated', )
 
 
 admin.site.register(Configuration, ConfigurationAdmin)
-admin.site.register(Campaign)
+admin.site.register(Campaign, CampaignAdmin)
 admin.site.register(Contact, ContactAdmin)
