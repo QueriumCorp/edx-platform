@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from django.core.management.base import BaseCommand
 from openstax_integrator.salesforce.models import Contact
 from openstax_integrator.salesforce.connector import Connection
+from pprint import pprint
 
 u"""
   salesforce.com upserts.
@@ -21,58 +22,88 @@ class Command(BaseCommand):
         update = kwargs[u'update']
 
         u"""
-        grab all salesforce.com CampaignMembers.
-
-        FIX NOTE: OpenStax will send a CampaignID value which we'll need to use to filter this recordset.
+        Update or Insert salesforce.com CampaignMembers from AM Contacts.
         """
-        self.stdout.write(self.style.NOTICE(u"Connecting to salesforce.com ..."))
+        self.sf_insert()
+
+
+    def sf_insert(self):
+        self.stdout.write(self.style.NOTICE(u"Begin updating salesforce.com CampaignMembers table ..."))
+
+        u"""
+            data = [
+                  {'Id': '0000000000AAAAA', 'Email': 'examplenew2@example.com'},
+                  {'Email': 'foo@foo.com'}
+                ]
+
+            sf.bulk.CampaignMember.upsert(data, 'Id')
+
+            SELECT Email, CampaignID,
+                  ContactID,
+                  Initial_Sign_in_Date__c,
+                  Most_recent_sign_in_date__c,
+                  Completed_Training_Wheels_date__c,
+                  Started_Assignment_date__c,
+                  Completed_Assignment_date__c,
+                  Soft_Ask_Decision__c,
+                  Soft_Ask_Decision_date__c,
+                  Estimated_Enrollment__c,
+                  latest_adoption_decision__c FROM CampaignMember
+
+            OrderedDict(
+                [(u'totalSize', 2), (u'done', True),
+                 (u'records',
+                    [
+                        OrderedDict([(u'attributes',
+                        OrderedDict([(u'type', u'CampaignMember'),
+                                     (u'url', u'/services/data/v38.0/sobjects/CampaignMember/00v0m000000NgWYAA0')
+                                     ]
+                                     )),
+                                     (u'Email', u'denver@rice.edu'), (u'CampaignId', u'7010m0000002pARAAY'), (u'ContactId', u'0030m00000IzDI4AAN')]),
+
+                        OrderedDict([(u'attributes',
+                        OrderedDict([(u'type', u'CampaignMember'),
+                                     (u'url', u'/services/data/v38.0/sobjects/CampaignMember/00v0m000000NgWZAA0')])),
+                                     (u'Email', u'denver2@rice.edu'), (u'CampaignId', u'7010m0000002pARAAY'), (u'ContactId', u'0030m00000CMTuvAAH')])]
+                                     )
+                ]
+
+                        )
+
+        """
+
+        sf_inserts = []
+        contacts = Contact.objects.all()
+        for contact in contacts:
+            self.stdout.write(self.style.NOTICE(u"Preparing CampaignMember update for ContactID {}".format(contact.contact_id)))
+            sf_campaign_member = {
+                u'ContactID': contact.contact_id,
+                u'CampaignID': '7010m0000002pARAAY',
+                u'Initial_Sign_in_Date__c': '',
+                u'Most_recent_sign_in_date__c': '',
+                u'Completed_Training_Wheels_date__c': contact.completed_training_wheels_date,
+                u'Started_Assignment_date__c': contact.started_assignment_date,
+                u'Completed_Assignment_date__c': contact.completed_assignment_date,
+                u'Soft_Ask_Decision__c': contact.soft_ask_decision,
+                u'Soft_Ask_Decision_date__c': contact.soft_ask_decision_date,
+                u'Students_Pell_Grant__c': '',
+                u'Estimated_Enrollment__c': contact.estimated_enrollment,
+                u'latest_adoption_decision__c': contact.latest_adoption_decision,
+                }
+            sf_inserts.append(sf_campaign_member)
+
+        self.stdout.write(self.style.NOTICE(u"Connecting to salesforce ..."))
         with Connection() as sf:
             self.stdout.write(self.style.SUCCESS(u"Connected."))
-            self.stdout.write(self.style.NOTICE(u"Querying CampaignMembers ..."))
-            query = u"SELECT Email, CampaignID, " \
-                      u"ContactID, " \
-                      u"Initial_Sign_in_Date__c, " \
-                      u"Most_recent_sign_in_date__c, " \
-                      u"Completed_Training_Wheels_date__c, " \
-                      u"Started_Assignment_date__c, " \
-                      u"Completed_Assignment_date__c, " \
-                      u"Soft_Ask_Decision__c, " \
-                      u"Soft_Ask_Decision_date__c, " \
-                      u"Estimated_Enrollment__c, " \
-                      u"latest_adoption_decision__c FROM CampaignMember"
-            sf_campaign_members = sf.bulk.CampaignMember.query(query)
 
-            if sf_campaign_members:
-                records_updated = 0
-                for sf_campaign_member in sf_campaign_members:
-                    email = sf_campaign_member[u'Email']
-                    contact = Contact.objects.select_related(u'user').filter(user__user__email=email)
+            self.stdout.write(self.style.NOTICE(u"Sending {} inserts of CampaignMembers to salesforce.com ...".format(len(sf_inserts))))
+            pprint(sf_inserts)
+            results = sf.bulk.CampaignMember.insert(sf_inserts)
+            # result should look like [{'errors': [], 'success': True, 'created': False, 'id': 'object_id_1'}]
 
-                    if contact:
-                        self.stdout.write(self.style.NOTICE(u"Updating CampaignMember {}".format(email)))
-                        sf_campaign_member[u'Initial_Sign_in_Date__c'] = contact.Initial_Sign_in_Date__c
-                        sf_campaign_member[u'Most_recent_sign_in_date__c'] = contact.Most_recent_sign_in_date__c
-                        sf_campaign_member[u'Completed_Training_Wheels_date__c'] = contact.Completed_Training_Wheels_date__c
-                        sf_campaign_member[u'Started_Assignment_date__c'] = contact.Started_Assignment_date__c
-                        sf_campaign_member[u'Completed_Assignment_date__c'] = contact.Completed_Assignment_date__c
-                        sf_campaign_member[u'Soft_Ask_Decision__c'] = contact.Soft_Ask_Decision__c
-                        sf_campaign_member[u'Soft_Ask_Decision_date__c'] = contact.Soft_Ask_Decision_date__c
-                        sf_campaign_member[u'Students_Pell_Grant__c'] = contact.Students_Pell_Grant__c
-                        sf_campaign_member[u'Estimated_Enrollment__c'] = contact.Estimated_Enrollment__c
-                        sf_campaign_member[u'latest_adoption_decision__c'] = contact.latest_adoption_decision__c
+            for result in results:
+                if result['success']:
+                    self.style.SUCCESS(u"Inserted Contact Id {}".format(result['id']))
 
-                        records_updated = records_updated + 1
-
-                self.stdout.write(self.style.NOTICE(u"Sending bulk update of CampaignMembers to salesforce.com ..."))
-                result = sf.bulk.CampaignMember.update(sf_campaign_members)
-                # result should look like [{'errors': [], 'success': True, 'created': False, 'id': 'object_id_1'}]
-
-                if result[0][u'success']:
-                    response = self.style.SUCCESS(u"Successfully updated {} schools".format(records_updated))
-                    self.stdout.write(response)
                 else:
-                    self.stdout.write(self.style.ERROR(u"Some errors were encountered while processing updates:"))
-                    for err in result[0][u'errors']:
-                        self.stdout.write(self.style.ERROR(err))
-            else:
-                self.stdout.write(self.style.NOTICE(u"No matching CampaignMember records found. Nothing to do. Exiting."))
+                    pprint(result['errors'])

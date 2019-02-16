@@ -31,7 +31,7 @@ class Command(BaseCommand):
             raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
                                     u"Django Admin to create a Salesforce Campaign.")
 
-        self.add_am_contacts()
+        self.insert_am_contacts()
         self.update_am_contacts()
 
     def update_am_contacts(self):
@@ -82,7 +82,7 @@ class Command(BaseCommand):
 
 
 
-    def add_am_contacts(self):
+    def insert_am_contacts(self):
         # CourseCreator rows with no corresponding master record in Contacts
         self.stdout.write(self.style.NOTICE(u"Looking for new Contact records to add..."))
         new_instructors = CourseCreator.objects.filter(state=u'granted').filter(contact__isnull=True)
