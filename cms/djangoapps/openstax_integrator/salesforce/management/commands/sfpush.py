@@ -1,9 +1,10 @@
 from __future__ import with_statement
 from __future__ import absolute_import
 from django.core.management.base import BaseCommand
-from openstax_integrator.salesforce.models import Contact
+from openstax_integrator.salesforce.models import Contact, Campaign
 from openstax_integrator.salesforce.connector import Connection
 from pprint import pprint
+import datetime
 
 u"""
   salesforce.com upserts.
@@ -21,55 +22,67 @@ class Command(BaseCommand):
         insert = kwargs[u'insert']
         update = kwargs[u'update']
 
-        u"""
-        Update or Insert salesforce.com CampaignMembers from AM Contacts.
-        """
         self.sf_insert()
 
 
     def sf_insert(self):
-        self.stdout.write(self.style.NOTICE(u"Begin updating salesforce.com CampaignMembers table ..."))
+        self.stdout.write(self.style.NOTICE(u"salesforce.com interface: update CampaignMembers"))
 
         u"""
-
-
+        Update or Insert salesforce.com CampaignMembers from AM Contacts.
         """
 
+        try:
+            campaign = Campaign.objects.filter(active=True).first()
+        except:
+            raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
+                                    u"Django Admin to create a Salesforce Campaign.")
 
-        sf_inserts = []
+        sf_upserts = []
         contacts = Contact.objects.all()
         for contact in contacts:
-            self.stdout.write(self.style.NOTICE(u"Preparing CampaignMember update for ContactID {}".format(contact.contact_id)))
             sf_campaign_member = {
                 u'ContactID': contact.contact_id,
-                u'CampaignID': '7010m0000002pARAAY',
+                u'CampaignID': campaign.salesforce_id,
                 u'accounts_uuid__c': contact.contact_id,
                 u'Status': 'Sent',
-            #    u'Initial_Sign_in_Date__c': '',
-            #    u'Most_recent_sign_in_date__c': '',
-            #    u'Completed_Training_Wheels_date__c': contact.completed_training_wheels_date,
-            #    u'Started_Assignment_date__c': contact.started_assignment_date,
-            #    u'Completed_Assignment_date__c': contact.completed_assignment_date,
-            #    u'Soft_Ask_Decision__c': contact.soft_ask_decision,
-            #    u'Soft_Ask_Decision_date__c': contact.soft_ask_decision_date,
+                u'Initial_Sign_in_Date__c': self.serialDate(contact.user.user.date_joined),
+                u'Most_recent_sign_in_date__c': self.serialDate(contact.user.user.last_login),
+                u'Completed_Training_Wheels_date__c': self.serialDate(contact.completed_training_wheels_date),
+                u'Started_Assignment_date__c': self.serialDate(contact.started_assignment_date),
+                u'Completed_Assignment_date__c': self.serialDate(contact.completed_assignment_date),
+                u'Soft_Ask_Decision__c': contact.soft_ask_decision,
+                u'Soft_Ask_Decision_date__c': self.serialDate(contact.soft_ask_decision_date),
             #    u'Students_Pell_Grant__c': '',
-            #    u'Estimated_Enrollment__c': contact.estimated_enrollment,
-            #    u'latest_adoption_decision__c': contact.latest_adoption_decision,
+                u'Estimated_Enrollment__c': contact.estimated_enrollment,
+                u'latest_adoption_decision__c': contact.latest_adoption_decision
                 }
-            sf_inserts.append(sf_campaign_member)
+            sf_upserts.append(sf_campaign_member)
 
         self.stdout.write(self.style.NOTICE(u"Connecting to salesforce ..."))
         with Connection() as sf:
             self.stdout.write(self.style.SUCCESS(u"Connected."))
 
-            self.stdout.write(self.style.NOTICE(u"Sending {} inserts of CampaignMembers to salesforce.com ...".format(len(sf_inserts))))
-            pprint(sf_inserts)
-            results = sf.bulk.CampaignMember.upsert(sf_inserts, "accounts_uuid__c")
-            # result should look like [{'errors': [], 'success': True, 'created': False, 'id': 'object_id_1'}]
+            self.stdout.write(self.style.NOTICE(u"Sending {} CampaignMember upserts to salesforce.com ...".format(len(sf_upserts))))
+            results = sf.bulk.CampaignMember.upsert(sf_upserts, "accounts_uuid__c")
 
+            self.stdout.write(self.style.SUCCESS(u"salesforce batch processing completed. Evaluating query results ..."))
             for result in results:
+                # results:  [{'errors': [], 'success': True, 'created': False, 'id': 'object_id_1'}]
                 if result['success']:
-                    self.style.SUCCESS(u"Inserted Contact Id {}".format(result['id']))
-
+                    self.stdout.write(self.style.SUCCESS(u"Successfully upserted Contact Id {}".format(result['id'])))
                 else:
+                    self.stdout.write(self.style.ERROR(u"Some errors were encountered for Contact Id {}".format(result['id'])))
                     pprint(result['errors'])
+
+            msg = u"Finished processing {} records. Note any record-level " \
+                    "information/errors above that might have been reported " \
+                    "by salesforce api.".format(len(sf_upserts))
+            self.stdout.write(self.style.SUCCESS(msg))
+
+    def serialDate(self, o):
+        if isinstance(o, datetime.datetime):
+            #convert datetime object to a string, then strip off and return only the date characters.
+            return o.__str__()[0:10]
+
+        return None

@@ -8,63 +8,34 @@ AM qualifications
 /edx/app/edxapp/edx-platform/cms/djangoapps/openstax_integrator/salesforce
 /edx/app/edxapp/edx-platform/cms/djangoapps/openstax_integrator/salesforce/management/commands
 
-CampaignId
-7010m0000002pARAAY
+CampaignId: 7010m0000002pARAAY
 
-
-accounts_uuid__c	(set with ContactId)
-CampaignId
-ContactId
-Status: Sent, Responded
-
-
-
-
-[{u'CampaignID': '7010m0000002pARAAY',
+{u'CampaignID': u'7010m0000002pARAAY',
   u'Completed_Assignment_date__c': None,
   u'Completed_Training_Wheels_date__c': None,
   u'ContactID': u'0030m00000JcBaJAAV',
   u'Estimated_Enrollment__c': None,
-  u'Initial_Sign_in_Date__c': '',
-  u'Most_recent_sign_in_date__c': '',
+  u'Initial_Sign_in_Date__c': '2019-02-15',
+  u'Most_recent_sign_in_date__c': '2019-02-15',
   u'Soft_Ask_Decision__c': None,
   u'Soft_Ask_Decision_date__c': None,
   u'Started_Assignment_date__c': None,
   u'Status': 'Sent',
-  u'Students_Pell_Grant__c': '',
   u'accounts_uuid__c': u'0030m00000JcBaJAAV',
-  u'latest_adoption_decision__c': None},
+  u'latest_adoption_decision__c': None}
 
- {u'CampaignID': '7010m0000002pARAAY',
-  u'Completed_Assignment_date__c': None,
-  u'Completed_Training_Wheels_date__c': None,
-  u'ContactID': u'0030m00000JbPVlAAN',
-  u'Estimated_Enrollment__c': None,
-  u'Initial_Sign_in_Date__c': '',
-  u'Most_recent_sign_in_date__c': '',
-  u'Soft_Ask_Decision__c': None,
-  u'Soft_Ask_Decision_date__c': None,
-  u'Started_Assignment_date__c': None,
-  u'Status': 'Sent',
-  u'Students_Pell_Grant__c': '',
-  u'accounts_uuid__c': u'0030m00000JbPVlAAN',
-  u'latest_adoption_decision__c': None},
-
- {u'CampaignID': '7010m0000002pARAAY',
-  u'Completed_Assignment_date__c': None,
-  u'Completed_Training_Wheels_date__c': None,
-  u'ContactID': u'0030m00000JbPW5AAN',
-  u'Estimated_Enrollment__c': None,
-  u'Initial_Sign_in_Date__c': '',
-  u'Most_recent_sign_in_date__c': '',
-  u'Soft_Ask_Decision__c': None,
-  u'Soft_Ask_Decision_date__c': None,
-  u'Started_Assignment_date__c': None,
-  u'Status': 'Sent',
-  u'Students_Pell_Grant__c': '',
-  u'accounts_uuid__c': u'0030m00000JbPW5AAN',
-  u'latest_adoption_decision__c': None}]
-
+  [{u'extendedErrorDetails': None,
+    u'fields': [u'ContactId'],
+    u'message': u'Unable to create/update fields: ContactId. Please check the security settings of this field and verify that it is read/write for your profile or permission set.',
+    u'statusCode': u'INVALID_FIELD_FOR_INSERT_UPDATE'}]
+  [{u'extendedErrorDetails': None,
+    u'fields': [u'ContactId'],
+    u'message': u'Unable to create/update fields: ContactId. Please check the security settings of this field and verify that it is read/write for your profile or permission set.',
+    u'statusCode': u'INVALID_FIELD_FOR_INSERT_UPDATE'}]
+  [{u'extendedErrorDetails': None,
+    u'fields': [],
+    u'message': u'Already a campaign member.',
+    u'statusCode': u'DUPLICATE_VALUE'}]
 
 
 https://support.veeva.com/hc/en-us/articles/115000100033-Error-Field-name-provided-does-not-match-an-External-ID-Salesforce-Id-or-Indexed-field-During-Network-Subscription-Failure
@@ -89,48 +60,30 @@ The field specified in the External ID API Name field on the Network Object Mapp
 
 
 
-simple_salesforce.exceptions.SalesforceMalformedRequest: Response content: {u'exceptionMessage': u'Records not processed', u'exceptionCode': u'InvalidBatch'}
+[
 
+{u'created': False,
+  u'errors': [{u'extendedErrorDetails': None,
+               u'fields': [u'ContactId'],
+               u'message': u'Unable to create/update fields: ContactId. Please check the security settings of this field and verify that it is read/write for your profile or permission set.',
+               u'statusCode': u'INVALID_FIELD_FOR_INSERT_UPDATE'}],
+  u'id': None,
+  u'success': False},
 
+ {u'created': False,
+  u'errors': [{u'extendedErrorDetails': None,
+               u'fields': [u'ContactId'],
+               u'message': u'Unable to create/update fields: ContactId. Please check the security settings of this field and verify that it is read/write for your profile or permission set.',
+               u'statusCode': u'INVALID_FIELD_FOR_INSERT_UPDATE'}],
+  u'id': None,
+  u'success': False},
 
-data = [
-        {u'CampaignID': '7010m0000002pARAAY',
-          u'ContactID': u'0030m00000JcBaJAAV',
-          u'Status': 'Sent',
-          u'accounts_uuid__c': u'0030m00000JcBaJAAV'}
-      ]
-with Connection() as sf:
-    sf.bulk.CampaignMember.upsert(data, 'accounts_uuid__c')
+ {u'created': True,
+  u'errors': [{u'extendedErrorDetails': None,
+               u'fields': [],
+               u'message': u'Already a campaign member.',
+               u'statusCode': u'DUPLICATE_VALUE'}],
+  u'id': None,
+  u'success': False}
 
-
-SELECT Email, CampaignID,
-      ContactID,
-      Initial_Sign_in_Date__c,
-      Most_recent_sign_in_date__c,
-      Completed_Training_Wheels_date__c,
-      Started_Assignment_date__c,
-      Completed_Assignment_date__c,
-      Soft_Ask_Decision__c,
-      Soft_Ask_Decision_date__c,
-      Estimated_Enrollment__c,
-      latest_adoption_decision__c FROM CampaignMember
-
-OrderedDict(
-    [(u'totalSize', 2), (u'done', True),
-     (u'records',
-        [
-            OrderedDict([(u'attributes',
-            OrderedDict([(u'type', u'CampaignMember'),
-                         (u'url', u'/services/data/v38.0/sobjects/CampaignMember/00v0m000000NgWYAA0')
-                         ]
-                         )),
-                         (u'Email', u'denver@rice.edu'), (u'CampaignId', u'7010m0000002pARAAY'), (u'ContactId', u'0030m00000IzDI4AAN')]),
-
-            OrderedDict([(u'attributes',
-            OrderedDict([(u'type', u'CampaignMember'),
-                         (u'url', u'/services/data/v38.0/sobjects/CampaignMember/00v0m000000NgWZAA0')])),
-                         (u'Email', u'denver2@rice.edu'), (u'CampaignId', u'7010m0000002pARAAY'), (u'ContactId', u'0030m00000CMTuvAAH')])]
-                         )
-    ]
-
-            )
+  ]
