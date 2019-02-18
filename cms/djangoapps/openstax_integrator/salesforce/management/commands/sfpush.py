@@ -114,13 +114,20 @@ class Command(BaseCommand):
                     "by salesforce api.".format(len(sf_updates))
             self.stdout.write(self.style.SUCCESS(msg))
 
+    u"""
+      Fix note: needs a real value.
+      The date a real course is created, or once they start actually setting it up
+    """
     def realCourseCreated(self):
-        u"""
-          Fix note: needs a real value.
-          The date a real course is created, or once they start actually setting it up
-        """
         return self.serialDate(timezone.now())
 
+    u"""
+      Trims a DateTime down to a date, which is a current salesforce limitation
+      based on the CampaignMember table definitionsself.
+
+      Want to maintain the time insider our db just in case OpenStax asks for
+      more detail in the future.
+    """
     def serialDate(self, o):
         if isinstance(o, datetime.datetime):
             #convert datetime object to a string, then strip off and return only the date characters.
@@ -128,6 +135,9 @@ class Command(BaseCommand):
 
         return None
 
+    u"""
+      We want to force a run-time error if no Campaign record exists.
+    """
     def getCampaign(self):
         try:
             campaign = Campaign.objects.filter(active=True).first()
