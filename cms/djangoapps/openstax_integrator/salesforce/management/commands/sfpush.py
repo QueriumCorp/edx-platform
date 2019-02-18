@@ -23,26 +23,18 @@ class Command(BaseCommand):
         insert = kwargs[u'insert']
         update = kwargs[u'update']
 
-
         self.sf_insert()
         self.sf_update()
 
 
+    u"""
+    Insert salesforce.com CampaignMembers from AM Contacts.
+    """
     def sf_insert(self):
         self.stdout.write(self.style.NOTICE(u"salesforce.com interface: insert new CampaignMembers"))
 
-        u"""
-        Insert salesforce.com CampaignMembers from AM Contacts.
-        """
-        try:
-            campaign = Campaign.objects.filter(active=True).first()
-        except:
-            raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
-                                    u"Django Admin to create a Salesforce Campaign.")
-
-
+        campaign = self.getCampaign()
         sf_inserts = []
-        #contacts = Contact.objects.filter(salesforce_insert_pending=True)
         contacts = Contact.objects.all()
         for contact in contacts:
             sf_campaign_member = {
@@ -77,18 +69,11 @@ class Command(BaseCommand):
                     "by salesforce api.".format(len(sf_inserts))
             self.stdout.write(self.style.SUCCESS(msg))
 
+    u"""
+    Update salesforce.com CampaignMembers from AM Contacts.
+    """
     def sf_update(self):
         self.stdout.write(self.style.NOTICE(u"salesforce.com interface: update CampaignMembers"))
-
-        u"""
-        Update salesforce.com CampaignMembers from AM Contacts.
-        """
-        try:
-            campaign = Campaign.objects.filter(active=True).first()
-        except:
-            raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
-                                    u"Django Admin to create a Salesforce Campaign.")
-
 
         sf_updates = []
         contacts = Contact.objects.all()
@@ -142,3 +127,11 @@ class Command(BaseCommand):
             return o.__str__()[0:10]
 
         return None
+
+    def getCampaign(self):
+        try:
+            campaign = Campaign.objects.filter(active=True).first()
+            return campaign
+        except:
+            raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
+                                    u"Django Admin to create a Salesforce Campaign.")

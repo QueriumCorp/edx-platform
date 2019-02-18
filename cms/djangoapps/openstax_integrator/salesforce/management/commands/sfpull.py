@@ -35,6 +35,7 @@ class Command(BaseCommand):
         self.update_am_contacts()
 
     def update_am_contacts(self):
+        self.stdout.write(self.style.NOTICE(u"salesforce.com interface: update Contacts"))
         # Add salesforce ContactID values to our contacts
         am_new_contacts = Contact.objects.filter(contact_id__isnull=True)
 
@@ -84,7 +85,7 @@ class Command(BaseCommand):
 
     def insert_am_contacts(self):
         # CourseCreator rows with no corresponding master record in Contacts
-        self.stdout.write(self.style.NOTICE(u"Looking for new Contact records to add..."))
+        self.stdout.write(self.style.NOTICE(u"salesforce.com interface: insert new Contacts"))
         new_instructors = CourseCreator.objects.filter(state=u'granted').filter(contact__isnull=True)
 
         if new_instructors.count() == 0:
