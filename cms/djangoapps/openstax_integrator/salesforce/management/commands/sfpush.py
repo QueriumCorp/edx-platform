@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from __future__ import absolute_import
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 from openstax_integrator.salesforce.models import Contact, Campaign
 from openstax_integrator.salesforce.connector import Connection
 from pprint import pprint
@@ -53,8 +54,8 @@ class Command(BaseCommand):
                 u'Completed_Assignment_date__c': self.serialDate(contact.completed_assignment_date),
                 u'Soft_Ask_Decision__c': contact.soft_ask_decision,
                 u'Soft_Ask_Decision_date__c': self.serialDate(contact.soft_ask_decision_date),
-            #    u'Students_Pell_Grant__c': '',
                 u'Estimated_Enrollment__c': contact.estimated_enrollment,
+                u'real_course_created_at__c': self.realCourseCreated(),
                 u'latest_adoption_decision__c': contact.latest_adoption_decision
                 }
             sf_upserts.append(sf_campaign_member)
@@ -79,6 +80,13 @@ class Command(BaseCommand):
                     "information/errors above that might have been reported " \
                     "by salesforce api.".format(len(sf_upserts))
             self.stdout.write(self.style.SUCCESS(msg))
+
+    def realCourseCreated(self):
+        u"""
+          Fix note: needs a real value.
+          The date a real course is created, or once they start actually setting it up
+        """
+        return self.serialDate(timezone.now())
 
     def serialDate(self, o):
         if isinstance(o, datetime.datetime):
