@@ -42,6 +42,7 @@ class Contact(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 
+
     #email
     # email (will come from user)
     # initial_sign_in_date (will come from user)
