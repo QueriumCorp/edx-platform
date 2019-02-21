@@ -63,6 +63,12 @@ def apply_settings(django_settings):
         'third_party_auth.pipeline.login_analytics',
     ]
 
+    # mcdaniel feb-2019: add pipeline functions to auto setup AM course creators
+    # for users with faculty_status = 'confirmed_faculty'
+    django_settings.SOCIAL_AUTH_PIPELINE += [
+        'openstax_oauth_backend.pipeline.add_course_creator',
+    ]
+
     # Add enterprise pipeline elements if the enterprise app is installed
     insert_enterprise_pipeline_elements(django_settings.SOCIAL_AUTH_PIPELINE)
 
