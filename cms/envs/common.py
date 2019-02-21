@@ -1101,6 +1101,11 @@ INSTALLED_APPS = [
     # django-oauth-toolkit
     'oauth2_provider',
 
+    # added by mcdaniel feb-2019 based on setup of lms common.py
+    'openedx.core.djangoapps.oauth_dispatch.apps.OAuthDispatchAppConfig',
+    'third_party_auth',
+
+
     # These are apps that aren't strictly needed by Studio, but are imported by
     # other apps that are.  Django 1.8 wants to have imported models supported
     # by installed apps.

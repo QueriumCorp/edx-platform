@@ -274,5 +274,14 @@ if settings.FEATURES.get('ENABLE_API_DOCS'):
         url(r'^api-docs/$', get_swagger_view(title='Studio API')),
     ]
 
+# Third-party auth.
+## mcdaniel feb-2019: copied from lms urls.py
+if settings.FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
+    urlpatterns += [
+        url(r'', include('third_party_auth.urls')),
+        url(r'api/third_party_auth/', include('third_party_auth.api.urls')),
+    ]
+
+
 from openedx.core.djangoapps.plugins import constants as plugin_constants, plugin_urls
 urlpatterns.extend(plugin_urls.get_patterns(plugin_constants.ProjectType.CMS))

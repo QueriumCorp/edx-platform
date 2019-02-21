@@ -465,6 +465,38 @@ SESSION_INACTIVITY_TIMEOUT_IN_SECONDS = AUTH_TOKENS.get("SESSION_INACTIVITY_TIME
 ##### X-Frame-Options response header settings #####
 X_FRAME_OPTIONS = ENV_TOKENS.get('X_FRAME_OPTIONS', X_FRAME_OPTIONS)
 
+##### Third-party auth options ################################################
+##
+## added by mcdaniel Feb-2019. copied from lms aws.py
+if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
+    tmp_backends = ENV_TOKENS.get('THIRD_PARTY_AUTH_BACKENDS', [
+        'social_core.backends.google.GoogleOAuth2',
+        'social_core.backends.linkedin.LinkedinOAuth2',
+        'social_core.backends.facebook.FacebookOAuth2',
+        'social_core.backends.azuread.AzureADOAuth2',
+        'third_party_auth.saml.SAMLAuthBackend',
+        'third_party_auth.lti.LTIAuthBackend',
+    ])
+
+    AUTHENTICATION_BACKENDS = list(tmp_backends) + list(AUTHENTICATION_BACKENDS)
+    del tmp_backends
+
+    # The reduced session expiry time during the third party login pipeline. (Value in seconds)
+    SOCIAL_AUTH_PIPELINE_TIMEOUT = ENV_TOKENS.get('SOCIAL_AUTH_PIPELINE_TIMEOUT', 600)
+
+    # Most provider configuration is done via ConfigurationModels but for a few sensitive values
+    # we allow configuration via AUTH_TOKENS instead (optionally).
+    # The SAML private/public key values do not need the delimiter lines (such as
+    # "-----BEGIN PRIVATE KEY-----", "-----END PRIVATE KEY-----" etc.) but they may be included
+    # if you want (though it's easier to format the key values as JSON without the delimiters).
+    SOCIAL_AUTH_SAML_SP_PRIVATE_KEY = AUTH_TOKENS.get('SOCIAL_AUTH_SAML_SP_PRIVATE_KEY', '')
+    SOCIAL_AUTH_SAML_SP_PUBLIC_CERT = AUTH_TOKENS.get('SOCIAL_AUTH_SAML_SP_PUBLIC_CERT', '')
+    SOCIAL_AUTH_SAML_SP_PRIVATE_KEY_DICT = AUTH_TOKENS.get('SOCIAL_AUTH_SAML_SP_PRIVATE_KEY_DICT', {})
+    SOCIAL_AUTH_SAML_SP_PUBLIC_CERT_DICT = AUTH_TOKENS.get('SOCIAL_AUTH_SAML_SP_PUBLIC_CERT_DICT', {})
+    SOCIAL_AUTH_OAUTH_SECRETS = AUTH_TOKENS.get('SOCIAL_AUTH_OAUTH_SECRETS', {})
+    SOCIAL_AUTH_LTI_CONSUMER_SECRETS = AUTH_TOKENS.get('SOCIAL_AUTH_LTI_CONSUMER_SECRETS', {})
+
+
 ##### ADVANCED_SECURITY_CONFIG #####
 ADVANCED_SECURITY_CONFIG = ENV_TOKENS.get('ADVANCED_SECURITY_CONFIG', {})
 
