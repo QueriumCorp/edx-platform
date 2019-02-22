@@ -50,15 +50,19 @@ course_sections = blocks.get('children')
                 gated_subsection = subsection['id'] in gated_content
                 completed_prereqs = gated_content[subsection['id']]['completed_prereqs'] if gated_subsection else False
                 subsection_is_auto_opened = subsection.get('resume_block') is True
+                if subsection.get('children') is None:
+                    assignment_url = false
+                else:
+                    assignment_url = subsection.get('children')[0].get('lms_web_url')
                 %>
                       <li class="subsection accordion ${ 'current' if subsection['resume_block'] else '' }">
+
+<!--
                 % if gated_subsection and not completed_prereqs:
                                 <a href="${ subsection['lms_web_url'] }">
                                     <button class="subsection-text prerequisite-button"
                                             id="${ subsection['id'] }">
-                                    <span class="menu-icon icon fa fa-lock"
-                                            aria-hidden="true">
-                                    </span>
+                                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
                                     <h4 class="subsection-title">
                                         ${ subsection['display_name'] }
                                     </h4>
@@ -84,7 +88,24 @@ course_sections = blocks.get('children')
                                         <span class="complete-checkmark fa fa-check"></span>
                     % endif
                 % endif
-                                        <div class="details">
+
+                subsection.get('children')[0].get('lms_web_url')
+-->
+                % if assignment_url:
+                    <a href="${assignment_url}">
+                % else:
+                    <a class="empty_assignment">
+                % endif
+
+                    <button class="subsection-text assignment-button"
+                            id="${ subsection['id'] }">
+                    <div class="assignment_icon" aria-hidden="true"></div>
+                    <h4 class="subsection-title">
+                        ${ subsection['display_name'] }
+                    </h4>
+
+
+                <div class="details">
 
                 ## There are behavior differences between rendering of subsections which have
                 ## exams (timed, graded, etc) and those that do not.
@@ -98,8 +119,10 @@ course_sections = blocks.get('children')
                     if 'special_exam_info' in subsection:
                         data_string = _('due {date}')
                     else:
-                        data_string = _("{subsection_format} due {{date}}").format(subsection_format=subsection.get('format'))
+                        data_string = _("Due {{date}}").format(subsection_format=subsection.get('format'))
                 %>
+
+
                 % if subsection.get('format') or 'special_exam_info' in subsection:
                                             <span class="subtitle">
                     % if 'special_exam' in subsection:
@@ -145,29 +168,6 @@ course_sections = blocks.get('children')
                 % if gated_subsection and not completed_prereqs:
                                 </a>
                 % endif
-                % if not gated_subsection or (gated_subsection and completed_prereqs):
-                                <ol class="outline-item accordion-panel ${ '' if subsection_is_auto_opened else 'is-hidden' }"
-                                    id="${ subsection['id'] }_contents"
-                                    aria-labelledby="${ subsection['id'] }"
-                                >
-                    % for vertical in subsection.get('children', []):
-                                    <li class="vertical outline-item focusable">
-                                        <a class="outline-item focusable"
-                                            href="${ vertical['lms_web_url'] }"
-                                            id="${ vertical['id'] }">
-                                            <div class="vertical-details">
-                                              <div class="vertical-title">
-                                                ${ vertical['display_name'] }
-                                              </div>
-                                            </div>
-                        % if vertical.get('complete'):
-                                                <span class="complete-checkmark fa fa-check"></span>
-                        % endif
-                                        </a>
-                                    </li>
-                    % endfor
-                                </ol>
-                % endif
                             </li>
             % endfor
                     </ol>
@@ -176,6 +176,105 @@ course_sections = blocks.get('children')
         </ol>
     % endif
 </main>
+
+<!-- JVR Feb2019 Styled to work at Assignment Level not question level -->
+<style>
+    .window-wrap {
+        background: white;
+    }
+
+    li.outline-item.section {
+        border: none !important ;
+    }
+
+    div#course-container {
+        border-bottom: none !important;
+    }
+    div#content {
+        margin-top: 0px !important;
+        padding: 0px !important;
+        background: #efefef;
+    }
+
+    nav.navbar.course-tabs.pb-0.navbar-expand {
+        padding-top: 00px !important;
+    }
+
+    html {
+        background:white
+    }
+    .course-outline .block-tree .section ol.outline-item .subsection {
+        border: none !important;
+    }
+    .assignment-button {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        background: none;
+        border: none;
+    }
+    .assignment_icon {
+        height: 32px;
+        width: 32px;
+        min-width: 32px;
+        min-height: 32px;
+        background-image: url('data:image/svg+xml;base64,PCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDE5LjIuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0NCjxzdmcgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiIHZpZXdCb3g9IjAgMCA2MiA2MiIgaGVpZ2h0PSIxMDAlIiB3aWR0aD0iMTAwJSIgdmVyc2lvbj0iMS4xIiB5PSIwcHgiIHg9IjBweCIgeG1sbnM6Y2M9Imh0dHA6Ly9jcmVhdGl2ZWNvbW1vbnMub3JnL25zIyIgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIj48bWV0YWRhdGE+PHJkZjpSREY+PGNjOldvcmsgcmRmOmFib3V0PSIiPjxkYzpmb3JtYXQ+aW1hZ2Uvc3ZnK3htbDwvZGM6Zm9ybWF0PjxkYzp0eXBlIHJkZjpyZXNvdXJjZT0iaHR0cDovL3B1cmwub3JnL2RjL2RjbWl0eXBlL1N0aWxsSW1hZ2UiLz48ZGM6dGl0bGUvPjwvY2M6V29yaz48L3JkZjpSREY+PC9tZXRhZGF0YT4NCjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+DQoJLnN0MHtmaWxsOiMwREMwREM7fQ0KCS5zdDF7ZmlsbDojRkZGRkZGO30NCjwvc3R5bGU+DQo8ZyB0cmFuc2Zvcm09Im1hdHJpeCgtMSwwLDAsMSw2MSwxKSI+DQoJPGNpcmNsZSBkPSJNIDYwLDMwIEMgNjAsNDYuNTY4NTQyIDQ2LjU2ODU0Miw2MCAzMCw2MCAxMy40MzE0NTgsNjAgMCw0Ni41Njg1NDIgMCwzMCAwLDEzLjQzMTQ1OCAxMy40MzE0NTgsMCAzMCwwIDQ2LjU2ODU0MiwwIDYwLDEzLjQzMTQ1OCA2MCwzMCB6IiBjeD0iMzAiIGN5PSIzMCIgcj0iMzAiIGNsYXNzPSJzdDAiIGZpbGw9IiMwZGMwZGMiLz4NCgk8bGluZSB5Mj0iNTEuNiIgeDI9IjM0LjEiIHkxPSI1MS42IiB4MT0iMzQuMSIgY2xhc3M9InN0MSIgZmlsbD0iI0ZGRiIvPg0KCQk8cGF0aCBmaWxsPSIjRkZGIiBjbGFzcz0ic3QxIiBkPSJtNDYuMywyMC4xYzAuNy0wLjcsMC44LTEuNywwLjItMi4ybC00LjQtNC40Yy0wLjUtMC41LTEuNS0wLjQtMi4yLDAuMmwtMiwyLDYuNCw2LjQsMi0yeiIvPg0KCQk8cGF0aCBmaWxsPSIjRkZGIiBjbGFzcz0ic3QxIiBkPSJtMTUuMiwzOC40LDAsMC0yLjEsOC41LDguNS0yLjEsMCwwLDE4LTE4LTYuNC02LjQtMTgsMTh6bTUuMyw1LjMtNC4yLDEuMS0xLjEtMS4xLDEuMS00LjIsNC4yLDQuMnoiLz4NCgkJPHJlY3QgdHJhbnNmb3JtPSJtYXRyaXgoMC43MDcxLC0wLjcwNzEsMC43MDcxLDAuNzA3MSwtMy42NDk1LDMzLjYzNTUpIiBoZWlnaHQ9IjkiIHdpZHRoPSIyLjIiIHk9IjE2LjciIHg9IjM3LjciIGNsYXNzPSJzdDEiIGZpbGw9IiNGRkYiLz4NCjwvZz4NCjwvc3ZnPg0NCg==');
+    }
+    li.subsection button{
+        cursor: pointer;
+    }
+    li.subsection a:hover{
+        text-decoration: none;
+    }
+    li.subsection a.empty_assignment{
+        text-decoration: line-through;
+    }
+    li.subsection h4{
+        text-align: left;
+    }
+    li.subsection span.subtitle{
+        text-align: left;
+    }
+</style>
+
+<!-- ITINERARY -->
+<script type="text/javascript">
+    function loadItinerary(){
+        return {
+        id: "course_outline",
+        steps: [
+            {
+            title: "Welcome to OpenStax Rover course-outline-fragment!",
+            content: "This tour will show the capabilities of the Rover dashboard.",
+            target: document.querySelector('.global-header'),
+            xOffset: "center",
+            placement: "bottom"
+            },
+            {
+            title: "Rover Logo",
+            content: "Clicking the Rover logo will return you to the dashboard.",
+            target: document.querySelector('.logo'),
+            placement: "bottom"
+            },
+            {
+            title: "Help",
+            content: "The Help button will open a new browser tab connecting you to OpenStax's suppport team.",
+            target: document.querySelector('.help-link'),
+            placement: "bottom"
+            },
+            {
+            title: "The menu",
+            content: "This menu provides commonly used commands. Click it now...",
+            target: document.querySelector('.nav-item-dropdown'),
+            placement: "left",
+            showNextButton: false,
+            showPrevButton: false,
+            nextOnTargetClick: true
+            }
+        ]
+        };
+    }
+</script>
 
 <%static:require_module_async module_name="js/dateutil_factory" class_name="DateUtilFactory">
     DateUtilFactory.transform('.localized-datetime');

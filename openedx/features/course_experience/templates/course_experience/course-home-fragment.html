@@ -66,6 +66,11 @@ from openedx.features.portfolio_project import INCLUDE_PORTFOLIO_UPSELL_MODAL
                     </form>
                 </div>
             % endif
+            % if dates_fragment:
+                <div class="section section-dates">
+                    ${HTML(dates_fragment.body_html())}
+                </div>
+            % endif
             <div class="form-actions">
                 % if resume_course_url:
                     <a class="btn btn-primary action-resume-course" href="${resume_course_url}">
@@ -79,22 +84,11 @@ from openedx.features.portfolio_project import INCLUDE_PORTFOLIO_UPSELL_MODAL
             </div>
         </div>
     </header>
+
+
     <div class="page-content">
-        <div class="page-content-main">
-            % if course_home_message_fragment:
-                ${HTML(course_home_message_fragment.body_html())}
-            % endif
-
-            % if update_message_fragment and UNIFIED_COURSE_TAB_FLAG.is_enabled(course.id):
-                <div class="section section-update-message">
-                    ${HTML(update_message_fragment.body_html())}
-                </div>
-            % endif
-
-            % if outline_fragment:
-                ${HTML(outline_fragment.body_html())}
-            % endif
-        </div>
+      <!-- McDaniel Oct-2018: reorder main page content and sidebar. trying to push the sidebar to the top on responsive styles -->
+<!--
         <aside class="page-content-secondary course-sidebar">
             % if has_goal_permission:
                 <div class="section section-goals ${'' if current_goal else 'hidden'}">
@@ -165,6 +159,22 @@ from openedx.features.portfolio_project import INCLUDE_PORTFOLIO_UPSELL_MODAL
                 </div>
             % endif
         </aside>
+-->
+        <div class="page-content-main">
+            % if course_home_message_fragment:
+                ${HTML(course_home_message_fragment.body_html())}
+            % endif
+
+            % if update_message_fragment and UNIFIED_COURSE_TAB_FLAG.is_enabled(course.id):
+                <div class="section section-update-message">
+                    ${HTML(update_message_fragment.body_html())}
+                </div>
+            % endif
+
+            % if outline_fragment:
+                ${HTML(outline_fragment.body_html())}
+            % endif
+        </div>
     </div>
     % if course_sock_fragment:
         ${HTML(course_sock_fragment.body_html())}
