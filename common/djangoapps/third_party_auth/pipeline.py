@@ -93,6 +93,8 @@ from . import provider
  imports for evaluate_course_creator_status()
 """
 from cms.djangoapps.course_creators.utils import grant_course_creator_status
+logger = getLogger(__name__)
+
 
 # These are the query string params you can pass
 # to the URL that starts the authentication process.
@@ -207,15 +209,16 @@ def evaluate_course_creator_status(user, response, *args, **kwargs):
     added by mcdaniel feb-2019
     only works with openstax oauth pipeline
     """
+
     faculty_status = response.get('faculty_status')
     full_name = response.get('first_name') + u' ' + response.get('last_name')
 
     msg = u'User {} is being evaluated in pipeline method add_course_creator(). '.format(full_name)
     msg += u'Email address is {}. '.format(user.email)
     msg += u'Faculty status is {}.'.format(faculty_status)
-
-    logger = getLogger(__name__)
     logger.info(msg)
+    logger.info('response: {}'.format(response))
+
 
     if (faculty_status == 'confirmed_faculty'):
         """

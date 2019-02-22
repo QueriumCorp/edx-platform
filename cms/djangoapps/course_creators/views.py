@@ -1,7 +1,11 @@
 """
 Methods for interacting programmatically with the user creator table.
 """
-from course_creators.models import CourseCreator
+# mcdaniel feb-2019: the partialluy direct address was causing the openstax oauth to blow up.
+#          switched this to completely relative addressing, which seems to work.
+from models import CourseCreator
+#from course_creators.models import CourseCreator
+
 from student import auth
 from student.roles import CourseCreatorRole
 
