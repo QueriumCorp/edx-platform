@@ -88,6 +88,12 @@ from lms.djangoapps.verify_student.utils import earliest_allowed_verification_da
 
 from . import provider
 
+"""
+ mcdaniel feb-2019
+ imports for evaluate_course_creator_status()
+"""
+from cms.djangoapps.course_creators.utils import grant_course_creator_status
+
 # These are the query string params you can pass
 # to the URL that starts the authentication process.
 #
@@ -195,8 +201,27 @@ class ProviderUserState(object):
         """Gets the name used in HTML forms that unlink a provider account."""
         return self.provider.provider_id + '_unlink_form'
 
-def add_course_creator(strategy, response, *args, **kwargs):
-    logger.info(self.get())
+
+def evaluate_course_creator_status(user, response, *args, **kwargs):
+    """
+    added by mcdaniel feb-2019
+    only works with openstax oauth pipeline
+    """
+    faculty_status = response.get('faculty_status')
+    full_name = response.get('first_name') + u' ' + response.get('last_name')
+
+    msg = u'User {} is being evaluated in pipeline method add_course_creator(). '.format(full_name)
+    msg += u'Email address is {}. '.format(user.email)
+    msg += u'Faculty status is {}.'.format(faculty_status)
+
+    logger = getLogger(__name__)
+    logger.info(msg)
+
+    if (faculty_status == 'confirmed_faculty'):
+        """
+        add a new course creator record with GRANTED status.
+        """
+        grant_course_creator_status(user)
 
 def get(request):
     """Gets the running pipeline's data from the passed request."""
