@@ -195,6 +195,8 @@ class ProviderUserState(object):
         """Gets the name used in HTML forms that unlink a provider account."""
         return self.provider.provider_id + '_unlink_form'
 
+def add_course_creator(strategy, response, *args, **kwargs):
+    logger.info(self.get())
 
 def get(request):
     """Gets the running pipeline's data from the passed request."""
