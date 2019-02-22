@@ -66,7 +66,7 @@ def apply_settings(django_settings):
     # mcdaniel feb-2019: add pipeline functions to auto setup AM course creators
     # for users with faculty_status = 'confirmed_faculty'
     django_settings.SOCIAL_AUTH_PIPELINE += [
-        'openstax_oauth_backend.pipeline.add_course_creator',
+        'openstax_oauth_backend.pipeline.evaluate_course_creator_status',
     ]
 
     # Add enterprise pipeline elements if the enterprise app is installed
