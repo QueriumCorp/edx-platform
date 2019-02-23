@@ -16,6 +16,11 @@ from openedx.core.djangoapps.password_policy.forms import PasswordPolicyAwareAdm
 
 from ratelimitbackend import admin
 
+# mcdaniel - feb-2019
+# for oauth to openstax
+from student import views as student_views
+
+
 django_autodiscover()
 admin.site.site_header = _('Studio Administration')
 admin.site.site_title = admin.site.site_header
@@ -280,7 +285,11 @@ if settings.FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
     urlpatterns += [
         url(r'', include('third_party_auth.urls')),
         url(r'api/third_party_auth/', include('third_party_auth.api.urls')),
+        # NOTE: The following login_oauth_token endpoint is DEPRECATED.
+        # Please use the exchange_access_token endpoint instead.
+        url(r'^login_oauth_token/(?P<backend>[^/]+)/$', student_views.login_oauth_token),
     ]
+
 
 
 from openedx.core.djangoapps.plugins import constants as plugin_constants, plugin_urls
