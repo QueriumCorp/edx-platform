@@ -11,6 +11,7 @@ This is the default template for our main set of AWS servers.
 # and throws spurious errors. Therefore, we disable invalid-name checking.
 # pylint: disable=invalid-name
 
+import datetime
 import json
 
 from .common import *
@@ -88,6 +89,7 @@ CELERY_QUEUES = {
 }
 
 CELERY_ROUTES = "{}celery.Router".format(QUEUE_VARIANT)
+CELERYBEAT_SCHEDULE = {}  # For scheduling tasks, entries can be added to this dict
 
 ############# NON-SECURE ENV CONFIG ##############################
 # Things like server locations, ports, etc.
@@ -496,6 +498,20 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
     SOCIAL_AUTH_OAUTH_SECRETS = AUTH_TOKENS.get('SOCIAL_AUTH_OAUTH_SECRETS', {})
     SOCIAL_AUTH_LTI_CONSUMER_SECRETS = AUTH_TOKENS.get('SOCIAL_AUTH_LTI_CONSUMER_SECRETS', {})
 
+    # third_party_auth config moved to ConfigurationModels. This is for data migration only:
+    THIRD_PARTY_AUTH_OLD_CONFIG = AUTH_TOKENS.get('THIRD_PARTY_AUTH', None)
+
+    if ENV_TOKENS.get('THIRD_PARTY_AUTH_SAML_FETCH_PERIOD_HOURS', 24) is not None:
+        CELERYBEAT_SCHEDULE['refresh-saml-metadata'] = {
+            'task': 'third_party_auth.fetch_saml_metadata',
+            'schedule': datetime.timedelta(hours=ENV_TOKENS.get('THIRD_PARTY_AUTH_SAML_FETCH_PERIOD_HOURS', 24)),
+        }
+
+    # The following can be used to integrate a custom login form with third_party_auth.
+    # It should be a dict where the key is a word passed via ?auth_entry=, and the value is a
+    # dict with an arbitrary 'secret_key' and a 'url'.
+    THIRD_PARTY_AUTH_CUSTOM_AUTH_FORMS = AUTH_TOKENS.get('THIRD_PARTY_AUTH_CUSTOM_AUTH_FORMS', {})
+
 
 ##### ADVANCED_SECURITY_CONFIG #####
 ADVANCED_SECURITY_CONFIG = ENV_TOKENS.get('ADVANCED_SECURITY_CONFIG', {})
@@ -554,9 +570,20 @@ MICROSITE_DATABASE_TEMPLATE_CACHE_TTL = ENV_TOKENS.get(
 )
 
 ############################ OAUTH2 Provider ###################################
+if FEATURES.get('ENABLE_OAUTH2_PROVIDER'):
+    OAUTH_OIDC_ISSUER = ENV_TOKENS['OAUTH_OIDC_ISSUER']
+    OAUTH_ENFORCE_SECURE = ENV_TOKENS.get('OAUTH_ENFORCE_SECURE', True)
+    OAUTH_ENFORCE_CLIENT_SECURE = ENV_TOKENS.get('OAUTH_ENFORCE_CLIENT_SECURE', True)
+    # Defaults for the following are defined in lms.envs.common
+    OAUTH_EXPIRE_DELTA = datetime.timedelta(
+        days=ENV_TOKENS.get('OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS', OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS)
+    )
+    OAUTH_EXPIRE_DELTA_PUBLIC = datetime.timedelta(
+        days=ENV_TOKENS.get('OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS', OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS)
+    )
+    OAUTH_ID_TOKEN_EXPIRATION = ENV_TOKENS.get('OAUTH_ID_TOKEN_EXPIRATION', OAUTH_ID_TOKEN_EXPIRATION)
+    OAUTH_DELETE_EXPIRED = ENV_TOKENS.get('OAUTH_DELETE_EXPIRED', OAUTH_DELETE_EXPIRED)
 
-# OpenID Connect issuer ID. Normally the URL of the authentication endpoint.
-OAUTH_OIDC_ISSUER = ENV_TOKENS['OAUTH_OIDC_ISSUER']
 
 #### JWT configuration ####
 JWT_AUTH.update(ENV_TOKENS.get('JWT_AUTH', {}))
