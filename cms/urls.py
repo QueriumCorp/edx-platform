@@ -18,7 +18,10 @@ from ratelimitbackend import admin
 
 # mcdaniel - feb-2019
 # for oauth to openstax
+from django_openid_auth import views as django_openid_auth_views
+from openedx.core.djangoapps.external_auth import views as external_auth_views
 from student import views as student_views
+from openedx.core.djangoapps.auth_exchange.views import LoginWithAccessTokenView
 
 
 django_autodiscover()
@@ -290,6 +293,41 @@ if settings.FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
         url(r'^login_oauth_token/(?P<backend>[^/]+)/$', student_views.login_oauth_token),
     ]
 
+# OAuth token exchange
+## mcdaniel feb-2019: copied from lms urls.py
+if settings.FEATURES.get('ENABLE_OAUTH2_PROVIDER'):
+    urlpatterns += [
+        url(
+            r'^oauth2/login/$',
+            LoginWithAccessTokenView.as_view(),
+            name='login_with_access_token'
+        ),
+    ]
+
+
+if settings.FEATURES.get('AUTH_USE_OPENID'):
+    urlpatterns += [
+        url(r'^openid/login/$', django_openid_auth_views.login_begin, name='openid-login'),
+        url(
+            r'^openid/complete/$',
+            external_auth_views.openid_login_complete,
+            name='openid-complete',
+        ),
+        url(r'^openid/logo.gif$', django_openid_auth_views.logo, name='openid-logo'),
+    ]
+
+if settings.FEATURES.get('AUTH_USE_SHIB'):
+    urlpatterns += [
+        url(r'^shib-login/$', external_auth_views.shib_login, name='shib-login'),
+    ]
+
+if settings.FEATURES.get('AUTH_USE_CAS'):
+    from django_cas import views as django_cas_views
+
+    urlpatterns += [
+        url(r'^cas-auth/login/$', external_auth_views.cas_login, name='cas-login'),
+        url(r'^cas-auth/logout/$', django_cas_views.logout, {'next_page': '/'}, name='cas-logout'),
+    ]
 
 
 from openedx.core.djangoapps.plugins import constants as plugin_constants, plugin_urls
