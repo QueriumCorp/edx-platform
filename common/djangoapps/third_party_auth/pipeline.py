@@ -56,7 +56,7 @@ rather than spreading them across two functions in the pipeline.
 
 See https://python-social-auth.readthedocs.io/en/latest/pipeline.html for more docs.
 """
-
+from django.core import serializers
 import base64
 import hashlib
 import hmac
@@ -93,7 +93,6 @@ from . import provider
  imports for evaluate_course_creator_status()
 """
 from cms.djangoapps.course_creators.utils import grant_course_creator_status
-logger = getLogger(__name__)
 
 
 # These are the query string params you can pass
@@ -473,6 +472,10 @@ def parse_query_params(strategy, response, *args, **kwargs):
     """Reads whitelisted query params, transforms them into pipeline args."""
     # If auth_entry is not in the session, we got here by a non-standard workflow.
     # We simply assume 'login' in that case.
+    logger.info(
+        'Initiating oAuth: {}'.format(strategy.request.META['SERVER_NAME'])
+        )
+
     auth_entry = strategy.request.session.get(AUTH_ENTRY_KEY, AUTH_ENTRY_LOGIN)
     if auth_entry not in _AUTH_ENTRY_CHOICES:
         raise AuthEntryError(strategy.request.backend, 'auth_entry invalid')
