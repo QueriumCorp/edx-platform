@@ -1,3 +1,10 @@
+<style>
+  ## mcdaniel feb-2019 - hide Assignment type drop-down per request from dani
+  .modal-section-content grading-type {
+    visibility: hidden;
+    height: 0;
+  }
+</style>
 <h3 class="modal-section-title"><%= gettext('Grading') %></h3>
 <div class="modal-section-content grading-type">
     <ul class="list-fields list-input">
