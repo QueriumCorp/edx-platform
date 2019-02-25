@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 
 class QueriumStepwiseConfig(AppConfig):
-    name = u'querium-stepwise'
+    name = u'querium'

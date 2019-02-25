@@ -7,5 +7,5 @@ from .models import Configuration
 
 class ConfigurationSerializer(serializers.ModelSerializer):
     class Meta(object):
-        model = Campaign
+        model = Configuration
         fields = u'__all__'
