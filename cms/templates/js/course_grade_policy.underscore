@@ -20,7 +20,7 @@
   <div class="field text" id="field-course-grading-assignment-totalassignments">
     <label for="course-grading-assignment-totalassignments"><%= gettext("Total Number of Assignments") %></label>
     <input type="text" class="short" id="course-grading-assignment-totalassignments" value = "<%= model.get('min_count') %>" />
-    <span class="tip tip-stacked"><%= gettext("The number of homework assignments in the course section. You must update this number if you add or delete assignments within your course section.") %></span>
+    <span class="tip tip-stacked"><%= gettext("Enter the total number of assignments in this course section. You must update this number if you add or delete assignments throughout your course.") %></span>
   </div>
 
   <div class="field text" id="field-course-grading-assignment-droppable">
