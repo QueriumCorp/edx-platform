@@ -21,6 +21,7 @@ class Configuration(models.Model):
     )
 
     type = models.CharField(max_length=24, blank=False,
+                            primary_key=True,
                             choices=configuration_type, default=DEVELOP,
                             unique=True,
                             help_text=_(u"Type of Open edX environment in which this configuration will be used."))
