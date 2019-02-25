@@ -64,6 +64,9 @@ if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
 
 
 urlpatterns = [
+    # make this the first array entry. there will be around 75 existing entries in this array.
+    url(r'^querium/stepwise/v1/', include('querium.stepwise.urls')),
+
     url(r'^$', branding_views.index, name='root'),   # Main marketing page, or redirect to courseware
 
     url(r'', include('student.urls')),

@@ -211,6 +211,10 @@ FEATURES = {
     # Allow editing of short description in course settings in cms
     'EDITABLE_SHORT_DESCRIPTION': True,
 
+    # Turn on third-party auth. Disabled for now because full implementations are not yet available. Remember to run
+    # migrations if you enable this; we don't create tables by default.
+    'ENABLE_THIRD_PARTY_AUTH': True,
+
     # Hide any Personally Identifiable Information from application logs
     'SQUELCH_PII_IN_LOGS': False,
 
@@ -434,6 +438,7 @@ LOGIN_URL = EDX_ROOT_URL + '/signin'
 AUTHENTICATION_BACKENDS = [
     'rules.permissions.ObjectPermissionBackend',
     'ratelimitbackend.backends.RateLimitModelBackend',
+    'openedx.core.djangoapps.oauth_dispatch.dot_overrides.validators.EdxRateLimitedAllowAllUsersModelBackend',
 ]
 
 LMS_BASE = None
@@ -1114,6 +1119,8 @@ INSTALLED_APPS = [
     'survey.apps.SurveyConfig',
     'lms.djangoapps.verify_student.apps.VerifyStudentConfig',
     'completion',
+    'social_django',
+
 
     # Microsite configuration application
     'microsite_configuration',
@@ -1447,10 +1454,66 @@ DATABASE_ROUTERS = [
 ############################ OAUTH2 Provider ###################################
 
 # OpenID Connect issuer ID. Normally the URL of the authentication endpoint.
+
+OAUTH_OIDC_ISSUER = 'https:/example.com/oauth2'
+
+# OpenID Connect claim handlers
+
+OAUTH_OIDC_ID_TOKEN_HANDLERS = (
+    'edx_oauth2_provider.oidc.handlers.BasicIDTokenHandler',
+    'edx_oauth2_provider.oidc.handlers.ProfileHandler',
+    'edx_oauth2_provider.oidc.handlers.EmailHandler',
+    'oauth2_handler.IDTokenHandler'
+)
+
+OAUTH_OIDC_USERINFO_HANDLERS = (
+    'edx_oauth2_provider.oidc.handlers.BasicUserInfoHandler',
+    'edx_oauth2_provider.oidc.handlers.ProfileHandler',
+    'edx_oauth2_provider.oidc.handlers.EmailHandler',
+    'oauth2_handler.UserInfoHandler'
+)
+
+OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS = 365
+OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS = 30
+
+# Automatically clean up edx-django-oauth2-provider tokens on use
+OAUTH_DELETE_EXPIRED = True
+OAUTH_ID_TOKEN_EXPIRATION = 60 * 60
+
+# OpenID Connect issuer ID. Normally the URL of the authentication endpoint.
 OAUTH_OIDC_ISSUER = 'https://www.example.com/oauth2'
 
 # 5 minute expiration time for JWT id tokens issued for external API requests.
 OAUTH_ID_TOKEN_EXPIRATION = 5 * 60
+
+################################## DJANGO OAUTH TOOLKIT #######################################
+
+# Scope description strings are presented to the user
+# on the application authorization page. See
+# lms/templates/oauth2_provider/authorize.html for details.
+OAUTH2_DEFAULT_SCOPES = {
+    'read': _('Read access'),
+    'write': _('Write access'),
+    'email': _('Know your email address'),
+    'profile': _('Know your name and username'),
+}
+
+OAUTH2_PROVIDER = {
+    'OAUTH2_VALIDATOR_CLASS': 'openedx.core.djangoapps.oauth_dispatch.dot_overrides.validators.EdxOAuth2Validator',
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 20160,
+    'SCOPES_BACKEND_CLASS': 'openedx.core.djangoapps.oauth_dispatch.scopes.ApplicationModelScopes',
+    'SCOPES': dict(OAUTH2_DEFAULT_SCOPES, **{
+        'grades:read': _('Retrieve your grades for your enrolled courses'),
+        'certificates:read': _('Retrieve your course certificates'),
+    }),
+    'DEFAULT_SCOPES': OAUTH2_DEFAULT_SCOPES,
+    'REQUEST_APPROVAL_PROMPT': 'auto_even_if_expired',
+    'ERROR_RESPONSE_WITH_SCOPES': True,
+}
+# This is required for the migrations in oauth_dispatch.models
+# otherwise it fails saying this attribute is not present in Settings
+OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
+
 
 # Partner support link for CMS footer
 PARTNER_SUPPORT_EMAIL = ''

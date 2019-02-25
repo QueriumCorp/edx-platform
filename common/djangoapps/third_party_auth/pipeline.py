@@ -56,7 +56,7 @@ rather than spreading them across two functions in the pipeline.
 
 See https://python-social-auth.readthedocs.io/en/latest/pipeline.html for more docs.
 """
-
+from django.core import serializers
 import base64
 import hashlib
 import hmac
@@ -93,7 +93,6 @@ from . import provider
  imports for evaluate_course_creator_status()
 """
 from cms.djangoapps.course_creators.utils import grant_course_creator_status
-logger = getLogger(__name__)
 
 
 # These are the query string params you can pass
@@ -204,27 +203,40 @@ class ProviderUserState(object):
         return self.provider.provider_id + '_unlink_form'
 
 
-def evaluate_course_creator_status(user, response, *args, **kwargs):
+def evaluate_course_creator_status(strategy, backend, user, response, *args, **kwargs):
     """
-    added by mcdaniel feb-2019
-    only works with openstax oauth pipeline
+    mcdaniel feb-2019
+
+    Openstax.org oAuth identity provider returns a faculty_status property.
+    For users who authenticate with their Openstax account, if they are confirmed
+    factulty, then automatically add them to the list of approved course creators.
+
     """
+
+    this = u'evaluate_course_creator_status() '
+    if (backend.name != 'openstax'):
+        msg = this + u'authentication with {}. Exiting.'.format(backend.name)
+        logger.info(msg)
+        return None
+
+    platform_name = configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME)
+    if (platform_name != "Rover Assignment Manager"):
+        msg = this + u'authentication initiated from {}. Exiting.'.format(strategy.request.META['SERVER_NAME'])
+        logger.info(msg)
+        return None
+
 
     faculty_status = response.get('faculty_status')
-    full_name = response.get('first_name') + u' ' + response.get('last_name')
+    if (faculty_status != 'confirmed_faculty'):
+        full_name = response.get('first_name') + u' ' + response.get('last_name')
+        msg = this + u'User {} is not confirmed faculty. Exiting.'.format(full_name)
+        logger.info(msg)
 
-    msg = u'User {} is being evaluated in pipeline method add_course_creator(). '.format(full_name)
-    msg += u'Email address is {}. '.format(user.email)
-    msg += u'Faculty status is {}.'.format(faculty_status)
-    logger.info(msg)
-    logger.info('response: {}'.format(response))
-
-
-    if (faculty_status == 'confirmed_faculty'):
-        """
-        add a new course creator record with GRANTED status.
-        """
-        grant_course_creator_status(user)
+    """
+    we have a confirmed faculty openstax.org user who is authenticating from AM
+    Lets ensure that course creator status has been granted.
+    """
+    grant_course_creator_status(user)
 
 def get(request):
     """Gets the running pipeline's data from the passed request."""
@@ -473,6 +485,10 @@ def parse_query_params(strategy, response, *args, **kwargs):
     """Reads whitelisted query params, transforms them into pipeline args."""
     # If auth_entry is not in the session, we got here by a non-standard workflow.
     # We simply assume 'login' in that case.
+    logger.info(
+        'Initiating oAuth: {}'.format(strategy.request.META['SERVER_NAME'])
+        )
+
     auth_entry = strategy.request.session.get(AUTH_ENTRY_KEY, AUTH_ENTRY_LOGIN)
     if auth_entry not in _AUTH_ENTRY_CHOICES:
         raise AuthEntryError(strategy.request.backend, 'auth_entry invalid')
