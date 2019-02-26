@@ -57,7 +57,6 @@ def login_page(request):
     """
     Display the login form.
     """
-    csrf_token = csrf(request)['csrf_token']
     if (settings.FEATURES['AUTH_USE_CERTIFICATES'] and
             ssl_get_cert_from_request(request)):
         # SSL login doesn't require a login view, so redirect
@@ -84,54 +83,7 @@ def login_page(request):
         return redirect(redirect_to)
 
 
-    # Allow external auth to intercept and handle the request
-    ext_auth_response = _external_auth_intercept(request, "login")
-    if ext_auth_response is not None:
-        return ext_auth_response
-
-    third_party_auth_error = None
-    for msg in messages.get_messages(request):
-        if msg.extra_tags.split()[0] == "social-auth":
-            # msg may or may not be translated. Try translating [again] in case we are able to:
-            third_party_auth_error = _(text_type(msg))  # pylint: disable=translation-of-non-string
-            break
-
-
-    # Our ?next= URL may itself contain a parameter 'tpa_hint=x' that we need to check.
-    # If present, we display a login page focused on third-party auth with that provider.
-    third_party_auth_hint = None
-    third_party_auth = _third_party_auth_context(request, redirect_to, third_party_auth_hint)
-    platform_name = configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME)
-    context = {
-        ## mcdaniel: preserved from THIS template
-        ## ----------------------
-        'csrf': csrf_token,
-        'forgot_password_link': "//{base}/login#forgot-password-modal".format(base=settings.LMS_BASE),
-        'platform_name': platform_name,
-        'login_redirect_url': redirect_to,  # This gets added to the query string of the "Sign In" button in the header
-        ## ----------------------
-
-        # Bool injected into JS to submit form if we're inside a running third-
-        # party auth pipeline; distinct from the actual instance of the running
-        # pipeline, if any.
-        'pipeline_running': 'true' if pipeline.running(request) else 'false',
-        'pipeline_url': auth_pipeline_urls(pipeline.AUTH_ENTRY_LOGIN, redirect_url=redirect_to),
-        'third_party_auth': third_party_auth,
-        'third_party_auth_hint': third_party_auth_hint or '',
-        'third_party_auth_error': third_party_auth_error,
-        # this "data" dictionary structure is copied from the lms view.
-        # still do not know which (context body or data dict) is the right way
-        # to send these params.
-        'data': {
-            'login_redirect_url': redirect_to,
-            'third_party_auth': third_party_auth,
-            'third_party_auth_hint': third_party_auth_hint or '',
-            'platform_name': platform_name,
-        },
-
-    }
-    # end of code copied from common and lms login views
-    # ---------------------------------------------------
+    context = _get_login_context(request)
     return render_to_response('login.html', context)
 
 
@@ -140,7 +92,8 @@ def howitworks(request):
     if request.user.is_authenticated:
         return redirect('/home/')
     else:
-        return render_to_response('howitworks.html', {})
+        context = _get_login_context(request)
+        return render_to_response('howitworks.html', context)
 
 
 @waffle_switch('{}.{}'.format(waffle.WAFFLE_NAMESPACE, waffle.ENABLE_ACCESSIBILITY_POLICY_PAGE))
@@ -245,3 +198,63 @@ def _external_auth_intercept(request, mode):
         return external_auth_login(request)
     elif mode == "register":
         return external_auth_register(request)
+
+
+def _get_login_context(request):
+    # mcdaniel feb-2019: oAuth code from LMS login view
+    #   /edx/app/edxapp/edx-platform/common/djangoapps/student/views/login.py signin_user()
+    #   /edx/app/edxapp/edx-platform/lms/djangoapps/student_account/views.py  login_and_registration_form()
+    # ---------------------------------------------------
+    # Determine the URL to redirect to following login/registration/third_party_auth
+    redirect_to = get_next_url_for_login_page(request)
+
+    # Allow external auth to intercept and handle the request
+    ext_auth_response = _external_auth_intercept(request, "login")
+    if ext_auth_response is not None:
+        return ext_auth_response
+
+    third_party_auth_error = None
+    for msg in messages.get_messages(request):
+        if msg.extra_tags.split()[0] == "social-auth":
+            # msg may or may not be translated. Try translating [again] in case we are able to:
+            third_party_auth_error = _(text_type(msg))  # pylint: disable=translation-of-non-string
+            break
+
+
+    # Our ?next= URL may itself contain a parameter 'tpa_hint=x' that we need to check.
+    # If present, we display a login page focused on third-party auth with that provider.
+    csrf_token = csrf(request)['csrf_token']
+    third_party_auth_hint = None
+    third_party_auth = _third_party_auth_context(request, redirect_to, third_party_auth_hint)
+    platform_name = configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME)
+    context = {
+        ## mcdaniel: preserved from THIS template
+        ## ----------------------
+        'csrf': csrf_token,
+        'forgot_password_link': "//{base}/login#forgot-password-modal".format(base=settings.LMS_BASE),
+        'platform_name': platform_name,
+        'login_redirect_url': redirect_to,  # This gets added to the query string of the "Sign In" button in the header
+        ## ----------------------
+
+        # Bool injected into JS to submit form if we're inside a running third-
+        # party auth pipeline; distinct from the actual instance of the running
+        # pipeline, if any.
+        'pipeline_running': 'true' if pipeline.running(request) else 'false',
+        'pipeline_url': auth_pipeline_urls(pipeline.AUTH_ENTRY_LOGIN, redirect_url=redirect_to),
+        'third_party_auth': third_party_auth,
+        'third_party_auth_hint': third_party_auth_hint or '',
+        'third_party_auth_error': third_party_auth_error,
+        # this "data" dictionary structure is copied from the lms view.
+        # still do not know which (context body or data dict) is the right way
+        # to send these params.
+        'data': {
+            'login_redirect_url': redirect_to,
+            'third_party_auth': third_party_auth,
+            'third_party_auth_hint': third_party_auth_hint or '',
+            'platform_name': platform_name,
+        },
+
+    }
+    # end of code copied from common and lms login views
+    # ---------------------------------------------------
+    return context
