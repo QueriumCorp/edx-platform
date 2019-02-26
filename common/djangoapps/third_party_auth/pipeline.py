@@ -834,7 +834,8 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
         verifications = SSOVerification.objects.filter(
             user=user,
             status="approved",
-            created_at__gte=earliest_allowed_verification_date(),
+            #mcdaniel feb-2019 - earliest_allowed_verification_date() only works from LMS.
+            #created_at__gte=earliest_allowed_verification_date(),
             identity_provider_type=current_provider.full_class_name,
             identity_provider_slug=current_provider.slug,
         )
