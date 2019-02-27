@@ -96,6 +96,9 @@ CELERYBEAT_SCHEDULE = {}  # For scheduling tasks, entries can be added to this d
 with open(CONFIG_ROOT / CONFIG_PREFIX + "env.json") as env_file:
     ENV_TOKENS = json.load(env_file)
 
+# mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
+REDIRECT_AM_REGISTRATION = ENV_TOKENS.get('REDIRECT_AM_REGISTRATION', '')
+
 # Do NOT calculate this dynamically at startup with git because it's *slow*.
 EDX_PLATFORM_REVISION = ENV_TOKENS.get('EDX_PLATFORM_REVISION', EDX_PLATFORM_REVISION)
 

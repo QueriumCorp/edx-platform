@@ -46,7 +46,9 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 # Pattern to match a library key only
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
-logger.info('REDIRECT_AM_REGISTRATION - {}'.format(os.environ.get('REDIRECT_AM_REGISTRATION', 'register')))
+
+logger.info('REDIRECT_AM_REGISTRATION - {}'.format(os.environ.get('REDIRECT_AM_REGISTRATION', '')))
+
 urlpatterns = [
     # mcdaniel feb-2019
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
