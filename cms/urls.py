@@ -43,9 +43,6 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
 urlpatterns = [
-    # mcdaniel feb-2019 - LMS AND AM signup / registration pages are inconsistent.
-    url(r'^register/$', RedirectView.as_view(url=reverse_lazy('signup'), permanent=False)),
-
     # mcdaniel feb-2019 - add salesforce REST api
     url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
     url(r'', include('student.urls')),
