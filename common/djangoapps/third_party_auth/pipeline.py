@@ -200,13 +200,13 @@ def evaluate_course_creator_status(strategy, backend, user, response, *args, **k
 
     this = u'evaluate_course_creator_status() '
     if (backend.name != 'openstax'):
-        msg = this + u'authentication with {}. Exiting.'.format(backend.name)
+        msg = this + u'evaluate_course_creator_status() - authentication with {}. Exiting.'.format(backend.name)
         logger.info(msg)
         return None
 
     platform_name = configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME)
     if (platform_name != "Rover Assignment Manager"):
-        msg = this + u'authentication initiated from {}. Exiting.'.format(strategy.request.META['SERVER_NAME'])
+        msg = this + u'evaluate_course_creator_status() - authentication initiated from {}. Exiting.'.format(strategy.request.META['SERVER_NAME'])
         logger.info(msg)
         return None
 
@@ -214,7 +214,7 @@ def evaluate_course_creator_status(strategy, backend, user, response, *args, **k
     faculty_status = response.get('faculty_status')
     if (faculty_status != 'confirmed_faculty'):
         full_name = response.get('first_name') + u' ' + response.get('last_name')
-        msg = this + u'User {} is not confirmed faculty. Exiting.'.format(full_name)
+        msg = this + u'evaluate_course_creator_status() - User {} is not confirmed faculty. Exiting.'.format(full_name)
         logger.info(msg)
 
     """
@@ -240,6 +240,7 @@ def get_real_social_auth_object(request):
     rather than an actual DB-backed UserSocialAuth object. We need the real thing,
     so this method allows us to get that by passing in the relevant request.
     """
+    logger.info('get_real_social_auth_object()')
     running_pipeline = get(request)
     if running_pipeline and 'social' in running_pipeline['kwargs']:
         social = running_pipeline['kwargs']['social']
@@ -255,6 +256,7 @@ def quarantine_session(request, locations):
     in the `locations` argument.
     Example: ``quarantine_session(request, ('enterprise.views',))``
     """
+    logger.info('quarantine_session()')
     request.session['third_party_auth_quarantined_modules'] = locations
 
 
@@ -262,6 +264,7 @@ def lift_quarantine(request):
     """
     Remove the session quarantine variable.
     """
+    logger.info('lift_quarantine()')
     request.session.pop('third_party_auth_quarantined_modules', None)
 
 
@@ -283,6 +286,7 @@ def get_authenticated_user(auth_provider, username, uid):
         user has no social auth associated with the given backend.
         AssertionError: if the user is not authenticated.
     """
+    logger.info('get_authenticated_user()')
     match = social_django.models.DjangoStorage.user.get_social_auth(provider=auth_provider.backend_name, uid=uid)
 
     if not match or match.user.username != username:
@@ -295,6 +299,7 @@ def get_authenticated_user(auth_provider, username, uid):
 
 def _get_enabled_provider(provider_id):
     """Gets an enabled provider by its provider_id member or throws."""
+    logger.info('_get_enabled_provider()')
     enabled_provider = provider.Registry.get(provider_id)
 
     if not enabled_provider:
@@ -336,6 +341,7 @@ def get_complete_url(backend_name):
     Raises:
         ValueError: if no provider is enabled with the given backend_name.
     """
+    logger.info('get_complete_url()')
     if not any(provider.Registry.get_enabled_by_backend_name(backend_name)):
         raise ValueError('Provider with backend %s not enabled' % backend_name)
 
@@ -354,6 +360,7 @@ def get_disconnect_url(provider_id, association_id):
     Raises:
         ValueError: if no provider is enabled with the given ID.
     """
+    logger.info('get_disconnect_url()')
     backend_name = _get_enabled_provider(provider_id).backend_name
     if association_id:
         return _get_url('social:disconnect_individual', backend_name, url_params={'association_id': association_id})
@@ -377,6 +384,7 @@ def get_login_url(provider_id, auth_entry, redirect_url=None):
     Raises:
         ValueError: if no provider is enabled with the given provider_id.
     """
+    logger.info('get_login_url()')
     assert auth_entry in _AUTH_ENTRY_CHOICES
     enabled_provider = _get_enabled_provider(provider_id)
     return _get_url(
@@ -400,6 +408,7 @@ def get_duplicate_provider(messages):
         string name of the python-social-auth backend that has the duplicate
         account, or None if there is no duplicate (and hence no error).
     """
+    logger.info('get_duplicate_provider()')
     social_auth_messages = [m for m in messages if m.message.endswith('is already in use.')]
 
     if not social_auth_messages:
@@ -418,6 +427,7 @@ def get_provider_user_states(user):
         List of ProviderUserState. The list of states of a user's account with
             each enabled provider.
     """
+    logger.info('get_provider_user_states()')
     states = []
     found_user_auths = list(social_django.models.DjangoStorage.user.get_social_auth_for_user(user))
 
@@ -437,6 +447,7 @@ def get_provider_user_states(user):
 
 def running(request):
     """Returns True iff request is running a third-party auth pipeline."""
+    logger.info('running()')
     return get(request) is not None  # Avoid False for {}.
 
 
@@ -451,7 +462,7 @@ def parse_query_params(strategy, response, *args, **kwargs):
     # If auth_entry is not in the session, we got here by a non-standard workflow.
     # We simply assume 'login' in that case.
     logger.info(
-        'Initiating oAuth: {}'.format(strategy.request.META['SERVER_NAME'])
+        'parse_query_params() - Initiating oAuth: {}'.format(strategy.request.META['SERVER_NAME'])
         )
 
     auth_entry = strategy.request.session.get(AUTH_ENTRY_KEY, AUTH_ENTRY_LOGIN)
@@ -479,6 +490,7 @@ def set_pipeline_timeout(strategy, user, *args, **kwargs):
       successfully signed into (Google), but your (Google) account isn't linked with an edX
       account. To link your accounts, login now using your edX password.".
     """
+    logger.info('set_pipeline_timeout()')
     if strategy.request and not user:  # If user is set, we're currently logged in (and/or linked) so it doesn't matter.
         strategy.request.session.set_expiry(strategy.setting('PIPELINE_TIMEOUT', 600))
         # We don't need to reset this timeout later. Because the user is not logged in and this
@@ -495,6 +507,7 @@ def redirect_to_custom_form(request, auth_entry, details, kwargs):
     The data is sent as a base64-encoded values in a POST request and includes
     a cryptographic checksum in case the integrity of the data is important.
     """
+    logger.info('redirect_to_custom_form()')
     backend_name = request.backend.name
     provider_id = provider.Registry.get_from_pipeline({'backend': backend_name, 'kwargs': kwargs}).provider_id
     form_info = AUTH_ENTRY_CUSTOM[auth_entry]
@@ -527,6 +540,7 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
     existing account or registration data) to proceed with the pipeline.
     """
 
+    logger.info('ensure_user_information() - {}'.format(details))
     # We're deliberately verbose here to make it clear what the intended
     # dispatch behavior is for the various pipeline entry points, given the
     # current state of the pipeline. Keep in mind the pipeline is re-entrant
@@ -539,14 +553,18 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
     # behavior appears correct without executing a step, it means important
     # invariants have been violated and future misbehavior is likely.
     def dispatch_to_login():
+        logger.info('dispatch_to_login()')
         """Redirects to the login page."""
         return redirect(AUTH_DISPATCH_URLS[AUTH_ENTRY_LOGIN])
 
     def dispatch_to_register():
+        logger.info('dispatch_to_register() - {}'.format(AUTH_DISPATCH_URLS[AUTH_ENTRY_REGISTER]))
         """Redirects to the registration page."""
         return redirect(AUTH_DISPATCH_URLS[AUTH_ENTRY_REGISTER])
 
     def should_force_account_creation():
+        logger.info('should_force_account_creation()')
+
         """ For some third party providers, we auto-create user accounts """
         current_provider = provider.Registry.get_from_pipeline({'backend': current_partial.backend, 'kwargs': kwargs})
         return (current_provider and
@@ -628,6 +646,7 @@ def set_logged_in_cookies(backend=None, user=None, strategy=None, auth_entry=Non
     the function returns `None`, indicating that control should pass
     to the next pipeline step.
     """
+    logger.info('set_logged_in_cookies()')
     if not is_api(auth_entry) and user is not None and user.is_authenticated:
         request = strategy.request if strategy else None
         # n.b. for new users, user.is_active may be False at this point; set the cookie anyways.
@@ -653,6 +672,7 @@ def set_logged_in_cookies(backend=None, user=None, strategy=None, auth_entry=Non
 def login_analytics(strategy, auth_entry, current_partial=None, *args, **kwargs):
     """ Sends login info to Segment """
 
+    logger.info('login_analytics()')
     event_name = None
     if auth_entry == AUTH_ENTRY_LOGIN:
         event_name = 'edx.bi.user.account.authenticated'
@@ -686,6 +706,7 @@ def associate_by_email_if_login_api(auth_entry, backend, details, user, current_
     implementation, which verifies that only a single database user is associated with the email.
     This association is done ONLY if the user entered the pipeline through a LOGIN API.
     """
+    logger.info('associate_by_email_if_login_api()')
     if auth_entry == AUTH_ENTRY_LOGIN_API:
         association_response = associate_by_email(backend, details, user, *args, **kwargs)
         if (
@@ -711,6 +732,7 @@ def user_details_force_sync(auth_entry, strategy, details, user=None, *args, **k
     forced synchronization, we send an email to both the old and new emails, letting the user know.
     This step is controlled by the `sync_learner_profile_data` flag on the provider's configuration.
     """
+    logger.info('user_details_force_sync()')
     current_provider = provider.Registry.get_from_pipeline({'backend': strategy.request.backend.name, 'kwargs': kwargs})
     if user and current_provider.sync_learner_profile_data:
         # Keep track of which incoming values get applied.
@@ -780,6 +802,7 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     """
     Use the user's authentication with the provider, if configured, as evidence of their identity being verified.
     """
+    logger.info('set_id_verification_status()')
     current_provider = provider.Registry.get_from_pipeline({'backend': strategy.request.backend.name, 'kwargs': kwargs})
     if user and current_provider.enable_sso_id_verification:
         # Get previous valid, non expired verification attempts for this SSO Provider and user
