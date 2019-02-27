@@ -1,8 +1,6 @@
 """Auth pipeline definitions.
-
 Auth pipelines handle the process of authenticating a user. They involve a
 consumer system and a provider service. The general pattern is:
-
     1. The consumer system exposes a URL endpoint that starts the process.
     2. When a user visits that URL, the client system redirects the user to a
        page served by the provider. The user authenticates with the provider.
@@ -26,34 +24,26 @@ consumer system and a provider service. The general pattern is:
        This happens by hitting a handler exposed by the consumer system.
     9. In this way, execution moves between the provider, the pipeline, and
        arbitrary consumer system code.
-
 Gotcha alert!:
-
 Bear in mind that when pausing and resuming a pipeline function decorated with
 @partial.partial, execution resumes by re-invoking the decorated function
 instead of invoking the next function in the pipeline stack. For example, if
 you have a pipeline of
-
     A
     B
     C
-
 with an implementation of
-
     @partial.partial
     def B(*args, **kwargs):
         [...]
-
 B will be invoked twice: once when initially proceeding through the pipeline
 before it is paused, and once when other code finishes and the pipeline
 resumes. Consequently, many decorated functions will first invoke a predicate
 to determine if they are in their first or second execution (usually by
 checking side-effects from the first run).
-
 This is surprising but important behavior, since it allows a single function in
 the pipeline to consolidate all the operations needed to establish invariants
 rather than spreading them across two functions in the pipeline.
-
 See https://python-social-auth.readthedocs.io/en/latest/pipeline.html for more docs.
 """
 from django.core import serializers
@@ -161,11 +151,9 @@ logger = getLogger(__name__)
 
 class AuthEntryError(AuthException):
     """Raised when auth_entry is invalid on URLs.
-
     auth_entry tells us whether the auth flow was initiated to register a new
     user (in which case it has the value of AUTH_ENTRY_REGISTER) or log in an
     existing user (in which case it has the value of AUTH_ENTRY_LOGIN).
-
     This is necessary because the edX code we hook into the pipeline to
     redirect to the existing auth flows needs to know what case we are in in
     order to format its output correctly (for example, the register code is
@@ -176,7 +164,6 @@ class AuthEntryError(AuthException):
 
 class ProviderUserState(object):
     """Object representing the provider state (attached or not) for a user.
-
     This is intended only for use when rendering templates. See for example
     lms/templates/dashboard.html.
     """
@@ -206,11 +193,9 @@ class ProviderUserState(object):
 def evaluate_course_creator_status(strategy, backend, user, response, *args, **kwargs):
     """
     mcdaniel feb-2019
-
     Openstax.org oAuth identity provider returns a faculty_status property.
     For users who authenticate with their Openstax account, if they are confirmed
     factulty, then automatically add them to the list of approved course creators.
-
     """
 
     this = u'evaluate_course_creator_status() '
@@ -231,7 +216,6 @@ def evaluate_course_creator_status(strategy, backend, user, response, *args, **k
         full_name = response.get('first_name') + u' ' + response.get('last_name')
         msg = this + u'User {} is not confirmed faculty. Exiting.'.format(full_name)
         logger.info(msg)
-        return None
 
     """
     we have a confirmed faculty openstax.org user who is authenticating from AM
@@ -269,7 +253,6 @@ def quarantine_session(request, locations):
     Set a session variable indicating that the session is restricted
     to being used in views contained in the modules listed by string
     in the `locations` argument.
-
     Example: ``quarantine_session(request, ('enterprise.views',))``
     """
     request.session['third_party_auth_quarantined_modules'] = locations
@@ -284,21 +267,17 @@ def lift_quarantine(request):
 
 def get_authenticated_user(auth_provider, username, uid):
     """Gets a saved user authenticated by a particular backend.
-
     Between pipeline steps User objects are not saved. We need to reconstitute
     the user and set its .backend, which is ordinarily monkey-patched on by
     Django during authenticate(), so it will function like a user returned by
     authenticate().
-
     Args:
         auth_provider: the third_party_auth provider in use for the current pipeline.
         username: string. Username of user to get.
         uid: string. The user ID according to the third party.
-
     Returns:
         User if user is found and has a social auth from the passed
         provider.
-
     Raises:
         User.DoesNotExist: if no user matching user is found, or the matching
         user has no social auth associated with the given backend.
@@ -349,14 +328,11 @@ def _get_url(view_name, backend_name, auth_entry=None, redirect_url=None,
 
 def get_complete_url(backend_name):
     """Gets URL for the endpoint that returns control to the auth pipeline.
-
     Args:
         backend_name: string. Name of the python-social-auth backend from the
             currently-running pipeline.
-
     Returns:
         String. URL that finishes the auth pipeline for a provider.
-
     Raises:
         ValueError: if no provider is enabled with the given backend_name.
     """
@@ -368,16 +344,13 @@ def get_complete_url(backend_name):
 
 def get_disconnect_url(provider_id, association_id):
     """Gets URL for the endpoint that starts the disconnect pipeline.
-
     Args:
         provider_id: string identifier of the social_django.models.ProviderConfig child you want
             to disconnect from.
         association_id: int. Optional ID of a specific row in the UserSocialAuth
             table to disconnect (useful if multiple providers use a common backend)
-
     Returns:
         String. URL that starts the disconnection pipeline.
-
     Raises:
         ValueError: if no provider is enabled with the given ID.
     """
@@ -390,21 +363,17 @@ def get_disconnect_url(provider_id, association_id):
 
 def get_login_url(provider_id, auth_entry, redirect_url=None):
     """Gets the login URL for the endpoint that kicks off auth with a provider.
-
     Args:
         provider_id: string identifier of the social_django.models.ProviderConfig child you want
             to disconnect from.
         auth_entry: string. Query argument specifying the desired entry point
             for the auth pipeline. Used by the pipeline for later branching.
             Must be one of _AUTH_ENTRY_CHOICES.
-
     Keyword Args:
         redirect_url (string): If provided, redirect to this URL at the end
             of the authentication process.
-
     Returns:
         String. URL that starts the auth pipeline for a provider.
-
     Raises:
         ValueError: if no provider is enabled with the given provider_id.
     """
@@ -421,15 +390,12 @@ def get_login_url(provider_id, auth_entry, redirect_url=None):
 
 def get_duplicate_provider(messages):
     """Gets provider from message about social account already in use.
-
     python-social-auth's exception middleware uses the messages module to
     record details about duplicate account associations. It records exactly one
     message there is a request to associate a social account S with an edX
     account E if S is already associated with an edX account E'.
-
     This messaging approach is stringly-typed and the particular string is
     unfortunately not in a reusable constant.
-
     Returns:
         string name of the python-social-auth backend that has the duplicate
         account, or None if there is no duplicate (and hence no error).
@@ -446,10 +412,8 @@ def get_duplicate_provider(messages):
 
 def get_provider_user_states(user):
     """Gets list of states of provider-user combinations.
-
     Args:
         django.contrib.auth.User. The user to get states for.
-
     Returns:
         List of ProviderUserState. The list of states of a user's account with
             each enabled provider.
@@ -499,7 +463,6 @@ def parse_query_params(strategy, response, *args, **kwargs):
 def set_pipeline_timeout(strategy, user, *args, **kwargs):
     """
     Set a short session timeout while the pipeline runs, to improve security.
-
     Consider the following attack:
     1. Attacker on a public computer visits edX and initiates the third-party login flow
     2. Attacker logs into their own third-party account
@@ -507,7 +470,6 @@ def set_pipeline_timeout(strategy, user, *args, **kwargs):
     4. Victim on the same computer logs into edX with username/password
     5. edX links attacker's third-party account with victim's edX account
     6. Attacker logs into victim's edX account using attacker's own third-party account
-
     We have two features of the pipeline designed to prevent this attack:
     * This method shortens the Django session timeout during the pipeline. This should mean that
       if there is a reasonable delay between steps 3 and 4, the session and pipeline will be
@@ -530,7 +492,6 @@ def redirect_to_custom_form(request, auth_entry, details, kwargs):
     """
     If auth_entry is found in AUTH_ENTRY_CUSTOM, this is used to send provider
     data to an external server's registration/login page.
-
     The data is sent as a base64-encoded values in a POST request and includes
     a cryptographic checksum in case the integrity of the data is important.
     """
@@ -650,28 +611,22 @@ def ensure_user_information(strategy, auth_entry, backend=None, user=None, socia
 def set_logged_in_cookies(backend=None, user=None, strategy=None, auth_entry=None, current_partial=None,
                           *args, **kwargs):
     """This pipeline step sets the "logged in" cookie for authenticated users.
-
     Some installations have a marketing site front-end separate from
     edx-platform.  Those installations sometimes display different
     information for logged in versus anonymous users (e.g. a link
     to the student dashboard instead of the login page.)
-
     Since social auth uses Django's native `login()` method, it bypasses
     our usual login view that sets this cookie.  For this reason, we need
     to set the cookie ourselves within the pipeline.
-
     The procedure for doing this is a little strange.  On the one hand,
     we need to send a response to the user in order to set the cookie.
     On the other hand, we don't want to drop the user out of the pipeline.
-
     For this reason, we send a redirect back to the "complete" URL,
     so users immediately re-enter the pipeline.  The redirect response
     contains a header that sets the logged in cookie.
-
     If the user is not logged in, or the logged in cookie is already set,
     the function returns `None`, indicating that control should pass
     to the next pipeline step.
-
     """
     if not is_api(auth_entry) and user is not None and user.is_authenticated:
         request = strategy.request if strategy else None
@@ -729,7 +684,6 @@ def associate_by_email_if_login_api(auth_entry, backend, details, user, current_
     This pipeline step associates the current social auth with the user with the
     same email address in the database.  It defers to the social library's associate_by_email
     implementation, which verifies that only a single database user is associated with the email.
-
     This association is done ONLY if the user entered the pipeline through a LOGIN API.
     """
     if auth_entry == AUTH_ENTRY_LOGIN_API:
@@ -749,15 +703,12 @@ def associate_by_email_if_login_api(auth_entry, backend, details, user, current_
 def user_details_force_sync(auth_entry, strategy, details, user=None, *args, **kwargs):
     """
     Update normally protected user details using data from provider.
-
     This step in the pipeline is akin to `social_core.pipeline.user.user_details`, which updates
     the user details but has an unconfigurable protection over updating the username & email, and
     is unable to update information such as the user's full name which isn't on the user model, but
     rather on the user profile model.
-
     Additionally, because the email field is normally used to log in, if the email is changed by this
     forced synchronization, we send an email to both the old and new emails, letting the user know.
-
     This step is controlled by the `sync_learner_profile_data` flag on the provider's configuration.
     """
     current_provider = provider.Registry.get_from_pipeline({'backend': strategy.request.backend.name, 'kwargs': kwargs})
