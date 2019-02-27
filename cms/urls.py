@@ -25,6 +25,9 @@ from django_openid_auth import views as django_openid_auth_views
 from openedx.core.djangoapps.external_auth import views as external_auth_views
 from student import views as student_views
 from openedx.core.djangoapps.auth_exchange.views import LoginWithAccessTokenView
+from logging import getLogger
+logger = getLogger(__name__)
+
 
 
 django_autodiscover()
@@ -43,11 +46,12 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 # Pattern to match a library key only
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
+logger.info('REDIRECT_AM_REGISTRATION - {}'.format(os.environ.get('REDIRECT_AM_REGISTRATION', 'register')))
 urlpatterns = [
     # mcdaniel feb-2019
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
     # process there.
-    url(r'^register/$', RedirectView.as_view(url=os.environ.get('REDIRECT_AM_REGISTRATION', 'register') , permanent=False)),
+    url(r'^register/$', RedirectView.as_view(url='https://roveropenstax.com/auth/login/openstax/' , permanent=False)),
 
     # mcdaniel feb-2019 - add salesforce REST api
     url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
