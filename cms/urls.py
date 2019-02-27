@@ -18,6 +18,7 @@ from ratelimitbackend import admin
 
 # mcdaniel - feb-2019
 # for oauth to openstax
+import os
 from django.urls import reverse_lazy
 from django.views.generic import RedirectView
 from django_openid_auth import views as django_openid_auth_views
@@ -42,13 +43,11 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 # Pattern to match a library key only
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
-# mcdaniel feb-2019
-# Redirect for new user sign up. we'll send these to LMS and restart the oauth
-# process there.
-REDIRECT_AM_REGISTRATION = r'https://roveropenstax.com/auth/login/openstax/'
-
 urlpatterns = [
-    url(r'^register/$', RedirectView.as_view(url=REDIRECT_AM_REGISTRATION, permanent=False)),
+    # mcdaniel feb-2019
+    # Redirect for new user sign up. we'll send these to LMS and restart the oauth
+    # process there.
+    url(r'^register/$', RedirectView.as_view(url=os.environ.get('REDIRECT_AM_REGISTRATION', 'register') , permanent=False)),
 
     # mcdaniel feb-2019 - add salesforce REST api
     url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
