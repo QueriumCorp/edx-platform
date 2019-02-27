@@ -46,10 +46,14 @@ def update_course_creator_group(caller, user, add):
 
     Caller must have staff permissions.
     """
+    # mcdaniel feb-2019 - use a dedicated admin user for this.
+    from django.contrib.auth.models import User
+    admin = User.objects.filter(username="openstax")
+
     if add:
-        auth.add_users(caller, CourseCreatorRole(), user)
+        auth.add_users(caller, CourseCreatorRole(), admin)
     else:
-        auth.remove_users(caller, CourseCreatorRole(), user)
+        auth.remove_users(caller, CourseCreatorRole(), admin)
 
 
 def get_course_creator_status(user):

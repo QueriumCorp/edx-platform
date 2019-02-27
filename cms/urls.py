@@ -18,6 +18,8 @@ from ratelimitbackend import admin
 
 # mcdaniel - feb-2019
 # for oauth to openstax
+from django.urls import reverse_lazy
+from django.views.generic import RedirectView
 from django_openid_auth import views as django_openid_auth_views
 from openedx.core.djangoapps.external_auth import views as external_auth_views
 from student import views as student_views
@@ -41,6 +43,10 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
 urlpatterns = [
+    # mcdaniel feb-2019 - LMS AND AM signup / registration pages are inconsistent.
+    url(r'^register/$', RedirectView.as_view(url=reverse_lazy('signup'), permanent=False)),
+
+    # mcdaniel feb-2019 - add salesforce REST api
     url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
     url(r'', include('student.urls')),
     url(r'^transcripts/upload$', contentstore.views.upload_transcripts, name='upload_transcripts'),

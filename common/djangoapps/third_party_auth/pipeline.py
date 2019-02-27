@@ -231,6 +231,7 @@ def evaluate_course_creator_status(strategy, backend, user, response, *args, **k
         full_name = response.get('first_name') + u' ' + response.get('last_name')
         msg = this + u'User {} is not confirmed faculty. Exiting.'.format(full_name)
         logger.info(msg)
+        return None
 
     """
     we have a confirmed faculty openstax.org user who is authenticating from AM
