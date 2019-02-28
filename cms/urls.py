@@ -31,7 +31,7 @@ logger = getLogger(__name__)
 
 
 django_autodiscover()
-admin.site.site_header = _('Studio Administration')
+admin.site.site_header = _('AM Administration')
 admin.site.site_title = admin.site.site_header
 
 if password_policy_compliance.should_enforce_compliance_on_login():
@@ -54,6 +54,7 @@ urlpatterns = [
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
     # process there.
     url(r'^register/$', RedirectView.as_view(url='https://roveropenstax.com/auth/login/openstax/' , permanent=False)),
+    url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=False)),
 
     # mcdaniel feb-2019 - add salesforce REST api
     url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
