@@ -82,7 +82,6 @@ from . import provider
  mcdaniel feb-2019
  imports for evaluate_course_creator_status()
 """
-#from cms.djangoapps.course_creators.utils import grant_course_creator_status
 import os
 SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
 
@@ -191,39 +190,6 @@ class ProviderUserState(object):
     def get_unlink_form_name(self):
         """Gets the name used in HTML forms that unlink a provider account."""
         return self.provider.provider_id + '_unlink_form'
-
-
-def evaluate_course_creator_status(strategy, backend, user, response, *args, **kwargs):
-    """
-    mcdaniel feb-2019
-    Openstax.org oAuth identity provider returns a faculty_status property.
-    For users who authenticate with their Openstax account, if they are confirmed
-    factulty, then automatically add them to the list of approved course creators.
-    """
-
-    this = u'evaluate_course_creator_status() '
-    if (backend.name != 'openstax'):
-        msg = this + u'evaluate_course_creator_status() - authentication with {}. Exiting.'.format(backend.name)
-        logger.info(msg)
-        return None
-
-    if (SERVICE_VARIANT != "cms"):
-        msg = this + u'evaluate_course_creator_status() - authentication initiated from {}. Exiting.'.format(strategy.request.META['SERVER_NAME'])
-        logger.info(msg)
-        return None
-
-
-    faculty_status = response.get('faculty_status')
-    if (faculty_status != 'confirmed_faculty'):
-        full_name = response.get('first_name') + u' ' + response.get('last_name')
-        msg = this + u'evaluate_course_creator_status() - User {} is not confirmed faculty. Exiting.'.format(full_name)
-        logger.info(msg)
-
-    """
-    we have a confirmed faculty openstax.org user who is authenticating from AM
-    Lets ensure that course creator status has been granted.
-    """
-    #grant_course_creator_status(user)
 
 def get(request):
     """Gets the running pipeline's data from the passed request."""
