@@ -1719,6 +1719,12 @@ def _get_course_creator_status(user):
     If the user passed in has not previously visited the index page, it will be
     added with status 'unrequested' if the course creator group is in use.
     """
+    log.info('_get_course_creator_status() - {}'.format(user.username))
+    log.info('_get_course_creator_status() - {}. Hard-coding grant status'.format(user.username))
+
+    course_creator_status = 'granted'
+    return course_creator_status
+
 
     if user.is_staff:
         course_creator_status = 'granted'
