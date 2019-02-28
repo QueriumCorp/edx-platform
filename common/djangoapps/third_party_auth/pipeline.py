@@ -82,7 +82,7 @@ from . import provider
  mcdaniel feb-2019
  imports for evaluate_course_creator_status()
 """
-from cms.djangoapps.course_creators.utils import grant_course_creator_status
+#from cms.djangoapps.course_creators.utils import grant_course_creator_status
 import os
 SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
 
@@ -223,7 +223,7 @@ def evaluate_course_creator_status(strategy, backend, user, response, *args, **k
     we have a confirmed faculty openstax.org user who is authenticating from AM
     Lets ensure that course creator status has been granted.
     """
-    grant_course_creator_status(user)
+    #grant_course_creator_status(user)
 
 def get(request):
     """Gets the running pipeline's data from the passed request."""
