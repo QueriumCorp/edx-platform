@@ -83,6 +83,9 @@ from . import provider
  imports for evaluate_course_creator_status()
 """
 from cms.djangoapps.course_creators.utils import grant_course_creator_status
+import os
+SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
+
 
 
 # These are the query string params you can pass
@@ -204,8 +207,7 @@ def evaluate_course_creator_status(strategy, backend, user, response, *args, **k
         logger.info(msg)
         return None
 
-    platform_name = configuration_helpers.get_value('platform_name', settings.PLATFORM_NAME)
-    if (platform_name != "Rover Assignment Manager"):
+    if (SERVICE_VARIANT != "cms"):
         msg = this + u'evaluate_course_creator_status() - authentication initiated from {}. Exiting.'.format(strategy.request.META['SERVER_NAME'])
         logger.info(msg)
         return None
