@@ -21,6 +21,8 @@ from student.roles import (
     OrgLibraryUserRole,
     OrgStaffRole
 )
+import logging
+log = logging.getLogger(__name__)
 
 # Studio permissions:
 STUDIO_EDIT_ROLES = 8
@@ -74,6 +76,12 @@ def get_user_permissions(user, course_key, org=None):
     Can also set course_key=None and pass in an org to get the user's
     permissions for that organization as a whole.
     """
+
+    # mcdaniel feb-2019 - add special permissions for templates
+    log.info('get_user_permissions()')
+    #if course_key[-9:] == '_Template':
+    #    return all_perms
+
     if org is None:
         org = course_key.org
         course_key = course_key.for_branch(None)
@@ -81,20 +89,26 @@ def get_user_permissions(user, course_key, org=None):
         assert course_key is None
     # No one has studio permissions for CCX courses
     if is_ccx_course(course_key):
+        log.info('get_user_permissions() - is_ccx_course')
         return STUDIO_NO_PERMISSIONS
     all_perms = STUDIO_EDIT_ROLES | STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
     # global staff, org instructors, and course instructors have all permissions:
     if GlobalStaff().has_user(user) or OrgInstructorRole(org=org).has_user(user):
+        log.info('get_user_permissions() - GlobalStaff or OrgInstructorRole')
         return all_perms
     if course_key and user_has_role(user, CourseInstructorRole(course_key)):
         return all_perms
     # Staff have all permissions except EDIT_ROLES:
     if OrgStaffRole(org=org).has_user(user) or (course_key and user_has_role(user, CourseStaffRole(course_key))):
+        log.info('get_user_permissions() - OrgStaffRole or CourseStaffRole')
         return STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
     # Otherwise, for libraries, users can view only:
     if course_key and isinstance(course_key, LibraryLocator):
         if OrgLibraryUserRole(org=org).has_user(user) or user_has_role(user, LibraryUserRole(course_key)):
+            log.info('get_user_permissions() - OrgLibraryUserRole or user_has_role')
             return STUDIO_VIEW_USERS | STUDIO_VIEW_CONTENT
+
+    log.info('get_user_permissions() - STUDIO_NO_PERMISSIONS')
     return STUDIO_NO_PERMISSIONS
 
 
@@ -129,6 +143,7 @@ def has_studio_read_access(user, course_key):
     There is currently no such thing as read-only course access in studio, but
     there is read-only access to content libraries.
     """
+    log.info('has_studio_read_access() - {}'.format(course_key))
     return bool(STUDIO_VIEW_CONTENT & get_user_permissions(user, course_key))
 
 

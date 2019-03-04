@@ -370,6 +370,7 @@ def _accessible_courses_summary_iter(request, org=None):
             string will result in no courses, and otherwise only courses with the
             specified org will be returned. The default value is None.
     """
+    log.info('_accessible_courses_summary_iter()')
     def course_filter(course_summary):
         """
         Filter out unusable and inaccessible courses
@@ -393,6 +394,7 @@ def _accessible_courses_iter(request):
     """
     List all courses available to the logged in user by iterating through all the courses.
     """
+    log.info('_accessible_courses_iter() - request {}'.format(request))
     def course_filter(course):
         """
         Filter out unusable and inaccessible courses
@@ -451,6 +453,7 @@ def _accessible_courses_list_from_groups(request):
     """
     List all courses available to the logged in user by reversing access group names
     """
+    log.info('_accessible_courses_list_from_groups()')
     def filter_ccx(course_access):
         """ CCXs cannot be edited in Studio and should not be shown in this dashboard """
         return not isinstance(course_access.course_id, CCXLocator)
@@ -496,7 +499,7 @@ def course_listing(request):
     """
     List all courses and libraries available to the logged in user
     """
-
+    log.info('course_listing()'.format(request))
     optimization_enabled = GlobalStaff().has_user(request.user) and \
         WaffleSwitchNamespace(name=WAFFLE_NAMESPACE).is_enabled(u'enable_global_staff_optimization')
 
@@ -670,6 +673,7 @@ def get_courses_accessible_to_user(request, org=None):
             returned), an empty string will result in no courses, and otherwise only courses with the
             specified org will be returned. The default value is None.
     """
+    log.info('get_courses_accessible_to_user()')
     if GlobalStaff().has_user(request.user):
         # user has global access so no need to get courses from django groups
         courses, in_process_course_actions = _accessible_courses_summary_iter(request, org)
