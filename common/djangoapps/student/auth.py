@@ -77,11 +77,7 @@ def get_user_permissions(user, course_key, org=None):
     permissions for that organization as a whole.
     """
 
-    # mcdaniel feb-2019 - add special permissions for templates
-    log.info('get_user_permissions() for: {}'.format(course_key))
-    if str(course_key)[-8:] == 'Template':
-        log.info('get_user_permissions() - template found.')
-        return STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
+    log.info('get_user_permissions() on : {}'.format(course_key))
 
     if org is None:
         org = course_key.org
@@ -91,7 +87,14 @@ def get_user_permissions(user, course_key, org=None):
     # No one has studio permissions for CCX courses
     if is_ccx_course(course_key):
         return STUDIO_NO_PERMISSIONS
+
     all_perms = STUDIO_EDIT_ROLES | STUDIO_VIEW_USERS | STUDIO_EDIT_CONTENT | STUDIO_VIEW_CONTENT
+
+    # mcdaniel: all approved course creators reeive all_perms to the course templates.
+    if str(course_key)[-8:] == 'Template':
+        log.info('get_user_permissions() - template found. granting all_perms on: {}'.format(course_key))
+        return all_perms
+
     # global staff, org instructors, and course instructors have all permissions:
     if GlobalStaff().has_user(user) or OrgInstructorRole(org=org).has_user(user):
         return all_perms

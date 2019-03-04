@@ -284,8 +284,13 @@ def course_rerun_handler(request, course_key_string):
         html: return html page with form to rerun a course for the given course id
     """
     # Only global staff (PMs) are able to rerun courses during the soft launch
-    if not GlobalStaff().has_user(request.user):
-        raise PermissionDenied()
+    #
+    # mcdaniel (mar-2019) - this was us? access is no longer restricted to staff,
+    # so commenting out the PermissionDenied exception.
+    #
+    #if not GlobalStaff().has_user(request.user):
+    #    raise PermissionDenied()
+    log.info('course_rerun_handler() - {}'.format(course_key_string))
     course_key = CourseKey.from_string(course_key_string)
     with modulestore().bulk_operations(course_key):
         course_module = get_course_and_check_access(course_key, request.user, depth=3)
@@ -682,18 +687,15 @@ def get_courses_accessible_to_user(request, org=None):
     log.info('get_courses_accessible_to_user()')
     if GlobalStaff().has_user(request.user):
         # user has global access so no need to get courses from django groups
-        log.info('get_courses_accessible_to_user() - found user in GlobalStaff()')
         courses, in_process_course_actions = _accessible_courses_summary_iter(request, org)
     else:
         try:
-            log.info('get_courses_accessible_to_user() - not in GlobalStaff. Trying _accessible_courses_list_from_groups()')
             # mcdaniel feb-2019
             #courses, in_process_course_actions = _accessible_courses_list_from_groups(request)
             courses, in_process_course_actions = _accessible_courses_summary_iter(request)
         except AccessListFallback:
             # user have some old groups or there was some error getting courses from django groups
             # so fallback to iterating through all courses
-            log.info('get_courses_accessible_to_user() - not in GlobalStaff. AccessListFallback')
             courses, in_process_course_actions = _accessible_courses_summary_iter(request)
     return courses, in_process_course_actions
 
@@ -788,7 +790,14 @@ def _create_or_rerun_course(request):
     Returns the destination course_key and overriding fields for the new course.
     Raises DuplicateCourseError and InvalidKeyError
     """
-    if not auth.user_has_role(request.user, CourseCreatorRole()):
+    log.info('_create_or_rerun_course()')
+    # mcdaniel mar-2019
+    # these ORDINARILY would return the same value except that we're
+    # decisioning _get_course_creator_status() based on a meta data value
+    # returned by the OpenStax oauth process.
+    #if not auth.user_has_role(request.user, CourseCreatorRole()):
+    if not _get_course_creator_status(request.user) == 'granted':
+        log.info('_create_or_rerun_course() - permission denied.')
         raise PermissionDenied()
 
     try:
@@ -1734,8 +1743,7 @@ def _get_course_creator_status(user):
     If the user passed in has not previously visited the index page, it will be
     added with status 'unrequested' if the course creator group is in use.
     """
-    log.info('_get_course_creator_status() - {}'.format(user.username))
-    log.info('_get_course_creator_status() - {}. Hard-coding grant status'.format(user.username))
+    log.info('_get_course_creator_status() Hard-coding grant status for user: {}'.format(user.username))
 
     course_creator_status = 'granted'
     return course_creator_status
