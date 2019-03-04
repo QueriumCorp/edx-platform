@@ -16,6 +16,7 @@ from contentstore.config import waffle
 
 # mcdaniel - feb-2019
 # imports for oAuth to openstax
+from six import text_type
 import third_party_auth
 from third_party_auth import pipeline
 from third_party_auth.decorators import xframe_allow_whitelisted
