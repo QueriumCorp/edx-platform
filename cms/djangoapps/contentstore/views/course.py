@@ -672,17 +672,28 @@ def get_courses_accessible_to_user(request, org=None):
             the courses returned. A value of None will have no effect (all courses
             returned), an empty string will result in no courses, and otherwise only courses with the
             specified org will be returned. The default value is None.
+
+    Notes: (mcdaniel feb-2019)
+     _accessible_courses_list_from_groups() consistently returns a null array
+     since we're not using groups. instead, we'll jump to the fallback option of
+     iterating through the courses, noting however that this might bottleneck at
+     scale.
     """
     log.info('get_courses_accessible_to_user()')
     if GlobalStaff().has_user(request.user):
         # user has global access so no need to get courses from django groups
+        log.info('get_courses_accessible_to_user() - found user in GlobalStaff()')
         courses, in_process_course_actions = _accessible_courses_summary_iter(request, org)
     else:
         try:
-            courses, in_process_course_actions = _accessible_courses_list_from_groups(request)
+            log.info('get_courses_accessible_to_user() - not in GlobalStaff. Trying _accessible_courses_list_from_groups()')
+            # mcdaniel feb-2019
+            #courses, in_process_course_actions = _accessible_courses_list_from_groups(request)
+            courses, in_process_course_actions = _accessible_courses_summary_iter(request)
         except AccessListFallback:
             # user have some old groups or there was some error getting courses from django groups
             # so fallback to iterating through all courses
+            log.info('get_courses_accessible_to_user() - not in GlobalStaff. AccessListFallback')
             courses, in_process_course_actions = _accessible_courses_summary_iter(request)
     return courses, in_process_course_actions
 
