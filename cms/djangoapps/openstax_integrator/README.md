@@ -16,10 +16,10 @@ Open edX itself uses Django REST Framework which also simplifies certain project
 
 Common REST api End points
 --------
-- All campaigns: https://am.roveropenstax.com/salesforce/v1/campaigns
-- All users who have ever requested Course Creator status: https://am.roveropenstax.com/salesforce/v1/coursecreators
-- All salesforce contacts: https://am.roveropenstax.com/salesforce/v1/contacts/all
-- Online Documentation: https://am.roveropenstax.com/salesforce/v1/docs/swagger/
+- All campaigns: https://am.roverbyopenstax.com/salesforce/v1/campaigns
+- All users who have ever requested Course Creator status: https://am.roverbyopenstax.com/salesforce/v1/coursecreators
+- All salesforce contacts: https://am.roverbyopenstax.com/salesforce/v1/contacts/all
+- Online Documentation: https://am.roverbyopenstax.com/salesforce/v1/docs/swagger/
 
 Installation
 --------
@@ -58,7 +58,7 @@ Installation
     ```
     ![open edx django migrations](docs/platform-migrations-installation.png)
 
-5. Add a salesforce configuration using Django Admin Console: https://am.roveropenstax.com/admin/salesforce/configuration/
+5. Add a salesforce configuration using Django Admin Console: https://am.roverbyopenstax.com/admin/salesforce/configuration/
 
     ![django admin configuration](docs/django-admin-config.png)
 
