@@ -9,6 +9,10 @@ from models import CourseCreator
 from student import auth
 from student.roles import CourseCreatorRole
 
+#mcdaniel mar-2019: additional imports
+import logging
+log = logging.getLogger(__name__)
+
 
 def add_user_with_status_unrequested(user):
     """
@@ -100,6 +104,7 @@ def _add_user(user, state):
     If the user is marked as is_staff, this method is a no-op (False will be returned).
     """
     if not user.is_staff and CourseCreator.objects.filter(user=user).count() == 0:
+        log.info('_add_user() - adding {} to course_creators.'.format(user.username))
         entry = CourseCreator(user=user, state=state)
         entry.save()
         return True
