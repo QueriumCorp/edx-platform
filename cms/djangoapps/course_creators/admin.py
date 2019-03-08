@@ -31,11 +31,12 @@ class CourseCreatorAdmin(admin.ModelAdmin):
 
     # Fields to display on the overview page.
     list_display = ['username', get_email, 'state', 'state_changed', 'note']
-    readonly_fields = ['username', 'state_changed']
+    #readonly_fields = ['username', 'state_changed']
+    readonly_fields = ['state_changed']
     # Controls the order on the edit form (without this, read-only fields appear at the end).
     fieldsets = (
         (None, {
-            'fields': ['username', 'state', 'state_changed', 'note']
+            'fields': ['user', 'state', 'state_changed', 'note']
         }),
     )
     # Fields that filtering support
@@ -56,10 +57,12 @@ class CourseCreatorAdmin(admin.ModelAdmin):
     username.admin_order_field = 'user__username'
 
     def has_add_permission(self, request):
-        return False
+        # mcdaniel mar-2019: this was hard-coded to false. no idea why.
+        return request.user.is_staff
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        # mcdaniel mar-2019: this was hard-coded to false. no idea why.
+        return request.user.is_staff
 
     def has_change_permission(self, request, obj=None):
         return request.user.is_staff
@@ -80,7 +83,8 @@ def update_creator_group_callback(sender, **kwargs):
     """
     user = kwargs['user']
     updated_state = kwargs['state']
-    update_course_creator_group(kwargs['caller'], user, updated_state == CourseCreator.GRANTED)
+    # mcdaniel mar-2019: causes run-time errors when called from the admin console.
+    #update_course_creator_group(kwargs['caller'], user, updated_state == CourseCreator.GRANTED)
 
 
 @receiver(send_user_notification, sender=CourseCreator)
