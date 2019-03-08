@@ -2421,7 +2421,7 @@ considered a valid course_creator if this field = faculty_confirmed
 def is_faculty(user):
     profile = UserProfile.objects.get(user=user)
     log.info('evaluate_course_creator_status() - {}'.format(profile.faculty_status))
-    return profile.faculty_status == 'faculty_confirmed':
+    return profile.faculty_status == 'faculty_confirmed'
 
 @receiver(user_logged_in)
 def log_successful_login(sender, request, user, **kwargs):  # pylint: disable=unused-argument
