@@ -94,6 +94,11 @@ from .component import ADVANCED_COMPONENT_TYPES
 from .item import create_xblock_info
 from .library import LIBRARIES_ENABLED, get_library_creator_status
 
+#mcdaniel mar-2019
+from student.models import is_faculty
+from course_creators.views import _add_user
+from course_creators.models import CourseCreator
+
 log = logging.getLogger(__name__)
 
 __all__ = ['course_info_handler', 'course_handler', 'course_listing',
@@ -685,6 +690,14 @@ def get_courses_accessible_to_user(request, org=None):
      scale.
     """
     log.info('get_courses_accessible_to_user()')
+
+    # mcdaniel mar-2019: some housekeeping: if the user is confirmed_faculty
+    # based on an openstax oauth login then we should add them to course_creators
+    if is_faculty(request.user):
+        log.info('get_courses_accessible_to_user() - adding to course_creators')
+        _add_user(request.user, CourseCreator.GRANTED)
+
+
     if GlobalStaff().has_user(request.user):
         # user has global access so no need to get courses from django groups
         courses, in_process_course_actions = _accessible_courses_summary_iter(request, org)
