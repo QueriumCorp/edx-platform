@@ -67,6 +67,17 @@ urlpatterns = [
     # make this the first array entry. there will be around 75 existing entries in this array.
     url(r'^querium/stepwise/v1/', include('querium.stepwise.urls')),
 
+    # mcdaniel mar-2019
+    # hacky as hell, but this really works.
+    # first-time AM users get redirected to the LMS during the oauth process as a way
+    # to leverage the legacy "registration" codebase in LMS' third_party_auth code extensions.
+    # conveniently, users in this workflow are ultimately sent to this non-existent
+    # '/home/' page, thus, we take this opportunity to redirect them back to AM
+    #
+    # -- [sigh] --
+    #
+    url(r'^home/$', RedirectView.as_view(url='https://am.tryroverbyopenstax.org/' , permanent=False)),
+
     url(r'^$', branding_views.index, name='root'),   # Main marketing page, or redirect to courseware
 
     url(r'', include('student.urls')),
