@@ -92,6 +92,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.NOTICE(u"No new Contact records to add."))
             return
 
+        try:
+            campaign = Campaign.objects.filter(active=True).first()
+        except:
+            raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
+                                    u"Django Admin to create a Salesforce Campaign.")
+
         for instructor in new_instructors:
             self.stdout.write(u"adding new Instructor: " + instructor.user.username)
             contact = Contact(user=instructor, campaign=campaign)
