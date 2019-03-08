@@ -707,8 +707,8 @@ def get_courses_accessible_to_user(request, org=None):
 
     # mcdaniel mar-2019: some housekeeping: if the user is confirmed_faculty
     # based on an openstax oauth login then we should add them to course_creators
-    #if is_faculty(request.user):
-    setup_faculty_confirmed(request.user)
+    if is_faculty(request.user):
+        setup_faculty_confirmed(request.user)
 
 
     if GlobalStaff().has_user(request.user):
