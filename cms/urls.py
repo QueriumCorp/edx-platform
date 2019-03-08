@@ -53,7 +53,7 @@ urlpatterns = [
     # mcdaniel feb-2019
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
     # process there.
-    url(r'^register/$', RedirectView.as_view(url='https://roverbyopenstax.com/auth/login/openstax/' , permanent=False)),
+    url(r'^register/$', RedirectView.as_view(url='https://tryroverbyopenstax.org/auth/login/openstax/' , permanent=False)),
     url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=False)),
 
     # mcdaniel feb-2019 - add salesforce REST api
