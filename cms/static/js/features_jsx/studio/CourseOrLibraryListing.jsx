@@ -6,6 +6,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 export function CourseOrLibraryListing(props) {
+  console.info('props',props);
   const allowReruns = props.allowReruns;
   const linkClass = props.linkClass;
   const idBase = props.idBase;
@@ -22,27 +23,27 @@ export function CourseOrLibraryListing(props) {
 
   function getBookCard( course_number ){
     switch( course_number ){
-      case "978-1-947172-00-5": // OpenStax Prealgebra
+      case "OS94717200": // OpenStax Prealgebra
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/prealgebra_1.svg";
-      case "978-1-947172-25-8": // OpenStax Elementary Algebra
+      case "OS94717225": // OpenStax Elementary Algebra
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/elementary-algebra.svg";
-      case "978-1-947172-26-5": // OpenStax Intermediate Algebra
+      case "OS94717226": // OpenStax Intermediate Algebra
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/intermediate-algebra.svg";
-      case "978-1-947172-10-4": // OpenStax Algebra and Trigonometry
+      case "OS94717210": // OpenStax Algebra and Trigonometry
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/algebra_trigonometry.svg";
-      case "978-1-947172-12-8": // OpenStax College Algebra
+      case "OS94717212": // OpenStax College Algebra
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/college_algebra.svg";
-      case "978-1-947172-06-7": // OpenStax Precalculus
+      case "OS94717206": // OpenStax Precalculus
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/precalculus.svg";
-      case "978-1-947172-13-5": // OpenStax Calculus Volume 1
+      case "OS94717213": // OpenStax Calculus Volume 1
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/calculus-v1.svg";
-      case "978-1-947172-14-2": // OpenStax Calculus Volume 2
+      case "OS94717214": // OpenStax Calculus Volume 2
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/calculus-v2.svg";
-      case "978-1-947172-16-6": // OpenStax Calculus Volume 3
+      case "OS94717216": // OpenStax Calculus Volume 3
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/calculus-v3.svg";
-      case "978-1-947172-05-0": // OpenStax Introductory Statistics
+      case "OS94717205": // OpenStax Introductory Statistics
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/statistics.svg";
-      case "978-1-947172-47-0": // OpenStax Introductory Business Statistics
+      case "OS94717247": // OpenStax Introductory Business Statistics
         return "https://d3bxy9euw4e147.cloudfront.net/oscms-prodcms/media/documents/IntroductoryBusinessStatistics-bookcard.svg";
       default:
         return "https://avatars2.githubusercontent.com/u/3805549?s=400&v=4"
