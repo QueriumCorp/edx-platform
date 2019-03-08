@@ -670,6 +670,20 @@ def course_index(request, course_key):
             ) if current_action else None,
         })
 
+"""
+mcdaniel mar-2019
+for confirmed faculty: add a new record to course_creators so that open edx
+recognizes them as a qualified user of AM.
+
+Also add a salesforce contact record so that basic sales tracking can begin immediately.
+"""
+def setup_faculty_confirmed(user):
+    from openstax_integrator.salesforce.utils import add_contact
+    # add user to course_creators table
+    _add_user(user, CourseCreator.GRANTED)
+    # add a salesforce contact record for this user
+    add_contact(user)
+
 
 def get_courses_accessible_to_user(request, org=None):
     """
@@ -693,9 +707,8 @@ def get_courses_accessible_to_user(request, org=None):
 
     # mcdaniel mar-2019: some housekeeping: if the user is confirmed_faculty
     # based on an openstax oauth login then we should add them to course_creators
-    if is_faculty(request.user):
-        log.info('get_courses_accessible_to_user() - adding to course_creators')
-        _add_user(request.user, CourseCreator.GRANTED)
+    #if is_faculty(request.user):
+    setup_faculty_confirmed(request.user)
 
 
     if GlobalStaff().has_user(request.user):
