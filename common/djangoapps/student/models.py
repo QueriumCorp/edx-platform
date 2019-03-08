@@ -2413,6 +2413,15 @@ def create_comments_service_user(user):
 # page to login.  These are currently the only signals available, so we need to continue
 # identifying and logging failures separately (in views).
 
+"""
+mcdaniel mar-2019
+populated from Openstax oauth process based on a user detail field, faculty_status
+considered a valid course_creator if this field = faculty_confirmed
+"""
+def is_faculty(user):
+    profile = UserProfile.objects.get(user=user)
+    log.info('evaluate_course_creator_status() - {}'.format(profile.faculty_status))
+    return profile.faculty_status == 'faculty_confirmed':
 
 @receiver(user_logged_in)
 def log_successful_login(sender, request, user, **kwargs):  # pylint: disable=unused-argument
@@ -2421,7 +2430,6 @@ def log_successful_login(sender, request, user, **kwargs):  # pylint: disable=un
         AUDIT_LOG.info(u"Login success - user.id: {0}".format(user.id))
     else:
         AUDIT_LOG.info(u"Login success - {0} ({1})".format(user.username, user.email))
-
 
 @receiver(user_logged_out)
 def log_successful_logout(sender, request, user, **kwargs):  # pylint: disable=unused-argument
