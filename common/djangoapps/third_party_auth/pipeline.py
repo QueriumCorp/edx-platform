@@ -770,7 +770,6 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     """
     Use the user's authentication with the provider, if configured, as evidence of their identity being verified.
     """
-    logger.info('set_id_verification_status()')
     current_provider = provider.Registry.get_from_pipeline({'backend': strategy.request.backend.name, 'kwargs': kwargs})
     if user and current_provider.enable_sso_id_verification:
         # Get previous valid, non expired verification attempts for this SSO Provider and user
@@ -792,3 +791,12 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
                 identity_provider_type=current_provider.full_class_name,
                 identity_provider_slug=current_provider.slug,
             )
+    # try to extract and synch the faculty_status from the backend, if the backend if openstax
+    try:
+        faculty_status = details['faculty_status']
+        logger.info('set_id_verification_status() - set faculty status: {}'.format(faculty_status))
+        profile = student.models.UserProfile.objects.get(user=user)
+        profile.faculty_status = faculty_status
+        profile.save()
+    except ValueError:
+        pass
