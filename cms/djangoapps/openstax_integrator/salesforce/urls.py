@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework.documentation import include_docs_urls
 from rest_framework_swagger.views import get_swagger_view
 
-from .views import AllContactViewSet, PendingContactViewSet, NewContactViewSet, CampaignViewSet, CourseCreatorViewSet
+from .views import ContactViewSet, CampaignViewSet, CourseCreatorViewSet
 
 # Note: include_docs_urls stopped working after the python backport
 API_TITLE = u'OpenStax Salesforce api V1.00'
@@ -14,9 +14,7 @@ docs = include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)
 router = DefaultRouter(trailing_slash=False)
 
 # add routes with default CRUD behavior here
-router.register(ur'contacts/all', AllContactViewSet)
-router.register(ur'contacts/new', NewContactViewSet)
-router.register(ur'contacts/pending', PendingContactViewSet)
+router.register(ur'contacts', ContactViewSet)
 router.register(ur'campaigns', CampaignViewSet)
 router.register(ur'coursecreators', CourseCreatorViewSet)
 

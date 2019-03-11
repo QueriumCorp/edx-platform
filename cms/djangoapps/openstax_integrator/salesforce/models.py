@@ -38,7 +38,7 @@ class Contact(models.Model):
         ordering = [u'-created']
 
     # Django user fields
-    user = models.ForeignKey(CourseCreator, on_delete=models.CASCADE)
+    user = models.OneToOneField(CourseCreator, on_delete=models.CASCADE, primary_key=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
 

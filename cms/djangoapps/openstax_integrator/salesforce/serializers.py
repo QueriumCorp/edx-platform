@@ -7,6 +7,7 @@ from course_creators.models import CourseCreator
 
 
 class UserSerializer(serializers.ModelSerializer):
+
     class Meta(object):
         model = get_user_model()
         fields = (u'username', u'first_name', u'last_name', u'email', u'last_login', u'date_joined', u'is_active', u'is_superuser', u'is_staff')

@@ -7,26 +7,22 @@ from .models import Campaign, Contact
 from .serializers import CampaignSerializer, ContactSerializer, CourseCreatorSerializer
 from course_creators.models import CourseCreator
 
+from logging import getLogger
+logger = getLogger(__name__)
+
+
 class ContactViewSet(viewsets.ModelViewSet):
     serializer_class = ContactSerializer
-
-    # make the contact list searchable by username instead of the int ID pk of the model.
-    def retrieve(self, request, pk=None):
-        queryset = Contact.objects.select_related(u'user').filter(user__user__username=pk)
-        contact = get_object_or_404(queryset, pk=1)
-        serializer = ContactSerializer(contact)
-        return Response(serializer.data)
-
-class AllContactViewSet(ContactViewSet):
     queryset = Contact.objects.select_related(u'user').filter(user__state=u'granted')
 
-class PendingContactViewSet(ContactViewSet):
-    valid_contacts = Contact.objects.select_related(u'user').filter(user__state=u'granted')
-    queryset = valid_contacts.filter(salesforce_push_pending=True).filter(contact_id__isnull=False)
+   # make the contact list searchable by username instead of the int ID pk of the model.
+    def retrieve(self, request, pk=None):
+        logger.info('ContactViewSet.retrieve() {}'.format(pk))
 
-class NewContactViewSet(ContactViewSet):
-    valid_contacts = Contact.objects.select_related(u'user').filter(user__state=u'granted')
-    queryset = valid_contacts.filter(contact_id__isnull=True)
+        queryset = Contact.objects.select_related(u'user').filter(user__user__username=pk)
+        contact = get_object_or_404(queryset)
+        serializer = ContactSerializer(contact)
+        return Response(serializer.data)
 
 class CourseCreatorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CourseCreator.objects.all()
