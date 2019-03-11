@@ -212,18 +212,37 @@ if (is_proctored_exam) {
                                         </span>
                                     <% } %>
                                 <% } else if (xblockInfo.get('release_date')) { %>
-                                    <span class="icon fa fa-clock-o" aria-hidden="true"></span>
-                                    <%- gettext('Scheduled:') %>
-                                    <% if (xblockInfo.get('release_date')) { %>
-                                        <%- xblockInfo.get('release_date') %>
-                                    <% } %>
+
+                                  <!-- McDaniel mar-2019: wrapping original fa icon snippets with "edit" anchors from "Set assignment date", above. -->
+                                  <% if (xblockInfo.isEditableOnCourseOutline()) { %>
+                                      <span class="action-item action-configure">
+                                          <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
+                                            <span class="icon fa fa-clock-o" aria-hidden="true"></span>
+                                            <%- gettext('Scheduled:') %>
+                                            <% if (xblockInfo.get('release_date')) { %>
+                                                <%- xblockInfo.get('release_date') %>
+                                            <% } %>
+                                          </a>
+                                      </span>
+                                  <% } %>
 
                                 <% } else { %>
-                                    <span class="icon fa fa-clock-o" aria-hidden="true"></span>
-                                    <%- gettext('Unscheduled') %>
-                                    <% if (xblockInfo.get('release_date')) { %>
-                                        <%- xblockInfo.get('release_date') %>
+
+                                    <!-- McDaniel mar-2019: wrapping original fa icon snippets with "edit" anchors from "Set assignment date", above. -->
+                                    <% if (xblockInfo.isEditableOnCourseOutline()) { %>
+                                        <span class="action-item action-configure">
+                                            <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
+
+                                              <span class="icon fa fa-clock-o" aria-hidden="true"></span>
+                                              <%- gettext('Unscheduled') %>
+                                              <% if (xblockInfo.get('release_date')) { %>
+                                                  <%- xblockInfo.get('release_date') %>
+                                              <% } %>
+
+                                            </a>
+                                        </span>
                                     <% } %>
+
                                 <% } %>
                             <% } %>
                         </span>
