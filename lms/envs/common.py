@@ -922,15 +922,15 @@ ROOT_URLCONF = 'lms.urls'
 
 # Platform Email
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'registration@example.com'
-DEFAULT_FEEDBACK_EMAIL = 'feedback@example.com'
-SERVER_EMAIL = 'devops@example.com'
-TECH_SUPPORT_EMAIL = 'technical@example.com'
-CONTACT_EMAIL = 'info@example.com'
-BUGS_EMAIL = 'bugs@example.com'
-UNIVERSITY_EMAIL = 'university@example.com'
-PRESS_EMAIL = 'press@example.com'
-FINANCE_EMAIL = ''
+DEFAULT_FROM_EMAIL = 'openstaxrover@gmail.com'
+DEFAULT_FEEDBACK_EMAIL = 'openstaxrover@gmail.com'
+SERVER_EMAIL = 'openstaxrover@gmail.com'
+TECH_SUPPORT_EMAIL = 'openstaxrover@gmail.com'
+CONTACT_EMAIL = 'openstaxrover@gmail.com'
+BUGS_EMAIL = 'openstaxrover@gmail.com'
+UNIVERSITY_EMAIL = 'openstaxrover@gmail.com'
+PRESS_EMAIL = 'openstaxrover@gmail.com'
+FINANCE_EMAIL = 'openstaxrover@gmail.com'
 
 # Platform mailing address
 CONTACT_MAILING_ADDRESS = ''
@@ -1130,7 +1130,7 @@ ZENDESK_CUSTOM_FIELDS = {}
 EMBARGO_SITE_REDIRECT_URL = None
 
 ##### shoppingcart Payment #####
-PAYMENT_SUPPORT_EMAIL = 'payment@example.com'
+PAYMENT_SUPPORT_EMAIL = 'openstaxrover@gmail.com'
 
 ##### Using cybersource by default #####
 
@@ -1953,7 +1953,7 @@ BLOCK_STRUCTURES_SETTINGS = dict(
 
 # Suffix used to construct 'from' email address for bulk emails.
 # A course-specific identifier is prepended.
-BULK_EMAIL_DEFAULT_FROM_EMAIL = 'no-reply@example.com'
+BULK_EMAIL_DEFAULT_FROM_EMAIL = 'openstaxrover@gmail.com'
 
 # Parameters for breaking down course enrollment into subtasks.
 BULK_EMAIL_EMAILS_PER_TASK = 100
@@ -3308,8 +3308,8 @@ DEFAULT_SITE_THEME = None
 ENABLE_COMPREHENSIVE_THEMING = True
 
 # API access management
-API_ACCESS_MANAGER_EMAIL = 'api-access@example.com'
-API_ACCESS_FROM_EMAIL = 'api-requests@example.com'
+API_ACCESS_MANAGER_EMAIL = 'openstaxrover@gmail.com'
+API_ACCESS_FROM_EMAIL = 'openstaxrover@gmail.com'
 API_DOCUMENTATION_URL = 'https://course-catalog-api-guide.readthedocs.io/en/latest/'
 AUTH_DOCUMENTATION_URL = 'https://course-catalog-api-guide.readthedocs.io/en/latest/authentication/index.html'
 
