@@ -54,6 +54,10 @@ from student_account import views as student_account_views
 from track import views as track_views
 from util import views as util_views
 
+# mcdaniel mar-2019
+from logging import getLogger
+logger = getLogger(__name__)
+
 if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
     django_autodiscover()
     admin.site.site_header = _('LMS Administration')
@@ -62,6 +66,24 @@ if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
     if password_policy_compliance.should_enforce_compliance_on_login():
         admin.site.login_form = PasswordPolicyAwareAdminAuthForm
 
+"""
+mcdaniel mar-2019
+new users are bounced over to LMS to leverage the legacy registration codebase.
+when these users complete the registration process (fully automated via oauth)
+they are redirect to '/home/', a route that does not exist in LMS.
+
+We seize this opportunity to redirect them back over to AM. this method
+builds up the URL for AM.
+"""
+def am_redirect():
+    scheme = u"https" if settings.HTTPS == "on" else u"http"
+    url = u'{scheme}://am.{domain}/auth/login/openstax/'.format(
+            scheme = scheme,
+            domain=settings.SESSION_COOKIE_DOMAIN
+            )
+    return url
+
+logger.info('am_redirect() - {}'.format(am_redirect()))
 
 urlpatterns = [
     # make this the first array entry. there will be around 75 existing entries in this array.
@@ -76,7 +98,7 @@ urlpatterns = [
     #
     # -- [sigh] --
     #
-    url(r'^home/$', RedirectView.as_view(url='https://am.tryroverbyopenstax.org/' , permanent=False)),
+    url(r'^home/$', RedirectView.as_view(url=am_redirect() , permanent=False)),
 
     url(r'^$', branding_views.index, name='root'),   # Main marketing page, or redirect to courseware
 

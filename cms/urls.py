@@ -46,14 +46,26 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 # Pattern to match a library key only
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
+"""
+mcdaniel mar-2019
+new users are bounced over to LMS to leverage the legacy registration codebase.
+This method builds up the URL for LMS.
+"""
+def registration_redirect():
+    scheme = u"https" if settings.HTTPS == "on" else u"http"
+    url = u'{scheme}://{domain}/auth/login/openstax/'.format(
+            scheme = scheme,
+            domain=settings.SESSION_COOKIE_DOMAIN
+            )
+    return url
 
-logger.info('REDIRECT_AM_REGISTRATION - {}'.format(os.environ.get('REDIRECT_AM_REGISTRATION', '')))
+logger.info('registration_redirect() - {}'.format(registration_redirect()))
 
 urlpatterns = [
     # mcdaniel feb-2019
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
     # process there.
-    url(r'^register/$', RedirectView.as_view(url='https://tryroverbyopenstax.org/auth/login/openstax/' , permanent=False)),
+    url(r'^register/$', RedirectView.as_view(url=registration_redirect() , permanent=False)),
     url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=False)),
 
     # mcdaniel feb-2019 - add salesforce REST api
