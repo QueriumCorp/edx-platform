@@ -567,7 +567,11 @@ def course_listing(request):
         u'user': user,
         u'request_course_creator_url': reverse('request_course_creator'),
         u'course_creator_status': _get_course_creator_status(user),
-        u'rerun_creator_status': GlobalStaff().has_user(user),
+        u'rerun_creator_status': _get_course_creator_status(user),
+        # McDaniel mar-2019: we're not using the "staff" designation to grant
+        # course creator nor course management access. this is instead determined
+        # by a field value "confirmed_faculty" that comes from the openstax oauth process.
+        #u'rerun_creator_status': GlobalStaff().has_user(user),
         u'allow_unicode_course_id': settings.FEATURES.get(u'ALLOW_UNICODE_COURSE_ID', False),
         u'allow_course_reruns': settings.FEATURES.get(u'ALLOW_COURSE_RERUNS', True),
         u'optimization_enabled': optimization_enabled
