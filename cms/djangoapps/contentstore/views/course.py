@@ -1112,7 +1112,14 @@ def settings_handler(request, course_key_string):
             sidebar_html_enabled = course_experience_waffle().is_enabled(ENABLE_COURSE_ABOUT_SIDEBAR_HTML)
             # self_paced_enabled = SelfPacedConfiguration.current().enabled
 
+            log.info('Is current user GlobalStaff? - {}'.format(GlobalStaff().has_user(request.user)))
+
             settings_context = {
+                # mcdaniel mar-2019: adding a custom variable to control visibility
+                # of advanced settings in course menu.
+                'advanced_settings_visible': False,
+                'group_configuration_visible': GlobalStaff().has_user(request.user),
+
                 'context_course': course_module,
                 'course_locator': course_key,
                 'lms_link_for_about_page': get_link_for_about_page(course_module),
@@ -1773,11 +1780,6 @@ def _get_course_creator_status(user):
     If the user passed in has not previously visited the index page, it will be
     added with status 'unrequested' if the course creator group is in use.
     """
-    log.info('_get_course_creator_status() Hard-coding grant status for user: {}'.format(user.username))
-
-    course_creator_status = 'granted'
-    return course_creator_status
-
 
     if user.is_staff:
         course_creator_status = 'granted'
@@ -1793,4 +1795,5 @@ def _get_course_creator_status(user):
     else:
         course_creator_status = 'granted'
 
+    log.info('_get_course_creator_status() user: {user} - {status}'.format(user = user.username, status = course_creator_status))
     return course_creator_status
