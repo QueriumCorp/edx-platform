@@ -77,7 +77,7 @@ def get_user_permissions(user, course_key, org=None):
     permissions for that organization as a whole.
     """
 
-    log.info('get_user_permissions() on : {}'.format(course_key))
+    #log.info('get_user_permissions() on : {}'.format(course_key))
 
     if org is None:
         org = course_key.org
