@@ -59,8 +59,6 @@ def registration_redirect():
             )
     return url
 
-logger.info('registration_redirect() - {}'.format(registration_redirect()))
-
 urlpatterns = [
     # mcdaniel feb-2019
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
