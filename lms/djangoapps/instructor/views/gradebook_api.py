@@ -86,7 +86,14 @@ def get_grade_book_page(request, course, course_key):
     with modulestore().bulk_operations(course.location.course_key):
         student_info = [
             {
-                'username': student.username,
+                # mcdaniel mar-2019: elminate the leading and trail underscores
+                # from oauth-generated usernames. This will leave us with a
+                # Openstax user ID
+                'username': student.username.replace('_', ''),
+
+                # mcdaniel mar-2019: add a fully formatted first & last name
+                # for the gradebook recordset
+                'full_name': student.first_name + ' ' + student.last_name,
                 'id': student.id,
                 'email': student.email,
                 'grade_summary': CourseGradeFactory().read(student, course).summary
