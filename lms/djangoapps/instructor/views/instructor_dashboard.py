@@ -123,7 +123,8 @@ def instructor_dashboard_2(request, course_id):
     sections = [
         _section_course_info(course, access),
         _section_membership(course, access),
-        _section_cohort_management(course, access),
+        # mcdaniel mar-2019: we're not currently using cohorts.
+        # _section_cohort_management(course, access),
         _section_discussions_management(course, access),
         _section_student_admin(course, access),
         _section_data_download(course, access),
@@ -142,7 +143,8 @@ def instructor_dashboard_2(request, course_id):
             link_start=link_start, link_end=HTML("</a>"), analytics_dashboard_name=settings.ANALYTICS_DASHBOARD_NAME)
 
         # Temporarily show the "Analytics" section until we have a better way of linking to Insights
-        sections.append(_section_analytics(course, access))
+        # mcdaniel mar-2019: we're not using analytics. removing this from the sub menu
+        # sections.append(_section_analytics(course, access))
 
     # Check if there is corresponding entry in the CourseMode Table related to the Instructor Dashboard course
     course_mode_has_price = False
