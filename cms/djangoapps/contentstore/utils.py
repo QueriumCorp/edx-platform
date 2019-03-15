@@ -130,6 +130,31 @@ def get_lms_link_for_item(location, preview=False):
         location=text_type(location),
     )
 
+def get_lms_link_for_gradebook(location):
+    """
+    McDaniel mar-2019: copied from above and tweaked to return URL to the LMS gradebook.
+    Returns an LMS link to the course gradebook.
+
+    :param location: the location to jump to
+    """
+    assert isinstance(location, UsageKey)
+
+    # checks LMS_BASE value in site configuration for the given course_org_filter(org)
+    # if not found returns settings.LMS_BASE
+    lms_base = SiteConfiguration.get_value_for_org(
+        location.org,
+        "LMS_BASE",
+        settings.LMS_BASE
+    )
+
+    if lms_base is None:
+        return None
+
+    return u"//{lms_base}/courses/{course_key}/instructor/api/gradebook".format(
+        lms_base=lms_base,
+        course_key=text_type(location.course_key)
+    )
+
 
 # pylint: disable=invalid-name
 def get_lms_link_for_certificate_web_view(user_id, course_key, mode):
