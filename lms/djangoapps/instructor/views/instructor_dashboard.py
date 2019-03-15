@@ -232,6 +232,8 @@ def instructor_dashboard_2(request, course_id):
     context = {
         'course': course,
         'studio_url': get_studio_url(course, 'course'),
+        # mcdaniel mar-2019: so that we can add a shortcut button to the Gradebook
+        'spoc_gradebook_url': reverse('spoc_gradebook', kwargs={'course_id': unicode(course_key)}),
         'sections': sections,
         'disable_buttons': disable_buttons,
         'analytics_dashboard_message': analytics_dashboard_message,
