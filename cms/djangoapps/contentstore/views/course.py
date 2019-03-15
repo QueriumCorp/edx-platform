@@ -43,6 +43,7 @@ from contentstore.tasks import rerun_course as rerun_course_task
 from contentstore.utils import (
     add_instructor,
     get_lms_link_for_item,
+    get_lms_link_for_gradebook,         # added by mcdaniel mar-2019
     initialize_permissions,
     remove_all_instructors,
     reverse_course_url,
@@ -636,6 +637,8 @@ def course_index(request, course_key):
         if not course_module:
             raise Http404
         lms_link = get_lms_link_for_item(course_module.location)
+        ## McDaniel mar-2019: add a url to the LMS Gradebook
+        gradebook_link = get_lms_link_for_gradebook(course_module.location)
         reindex_link = None
         if settings.FEATURES.get('ENABLE_COURSEWARE_INDEX', False):
             reindex_link = "/course/{course_id}/search_reindex".format(course_id=unicode(course_key))
@@ -656,6 +659,8 @@ def course_index(request, course_key):
         return render_to_response('course_outline.html', {
             'language_code': request.LANGUAGE_CODE,
             'context_course': course_module,
+            ## McDaniel mar-2019: add a url to the LMS Gradebook
+            'gradebook_link': gradebook_link,
             'lms_link': lms_link,
             'sections': sections,
             'course_structure': course_structure,
