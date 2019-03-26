@@ -1110,3 +1110,11 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.LMS, plugin_c
 ########################## Derive Any Derived Settings  #######################
 
 derive_settings(__name__)
+
+# McDaniuel mar-2019: install figures
+if 'figures' in INSTALLED_APPS:
+    import figures
+    figures.update_settings(
+        WEBPACK_LOADER,
+        CELERYBEAT_SCHEDULE,
+        ENV_TOKENS.get('FIGURES', {}))

@@ -1119,3 +1119,10 @@ if settings.FEATURES.get('ENABLE_API_DOCS'):
     ]
 
 urlpatterns.extend(plugin_urls.get_patterns(plugin_constants.ProjectType.LMS))
+
+# McDaniel mar-2019: install Figures
+if 'figures' in settings.INSTALLED_APPS:
+        urlpatterns += (
+                url(r'^figures/',
+                    include('figures.urls', namespace='figures')),
+        )
