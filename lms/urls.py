@@ -91,7 +91,7 @@ def am_redirect():
             scheme = scheme,
             url=redirect_url
             )
-    logger.info('am_redirect() - {}'.format(url))
+    logger.debug('am_redirect() - {}'.format(url))
     return url
 
 
