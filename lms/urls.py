@@ -74,12 +74,22 @@ they are redirect to '/home/', a route that does not exist in LMS.
 
 We seize this opportunity to redirect them back over to AM. this method
 builds up the URL for AM.
+
+note: settings.SESSION_COOKIE_DOMAIN sporadically was unassigned, leading
+      to a redirect url of https://am./auth/login/openstax/
+      the following is obviously overkill, but, i digress.
 """
+redirect_url = settings.CMS_BASE
+if not redirect_url and settings.SITE_NAME is not None:
+    redirect_url = 'am.' + settings.SITE_NAME
+if not redirect_url and settings.SESSION_COOKIE_DOMAIN is not None:
+    redirect_url = 'am.' + settings.SESSION_COOKIE_DOMAIN
+
 def am_redirect():
     scheme = u"https" if settings.HTTPS == "on" else u"http"
-    url = u'{scheme}://am.{domain}/auth/login/openstax/'.format(
+    url = u'{scheme}://{url}/auth/login/openstax/'.format(
             scheme = scheme,
-            domain=settings.SESSION_COOKIE_DOMAIN
+            url=redirect_url
             )
     return url
 
