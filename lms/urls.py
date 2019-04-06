@@ -91,9 +91,9 @@ def am_redirect():
             scheme = scheme,
             url=redirect_url
             )
+    logger.info('am_redirect() - {}'.format(url))
     return url
 
-logger.info('am_redirect() - {}'.format(am_redirect()))
 
 urlpatterns = [
     # make this the first array entry. there will be around 75 existing entries in this array.
