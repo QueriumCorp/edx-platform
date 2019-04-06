@@ -430,8 +430,8 @@ def parse_query_params(strategy, response, *args, **kwargs):
     # If auth_entry is not in the session, we got here by a non-standard workflow.
     # We simply assume 'login' in that case.
     #logger.info(
-        'parse_query_params() - Initiating oAuth: {}'.format(strategy.request.META['SERVER_NAME'])
-        )
+    #    'parse_query_params() - Initiating oAuth: {}'.format(strategy.request.META['SERVER_NAME'])
+    #    )
 
     auth_entry = strategy.request.session.get(AUTH_ENTRY_KEY, AUTH_ENTRY_LOGIN)
     if auth_entry not in _AUTH_ENTRY_CHOICES:
