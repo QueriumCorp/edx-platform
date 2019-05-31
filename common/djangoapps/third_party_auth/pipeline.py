@@ -791,12 +791,24 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
                 identity_provider_type=current_provider.full_class_name,
                 identity_provider_slug=current_provider.slug,
             )
+
     # try to extract and synch the faculty_status from the backend, if the backend if openstax
-    try:
-        faculty_status = details['faculty_status']
-        logger.info('set_id_verification_status() - set faculty status: {}'.format(faculty_status))
-        profile = student.models.UserProfile.objects.get(user=user)
-        profile.faculty_status = faculty_status
-        profile.save()
-    except ValueError:
-        pass
+    faculty_status = "Unassigned"
+    backend_name = strategy.request.backend.name
+    logger.info('set_id_verification_status() - backend: {}'.format(backend_name))
+    if backend_name == "openstax":
+        try:
+            faculty_status = details['faculty_status']
+        except ValueError:
+            pass
+
+    if backend_name == "lti":
+        try:
+            faculty_status = "LTI-Skipping"
+        except ValueError:
+            pass
+
+    logger.info('set_id_verification_status() - set faculty status: {}'.format(faculty_status))
+    profile = student.models.UserProfile.objects.get(user=user)
+    profile.faculty_status = faculty_status
+    profile.save()
