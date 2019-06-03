@@ -85,6 +85,9 @@ from . import provider
 import os
 SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
 
+# mcdaniel jun-2019 - Willo Labs LTI integration
+from lti_faculty_verification import is_lti_faculty
+
 
 
 # These are the query string params you can pass
@@ -770,6 +773,7 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     """
     Use the user's authentication with the provider, if configured, as evidence of their identity being verified.
     """
+
     current_provider = provider.Registry.get_from_pipeline({'backend': strategy.request.backend.name, 'kwargs': kwargs})
     if user and current_provider.enable_sso_id_verification:
         # Get previous valid, non expired verification attempts for this SSO Provider and user
@@ -804,7 +808,7 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
 
     if backend_name == "lti":
         try:
-            faculty_status = "LTI-Skipping"
+            faculty_status = is_lti_faculty(strategy, details, user)
         except ValueError:
             pass
 
