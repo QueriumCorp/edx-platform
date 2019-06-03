@@ -110,7 +110,10 @@ roles_param_examples = (
 
 def is_lti_faculty(strategy, details, user=None, *args, **kwargs):
 
-    # Fix note: extract this from strategy.
+    """
+    Extract the LTI roles tuples parameter from details, if it exists.
+    Example:
+    =======================
     roles_param = (
         'Learner',
         'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
@@ -119,7 +122,8 @@ def is_lti_faculty(strategy, details, user=None, *args, **kwargs):
         'TeachingAssistant',
         'urn:lti:instrole:ims/lis/Administrator'
     )
-
+    """
+    roles_param = details.get("roles_param", ())
 
     for role_param in roles_param:
         # build the lti_params dict similar to what exists in openedx third_party_auth LTIAuthBackend
