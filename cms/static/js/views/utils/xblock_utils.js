@@ -142,7 +142,11 @@ define(['jquery', 'underscore', 'gettext', 'common/js/components/utils/view_util
                     );
                 },
                 messageBody;
-            xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') || 'component'; // eslint-disable-line no-param-reassign
+            if (xblockType) {
+              xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') || 'component'; // eslint-disable-line no-param-reassign
+            } else {
+              xblockType = 'item'
+            }
             messageBody = StringUtils.interpolate(
                     gettext('Deleting this {xblock_type} is permanent and cannot be undone.'),
                     {xblock_type: xblockType},
@@ -258,11 +262,18 @@ define(['jquery', 'underscore', 'gettext', 'common/js/components/utils/view_util
         };
 
         getXBlockType = function(category, parentInfo, translate) {
+            /* mcdaniel jun-2019 - add criteria for renamed elements. */
             var xblockType = category;
             if (category === 'chapter') {
                 xblockType = translate ? gettext('section') : 'section';
             } else if (category === 'sequential') {
                 xblockType = translate ? gettext('subsection') : 'subsection';
+            } else if (category === 'assignment') {
+                xblockType = 'subsection';
+            } else if (category === 'question') {
+                xblockType = 'unit';
+            } else if (category === 'chapter') {
+                xblockType = 'section';
             } else if (category === 'vertical' && (!parentInfo || parentInfo.get('category') === 'sequential')) {
                 xblockType = translate ? gettext('unit') : 'unit';
             }

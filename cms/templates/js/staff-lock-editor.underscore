@@ -1,3 +1,8 @@
+<%
+if (xblockType) {
+  xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter')
+}
+%>
 <form>
 <h3 class="modal-section-title">
     <% if (xblockInfo.isVertical()) { %>

@@ -28,6 +28,9 @@ var addStatusMessage = function (statusType, message) {
     statusMessages.push({iconClass: statusIconClass, text: message});
 };
 
+if (xblockType) {
+  xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter')
+}
 if (prereq) {
     var prereqDisplayName = '';
     _.each(xblockInfo.get('prereqs'), function (p) {

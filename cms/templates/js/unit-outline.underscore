@@ -1,3 +1,8 @@
+<%
+if (xblockType) {
+  xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter')
+}
+%>
 <% if (parentInfo) { %>
     <li class="outline-item outline-<%= xblockType %> <%= visibilityClass %> <%= xblockInfo.get('id') === currentUnitId ? 'is-current' : '' %>"
         data-parent="<%= parentInfo.get('id') %>" data-locator="<%= xblockInfo.get('id') %>">
