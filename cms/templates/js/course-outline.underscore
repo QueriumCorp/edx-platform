@@ -28,9 +28,12 @@ var addStatusMessage = function (statusType, message) {
     statusMessages.push({iconClass: statusIconClass, text: message});
 };
 
+/*---------------------------------------------------
+ mcdaniel jun-2019: this breaks styling in the outline, and, breaks the expand/collapse action button.
 if (xblockType) {
   xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter')
 }
+*----------------------------------------------------*/
 if (prereq) {
     var prereqDisplayName = '';
     _.each(xblockInfo.get('prereqs'), function (p) {
