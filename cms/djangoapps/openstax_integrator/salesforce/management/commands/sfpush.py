@@ -89,7 +89,19 @@ class Command(BaseCommand):
                 u'Soft_Ask_Decision_date__c': self.serialDate(contact.soft_ask_decision_date),
                 u'Estimated_Enrollment__c': contact.estimated_enrollment,
                 u'real_course_created_at__c': self.realCourseCreated(),
-                u'latest_adoption_decision__c': contact.latest_adoption_decision
+                u'latest_adoption_decision__c': contact.latest_adoption_decision,
+
+                """
+                mcdaniel jun-2019
+                Super training wheels field additions
+                """
+                u'Completed_super_training_wheel_1': self.serialDate(contact.completed_super_training_wheel_1),
+                u'Downloaded_GSG__c': self.serialDate(contact.downloaded_gsg),
+                u'Watched_video__c': self.serialDate(contact.watched_video),
+                u'Completed_AM_page_tips__c': self.serialDate(contact.completed_am_page_tips),
+                u'Created_a_course__c': self.serialDate(contact.created_a_course),
+                u'Completed_building_assignments_training__c': self.serialDate(contact.completed_building_assignments_training),
+                u'Completed_how_to_set_up_grading_page_tip__c': self.serialDate(contact.completed_how_to_set_up_grading_page_tip)
                 }
             sf_updates.append(sf_campaign_member)
 

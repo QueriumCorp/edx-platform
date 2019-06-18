@@ -65,13 +65,13 @@ class Contact(models.Model):
     # mcdaniel jun-2019
     # Expanded Training Wheels fields from Allison/Denver
     # https://docs.google.com/spreadsheets/d/1--9XMFC0bouIoR3vGX8ipVzEtlgtXZ_2kd8knwVPZVo/edit?ts=5d015789#gid=0
-    Completed_super_training_wheel_1 = models.DateTimeField(blank=True, null=True)
-    Downloaded_GSG = models.DateTimeField(blank=True, null=True)
-    Watched_video = models.DateTimeField(blank=True, null=True)
-    Completed_AM_page_tips = models.DateTimeField(blank=True, null=True)
-    Created_a_course = models.DateTimeField(blank=True, null=True)
-    Completed_building_assignments_training = models.DateTimeField(blank=True, null=True)
-    Completed_how_to_set_up_grading_page_tip = models.DateTimeField(blank=True, null=True)
+    completed_super_training_wheel_1 = models.DateTimeField(blank=True, null=True)
+    downloaded_gsg = models.DateTimeField(blank=True, null=True)
+    watched_video = models.DateTimeField(blank=True, null=True)
+    completed_am_page_tips = models.DateTimeField(blank=True, null=True)
+    created_a_course = models.DateTimeField(blank=True, null=True)
+    completed_building_assignments_training = models.DateTimeField(blank=True, null=True)
+    completed_how_to_set_up_grading_page_tip = models.DateTimeField(blank=True, null=True)
 
     # TBD 3rd party system
     soft_ask_decision = models.CharField(max_length=255, blank=True, null=True)
