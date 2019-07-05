@@ -100,6 +100,9 @@ from student.models import is_faculty
 from course_creators.views import _add_user
 from course_creators.models import CourseCreator
 
+# mcdaniel jul-2019
+from public import _get_login_context
+
 log = logging.getLogger(__name__)
 
 __all__ = ['course_info_handler', 'course_handler', 'course_listing',
@@ -507,9 +510,17 @@ def _accessible_libraries_iter(user, org=None):
 @login_required
 @ensure_csrf_cookie
 def course_listing(request):
+
+    # mcdaniel jul-2019
+    # trap and redirect authenticated users who are not course creators.
+    if request.user.is_authenticated and not (_get_course_creator_status(request.user) == 'granted'):
+        context = _get_login_context(request)
+        return render_to_response('home-noninstructor-oops.html', context)
+
     """
     List all courses and libraries available to the logged in user
     """
+
     log.info('course_listing()'.format(request))
     optimization_enabled = GlobalStaff().has_user(request.user) and \
         WaffleSwitchNamespace(name=WAFFLE_NAMESPACE).is_enabled(u'enable_global_staff_optimization')

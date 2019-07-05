@@ -31,7 +31,7 @@ from student.helpers import (
 )
 
 
-__all__ = ['signup', 'login_page', 'howitworks', 'accessibility']
+__all__ = ['signup', 'login_page', 'howitworks', 'accessibility', 'noninstructor']
 
 
 @ensure_csrf_cookie
@@ -95,6 +95,14 @@ def howitworks(request):
     else:
         context = _get_login_context(request)
         return render_to_response('howitworks.html', context)
+
+def noninstructor(request):
+    "Proxy view for authenticated non-instructors"
+    #if request.user.is_authenticated:
+    #    return redirect('/home/')
+    #else:
+    context = _get_login_context(request)
+    return render_to_response('home-noninstructor-oops.html', context)
 
 
 @waffle_switch('{}.{}'.format(waffle.WAFFLE_NAMESPACE, waffle.ENABLE_ACCESSIBILITY_POLICY_PAGE))
