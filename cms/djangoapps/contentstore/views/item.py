@@ -25,7 +25,7 @@ from xblock.fields import Scope
 
 import dogstats_wrapper as dog_stats_api
 from cms.lib.xblock.authoring_mixin import VISIBILITY_VIEW
-from contentstore.utils import (
+from cms.djangoapps.contentstore.utils import (
     ancestor_has_staff_lock,
     find_release_date_source,
     find_staff_lock_source,
@@ -36,7 +36,7 @@ from contentstore.utils import (
     is_currently_visible_to_students,
     is_self_paced
 )
-from contentstore.views.helpers import (
+from cms.djangoapps.contentstore.views.helpers import (
     create_xblock,
     get_parent_xblock,
     is_unit,
@@ -45,7 +45,7 @@ from contentstore.views.helpers import (
     xblock_studio_url,
     xblock_type_display_name
 )
-from contentstore.views.preview import get_preview_fragment
+from cms.djangoapps.contentstore.views.preview import get_preview_fragment
 from edxmako.shortcuts import render_to_string
 from help_tokens.core import HelpUrlExpert
 from models.settings.course_grading import CourseGradingModel
