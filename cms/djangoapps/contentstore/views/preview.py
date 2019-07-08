@@ -16,8 +16,8 @@ from xblock.runtime import KvsFieldData
 
 import static_replace
 from cms.lib.xblock.field_data import CmsFieldData
-from cms.djangoapps.contentstore.utils import get_visibility_partition_info
-from cms.djangoapps.contentstore.views.access import get_user_role
+from contentstore.utils import get_visibility_partition_info
+from contentstore.views.access import get_user_role
 from edxmako.shortcuts import render_to_string
 from lms.djangoapps.lms_xblock.field_data import LmsFieldData
 from openedx.core.lib.license import wrap_with_license
@@ -30,7 +30,7 @@ from openedx.core.lib.xblock_utils import (
     xblock_local_resource_url
 )
 from util.sandboxing import can_execute_unsafe_code, get_python_lib_zip
-from cms.djangoapps.xblock_config.models import StudioConfig
+from xblock_config.models import StudioConfig
 from xblock_django.user_service import DjangoXBlockUserService
 from xmodule.contentstore.django import contentstore
 from xmodule.error_module import ErrorDescriptor
@@ -54,7 +54,6 @@ log = logging.getLogger(__name__)
 def preview_handler(request, usage_key_string, handler, suffix=''):
     """
     Dispatch an AJAX action to an xblock
-
     usage_key_string: The usage_key_string-id of the block to dispatch to, passed through `quote_slashes`
     handler: The handler to execute
     suffix: The remainder of the url to be passed to the handler
@@ -150,7 +149,6 @@ def _preview_module_system(request, descriptor, field_data):
     """
     Returns a ModuleSystem for the specified descriptor that is specialized for
     rendering module previews.
-
     request: The active django request
     descriptor: An XModuleDescriptor
     """
@@ -237,7 +235,6 @@ def _load_preview_module(request, descriptor):
     """
     Return a preview XModule instantiated from the supplied descriptor. Will use mutable fields
     if XModule supports an author_view. Otherwise, will use immutable fields and student_view.
-
     request: The active django request
     descriptor: An XModuleDescriptor
     """

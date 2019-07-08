@@ -17,9 +17,9 @@ from xblock.exceptions import NoSuchHandlerError
 from xblock.plugin import PluginMissingError
 from xblock.runtime import Mixologist
 
-from cms.djangoapps.contentstore.utils import get_lms_link_for_item, get_xblock_aside_instance, reverse_course_url
-from cms.djangoapps.contentstore.views.helpers import get_parent_xblock, is_unit, xblock_type_display_name
-from cms.djangoapps.contentstore.views.item import StudioEditModuleRuntime, add_container_page_publishing_info, create_xblock_info
+from contentstore.utils import get_lms_link_for_item, get_xblock_aside_instance, reverse_course_url
+from contentstore.views.helpers import get_parent_xblock, is_unit, xblock_type_display_name
+from contentstore.views.item import StudioEditModuleRuntime, add_container_page_publishing_info, create_xblock_info
 from edxmako.shortcuts import render_to_response
 from student.auth import has_course_author_access
 from xblock_django.api import authorable_xblocks, disabled_xblocks
@@ -54,10 +54,8 @@ CONTAINER_TEMPLATES = [
 def _advanced_component_types(show_unsupported):
     """
     Return advanced component types which can be created.
-
     Args:
         show_unsupported: if True, unsupported XBlocks may be included in the return value
-
     Returns:
         A dict of authorable XBlock types and their support levels (see XBlockStudioConfiguration). For example:
         {
@@ -96,7 +94,6 @@ def _load_mixed_class(category):
 def container_handler(request, usage_key_string):
     """
     The restful handler for container xblock requests.
-
     GET
         html: returns the HTML page for editing a container
         json: not currently supported
@@ -179,7 +176,6 @@ def get_component_templates(courselike, library=False):
     def create_template_dict(name, category, support_level, boilerplate_name=None, tab="common", hinted=False):
         """
         Creates a component template dict.
-
         Parameters
             display_name: the user-visible name of the component
             category: the type of component (problem, html, etc.)
@@ -187,7 +183,6 @@ def get_component_templates(courselike, library=False):
             boilerplate_name: name of boilerplate for filling in default values. May be None.
             hinted: True if hinted problem else False
             tab: common(default)/advanced, which tab it goes in
-
         """
         return {
             "display_name": name,
@@ -201,12 +196,10 @@ def get_component_templates(courselike, library=False):
     def component_support_level(editable_types, name, template=None):
         """
         Returns the support level for the given xblock name/template combination.
-
         Args:
             editable_types: a QuerySet of xblocks with their support levels
             name: the name of the xblock
             template: optional template for the xblock
-
         Returns:
             If XBlockStudioConfigurationFlag is enabled, returns the support level
             (see XBlockStudioConfiguration) or False if this xblock name/template combination
@@ -408,7 +401,6 @@ def _get_item_in_course(request, usage_key):
     """
     Helper method for getting the old location, containing course,
     item, lms_link, and preview_lms_link for a given locator.
-
     Verifies that the caller has permission to access this item.
     """
     # usage_key's course_key may have an empty run property
@@ -431,12 +423,10 @@ def _get_item_in_course(request, usage_key):
 def component_handler(request, usage_key_string, handler, suffix=''):
     """
     Dispatch an AJAX action to an xblock
-
     Args:
         usage_id: The usage-id of the block to dispatch to
         handler (str): The handler to execute
         suffix (str): The remainder of the url to be passed to the handler
-
     Returns:
         :class:`django.http.HttpResponse`: The response from the handler, converted to a
             django response

@@ -20,8 +20,8 @@ from xmodule.exceptions import NotFoundError
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
-from cms.djangoapps.contentstore.utils import reverse_course_url
-from cms.djangoapps.contentstore.views.exception import AssetNotFoundException, AssetSizeTooLargeException
+from contentstore.utils import reverse_course_url
+from contentstore.views.exception import AssetNotFoundException, AssetSizeTooLargeException
 from edxmako.shortcuts import render_to_response
 from openedx.core.djangoapps.contentserver.caching import del_cached_content
 from student.auth import has_course_author_access
@@ -47,7 +47,6 @@ def assets_handler(request, course_key_string=None, asset_key_string=None):
     The restful handler for assets.
     It allows retrieval of all the assets (as an HTML page), as well as uploading new assets,
     deleting assets, and changing the 'locked' state of an asset.
-
     GET
         html: return an html page which will show all course assets. Note that only the asset container
             is returned and that the actual assets are filled in with a client-side request.
@@ -94,7 +93,6 @@ def _request_response_format_is_json(request, response_format):
 def _asset_index(request, course_key):
     '''
     Display an editable asset library.
-
     Supports start (0-based index into the list of assets) and max query parameters.
     '''
     course_module = modulestore().get_course(course_key)
@@ -112,7 +110,6 @@ def _asset_index(request, course_key):
 def _assets_json(request, course_key):
     '''
     Display an editable asset library.
-
     Supports start (0-based index into the list of assets) and max query parameters.
     '''
     request_options = _parse_request_to_dictionary(request)
@@ -240,7 +237,6 @@ def _get_mongo_expression_for_type_other():
 def _get_mongo_expression_for_type_filter(requested_file_types):
     """
     Construct and return pymongo expression dict for the named content type categories.
-
     The named content categories are the keys of the FILES_AND_UPLOAD_TYPE_FILTERS setting that are not 'OTHER':
     'Images', 'Documents', 'Audio', and 'Code'.
     """
@@ -504,7 +500,6 @@ def _update_asset(request, course_key, asset_key):
     '''
     restful CRUD operations for a course asset.
     Currently only DELETE, POST, and PUT methods are implemented.
-
     asset_path_encoding: the odd /c4x/org/course/category/name repr of the asset (used by Backbone as the id)
     '''
     if request.method == 'DELETE':

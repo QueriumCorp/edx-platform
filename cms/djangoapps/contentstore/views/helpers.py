@@ -14,9 +14,9 @@ from opaque_keys.edx.keys import UsageKey
 from xblock.core import XBlock
 
 import dogstats_wrapper as dog_stats_api
-from cms.djangoapps.contentstore.utils import reverse_course_url, reverse_library_url, reverse_usage_url
+from contentstore.utils import reverse_course_url, reverse_library_url, reverse_usage_url
 from edxmako.shortcuts import render_to_string
-from cms.djangoapps.models.settings.course_grading import CourseGradingModel
+from models.settings.course_grading import CourseGradingModel
 from util.milestones_helpers import is_entrance_exams_enabled
 from xmodule.modulestore.django import modulestore
 from xmodule.tabs import StaticTab
@@ -125,7 +125,6 @@ def xblock_type_display_name(xblock, default_display_name=None):
     """
     Returns the display name for the specified type of xblock. Note that an instance can be passed in
     for context dependent names, e.g. a vertical beneath a sequential is a Unit.
-
     :param xblock: An xblock instance or the type of xblock.
     :param default_display_name: The default value to return if no display name can be found.
     :return:
@@ -293,7 +292,6 @@ def create_xblock(parent_locator, user, category, display_name, boilerplate=None
 def is_item_in_course_tree(item):
     """
     Check that the item is in the course tree.
-
     It's possible that the item is not in the course tree
     if its parent has been deleted and is now an orphan.
     """

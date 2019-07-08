@@ -25,7 +25,7 @@ from xblock.fields import Scope
 
 import dogstats_wrapper as dog_stats_api
 from cms.lib.xblock.authoring_mixin import VISIBILITY_VIEW
-from cms.djangoapps.contentstore.utils import (
+from contentstore.utils import (
     ancestor_has_staff_lock,
     find_release_date_source,
     find_staff_lock_source,
@@ -36,7 +36,7 @@ from cms.djangoapps.contentstore.utils import (
     is_currently_visible_to_students,
     is_self_paced
 )
-from cms.djangoapps.contentstore.views.helpers import (
+from contentstore.views.helpers import (
     create_xblock,
     get_parent_xblock,
     is_unit,
@@ -45,7 +45,7 @@ from cms.djangoapps.contentstore.views.helpers import (
     xblock_studio_url,
     xblock_type_display_name
 )
-from cms.djangoapps.contentstore.views.preview import get_preview_fragment
+from contentstore.views.preview import get_preview_fragment
 from edxmako.shortcuts import render_to_string
 from help_tokens.core import HelpUrlExpert
 from models.settings.course_grading import CourseGradingModel
@@ -112,7 +112,6 @@ def _filter_entrance_exam_grader(graders):
 def xblock_handler(request, usage_key_string):
     """
     The restful handler for xblock requests.
-
     DELETE
         json: delete this xblock instance from the course.
     GET
@@ -145,7 +144,6 @@ def xblock_handler(request, usage_key_string):
                 Note: If 'discard_changes', the other fields will not be used; that is, it is not possible
                 to update and discard changes in a single operation.
               The JSON representation on the updated xblock (minus children) is returned.
-
               if usage_key_string is not specified, create a new xblock instance, either by duplicating
               an existing xblock, or creating an entirely new one. The json playload can contain
               these fields:
@@ -250,9 +248,7 @@ def xblock_handler(request, usage_key_string):
 class StudioPermissionsService(object):
     """
     Service that can provide information about a user's permissions.
-
     Deprecated. To be replaced by a more general authorization service.
-
     Only used by LibraryContentDescriptor (and library_tools.py).
     """
     def __init__(self, user):
@@ -300,7 +296,6 @@ class StudioEditModuleRuntime(object):
 def xblock_view_handler(request, usage_key_string, view_name):
     """
     The restful handler for requests for rendered xblock views.
-
     Returns a json object containing two keys:
         html: The rendered html of the view
         resources: A list of tuples where the first element is the resource hash, and
@@ -488,7 +483,6 @@ def _save_xblock(user, xblock, data=None, children_strings=None, metadata=None, 
     Saves xblock w/ its fields. Has special processing for grader_type, publish, and nullout and Nones in metadata.
     nullout means to truly set the field to None whereas nones in metadata mean to unset them (so they revert
     to default).
-
     """
     store = modulestore()
     # Perform all xblock changes within a (single-versioned) transaction
@@ -689,11 +683,9 @@ def _create_item(request):
 def _get_source_index(source_usage_key, source_parent):
     """
     Get source index position of the XBlock.
-
     Arguments:
         source_usage_key (BlockUsageLocator): Locator of source item.
         source_parent (XBlock): A parent of the source XBlock.
-
     Returns:
         source_index (int): Index position of the xblock in a parent.
     """
@@ -707,7 +699,6 @@ def _get_source_index(source_usage_key, source_parent):
 def is_source_item_in_target_parents(source_item, target_parent):
     """
     Returns True if source item is found in target parents otherwise False.
-
     Arguments:
         source_item (XBlock): Source Xblock.
         target_parent (XBlock): Target XBlock.
@@ -722,12 +713,10 @@ def is_source_item_in_target_parents(source_item, target_parent):
 def _move_item(source_usage_key, target_parent_usage_key, user, target_index=None):
     """
     Move an existing xblock as a child of the supplied target_parent_usage_key.
-
     Arguments:
         source_usage_key (BlockUsageLocator): Locator of source item.
         target_parent_usage_key (BlockUsageLocator): Locator of target parent.
         target_index (int): If provided, insert source item at provided index location in target_parent_usage_key item.
-
     Returns:
         JsonResponse: Information regarding move operation. It may contains error info if an invalid move operation
             is performed.
@@ -948,7 +937,6 @@ def orphan_handler(request, course_key_string):
     """
     View for handling orphan related requests. GET gets all of the current orphans.
     DELETE removes all orphans (requires is_staff access)
-
     An orphan is a block whose category is not in the DETACHED_CATEGORY list, is not the root, and is not reachable
     from the root via children
     """
@@ -1039,11 +1027,9 @@ def _get_gating_info(course, xblock):
     """
     Returns a dict containing gating information for the given xblock which
     can be added to xblock info responses.
-
     Arguments:
         course (CourseDescriptor): The course
         xblock (XBlock): The xblock
-
     Returns:
         dict: Gating information
     """
@@ -1074,17 +1060,14 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
                        user=None, course=None, is_concise=False):
     """
     Creates the information needed for client-side XBlockInfo.
-
     If data or metadata are not specified, their information will not be added
     (regardless of whether or not the xblock actually has data or metadata).
-
     There are three optional boolean parameters:
       include_ancestor_info - if true, ancestor info is added to the response
       include_child_info - if true, direct child info is included in the response
       is_concise - if true, returns the concise version of xblock info, default is false.
       course_outline - if true, the xblock is being rendered on behalf of the course outline.
         There are certain expensive computations that do not need to be included in this case.
-
     In addition, an optional include_children_predicate argument can be provided to define whether or
     not a particular xblock should have its children included.
     """
@@ -1281,7 +1264,6 @@ def add_container_page_publishing_info(xblock, xblock_info):  # pylint: disable=
         Guard against bad user_ids, like the infamous "**replace_user**".
         Note that this will ignore our special known IDs (ModuleStoreEnum.UserID).
         We should consider adding special handling for those values.
-
         :param user_id: the user id to get the username of
         :return: username, or None if the user does not exist or user_id is None
         """
@@ -1308,22 +1290,16 @@ def add_container_page_publishing_info(xblock, xblock_info):  # pylint: disable=
 class VisibilityState(object):
     """
     Represents the possible visibility states for an xblock:
-
       live - the block and all of its descendants are live to students (excluding staff only items)
         Note: Live means both published and released.
-
       ready - the block is ready to go live and all of its descendants are live or ready (excluding staff only items)
         Note: content is ready when it is published and scheduled with a release date in the future.
-
       unscheduled - the block and all of its descendants have no release date (excluding staff only items)
         Note: it is valid for items to be published with no release date in which case they are still unscheduled.
-
       needs_attention - the block or its descendants are not fully live, ready or unscheduled (excluding staff only items)
         For example: one subsection has draft content, or there's both unreleased and released content in one section.
-
       staff_only - all of the block's content is to be shown to staff only
         Note: staff only items do not affect their parent's state.
-
       gated - all of the block's content is to be shown to students only after the configured prerequisite is met
     """
     live = 'live'

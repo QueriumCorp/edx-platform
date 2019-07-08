@@ -3,7 +3,7 @@ from datetime import timedelta
 from hashlib import sha1
 import json
 
-from cms.djangoapps.contentstore.signals.signals import GRADING_POLICY_CHANGED
+from contentstore.signals.signals import GRADING_POLICY_CHANGED
 from eventtracking import tracker
 from track.event_transaction_utils import create_new_event_transaction_id
 from xmodule.modulestore.django import modulestore
@@ -135,12 +135,10 @@ class CourseGradingModel(object):
     @staticmethod
     def update_minimum_grade_credit_from_json(course_key, minimum_grade_credit, user):
         """Update the course's default minimum grade requirement for credit.
-
         Args:
             course_key(CourseKey): The course identifier
             minimum_grade_json(Float): Minimum grade value
             user(User): The user object
-
         """
         descriptor = modulestore().get_course(course_key)
 
