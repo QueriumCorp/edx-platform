@@ -79,6 +79,10 @@ class Contact(models.Model):
     estimated_enrollment = models.IntegerField(blank=True, null=True)
     latest_adoption_decision = models.CharField(max_length=255, blank=True, null=True)
 
+    # mcdaniel jul-2019
+    # add a tracking field for the LMS student assignments tour
+    lms_completed_assignment_tour = models.DateTimeField(blank=True, null=True)
+
     def clean_salesforce_push_pending(self):
         # Set flag to True so that this record will be included in 'pending' to salesforce
         return True
