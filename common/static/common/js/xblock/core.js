@@ -1,3 +1,4 @@
+cat ./common/static/common/js/xblock/core.js
 (function($, JSON) {
     'use strict';
 
@@ -36,7 +37,8 @@
     }
 
     function initArgs(element) {
-        var initargs = $(element).children('.xblock-json-init-args').remove().text();
+        // KENT 7-23-2019, fix malformed StepWise hint <mspace> tags stored in the gradebook before they are redisplayed
+        var initargs = $(element).children('.xblock-json-init-args').remove().text().replace(new RegExp('mspace width=\'\\.\\d+em\'', 'g'), 'MSPACE').replace(new RegExp('MSPACE\\\\', 'g'), 'MSPACE').replace(new RegExp('MSPACE','g'),'mspace width=\'.04em\'').replace(new RegExp('\\\>', 'g'), '>');
         return initargs ? JSON.parse(initargs) : {};
     }
 
