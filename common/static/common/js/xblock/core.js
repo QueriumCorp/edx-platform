@@ -1,4 +1,3 @@
-cat ./common/static/common/js/xblock/core.js
 (function($, JSON) {
     'use strict';
 
