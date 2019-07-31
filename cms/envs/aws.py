@@ -665,3 +665,6 @@ plugin_settings.add_plugins(__name__, plugin_constants.ProjectType.CMS, plugin_c
 ########################## Derive Any Derived Settings  #######################
 
 derive_settings(__name__)
+
+# McDaniel jul-2019: add querium apps
+INSTALLED_APPS.append('openstax_integrator.salesforce')
