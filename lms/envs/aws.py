@@ -107,6 +107,11 @@ CELERYBEAT_SCHEDULE = {}  # For scheduling tasks, entries can be added to this d
 with open(CONFIG_ROOT / CONFIG_PREFIX + "env.json") as env_file:
     ENV_TOKENS = json.load(env_file)
 
+# McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
+with open("/home/ubuntu/rover/rover.env.json") as rover_env_file:
+    ROVER_TOKENS = json.load(rover_env_file)
+    ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
+
 # STATIC_ROOT specifies the directory where static files are
 # collected
 STATIC_ROOT_BASE = ENV_TOKENS.get('STATIC_ROOT_BASE', None)
@@ -122,14 +127,6 @@ if STATIC_URL_BASE:
     STATIC_URL = STATIC_URL_BASE.encode('ascii')
     if not STATIC_URL.endswith("/"):
         STATIC_URL += "/"
-
-# mcdaniel mar-2019: Openstax Backend parameters
-OPENSTAX_BACKEND_CLIENT_ID = ENV_TOKENS.get('OPENSTAX_BACKEND_CLIENT_ID', None)
-OPENSTAX_BACKEND_CLIENT_SECRET = ENV_TOKENS.get('OPENSTAX_BACKEND_CLIENT_SECRET', None)
-OPENSTAX_BACKEND_AUTHORIZATION_URL = ENV_TOKENS.get('OPENSTAX_BACKEND_AUTHORIZATION_URL', None)
-OPENSTAX_BACKEND_ACCESS_TOKEN_URL = ENV_TOKENS.get('OPENSTAX_BACKEND_ACCESS_TOKEN_URL', None)
-OPENSTAX_BACKEND_USER_QUERY = ENV_TOKENS.get('OPENSTAX_BACKEND_USER_QUERY', None)
-OPENSTAX_BACKEND_USERS_QUERY = ENV_TOKENS.get('OPENSTAX_BACKEND_USERS_QUERY', None)
 
 
 # DEFAULT_COURSE_ABOUT_IMAGE_URL specifies the default image to show for courses that don't provide one
@@ -159,10 +156,10 @@ EMAIL_FILE_PATH = ENV_TOKENS.get('EMAIL_FILE_PATH', None)
 EMAIL_HOST = ENV_TOKENS.get('EMAIL_HOST', 'localhost')  # django default is localhost
 EMAIL_PORT = ENV_TOKENS.get('EMAIL_PORT', 25)  # django default is 25
 EMAIL_USE_TLS = ENV_TOKENS.get('EMAIL_USE_TLS', False)  # django default is False
-SITE_NAME = ENV_TOKENS['SITE_NAME']
+SITE_NAME = ENV_TOKENS['SITE_NAME'].replace('{CLIENT}', ROVER_CLIENT_CODE)
 HTTPS = ENV_TOKENS.get('HTTPS', HTTPS)
 SESSION_ENGINE = ENV_TOKENS.get('SESSION_ENGINE', SESSION_ENGINE)
-SESSION_COOKIE_DOMAIN = ENV_TOKENS.get('SESSION_COOKIE_DOMAIN')
+SESSION_COOKIE_DOMAIN = ENV_TOKENS.get('SESSION_COOKIE_DOMAIN').replace('{CLIENT}', ROVER_CLIENT_CODE)
 SESSION_COOKIE_HTTPONLY = ENV_TOKENS.get('SESSION_COOKIE_HTTPONLY', True)
 SESSION_COOKIE_SECURE = ENV_TOKENS.get('SESSION_COOKIE_SECURE', SESSION_COOKIE_SECURE)
 SESSION_SAVE_EVERY_REQUEST = ENV_TOKENS.get('SESSION_SAVE_EVERY_REQUEST', SESSION_SAVE_EVERY_REQUEST)
@@ -181,20 +178,20 @@ REGISTRATION_FIELD_ORDER = ENV_TOKENS.get('REGISTRATION_FIELD_ORDER', REGISTRATI
 EDXMKTG_LOGGED_IN_COOKIE_NAME = ENV_TOKENS.get('EDXMKTG_LOGGED_IN_COOKIE_NAME', EDXMKTG_LOGGED_IN_COOKIE_NAME)
 EDXMKTG_USER_INFO_COOKIE_NAME = ENV_TOKENS.get('EDXMKTG_USER_INFO_COOKIE_NAME', EDXMKTG_USER_INFO_COOKIE_NAME)
 
-LMS_ROOT_URL = ENV_TOKENS.get('LMS_ROOT_URL')
-LMS_INTERNAL_ROOT_URL = ENV_TOKENS.get('LMS_INTERNAL_ROOT_URL', LMS_ROOT_URL)
+LMS_ROOT_URL = ENV_TOKENS.get('LMS_ROOT_URL').replace('{CLIENT}', ROVER_CLIENT_CODE)
+LMS_INTERNAL_ROOT_URL = ENV_TOKENS.get('LMS_INTERNAL_ROOT_URL', LMS_ROOT_URL).replace('{CLIENT}', ROVER_CLIENT_CODE)
 
 ENV_FEATURES = ENV_TOKENS.get('FEATURES', {})
 for feature, value in ENV_FEATURES.items():
     FEATURES[feature] = value
 
-CMS_BASE = ENV_TOKENS.get('CMS_BASE', 'studio.edx.org')
+CMS_BASE = ENV_TOKENS.get('CMS_BASE', 'studio.edx.org').replace('{CLIENT}', ROVER_CLIENT_CODE)
 
 ALLOWED_HOSTS = [
     # TODO: bbeggs remove this before prod, temp fix to get load testing running
     "*",
-    ENV_TOKENS.get('LMS_BASE'),
-    FEATURES['PREVIEW_LMS_BASE'],
+    ENV_TOKENS.get('LMS_BASE').replace('{CLIENT}', ROVER_CLIENT_CODE),
+    FEATURES['PREVIEW_LMS_BASE'].replace('{CLIENT}', ROVER_CLIENT_CODE),
 ]
 
 # allow for environments to specify what cookie name our login subsystem should use
@@ -487,7 +484,7 @@ if 'DJFS' in AUTH_TOKENS and AUTH_TOKENS['DJFS'] is not None:
 HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS = ENV_TOKENS.get('HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS', {})
 # PREVIEW DOMAIN must be present in HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS for the preview to show draft changes
 if 'PREVIEW_LMS_BASE' in FEATURES and FEATURES['PREVIEW_LMS_BASE'] != '':
-    PREVIEW_DOMAIN = FEATURES['PREVIEW_LMS_BASE'].split(':')[0]
+    PREVIEW_DOMAIN = FEATURES['PREVIEW_LMS_BASE'].split(':')[0].replace('{CLIENT}', ROVER_CLIENT_CODE)
     # update dictionary with preview domain regex
     HOSTNAME_MODULESTORE_DEFAULT_MAPPINGS.update({
         PREVIEW_DOMAIN: 'draft-preferred'
@@ -684,6 +681,7 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
         'social_core.backends.azuread.AzureADOAuth2',
         'third_party_auth.saml.SAMLAuthBackend',
         'third_party_auth.lti.LTIAuthBackend',
+        'openstax_oauth_backend.openstax.OpenStaxOAuth2',
     ])
 
     AUTHENTICATION_BACKENDS = list(tmp_backends) + list(AUTHENTICATION_BACKENDS)
@@ -1040,10 +1038,7 @@ ENTERPRISE_EXCLUDED_REGISTRATION_FIELDS = set(
         ENTERPRISE_EXCLUDED_REGISTRATION_FIELDS
     )
 )
-BASE_COOKIE_DOMAIN = ENV_TOKENS.get(
-    'BASE_COOKIE_DOMAIN',
-    BASE_COOKIE_DOMAIN
-)
+BASE_COOKIE_DOMAIN = ENV_TOKENS.get('BASE_COOKIE_DOMAIN',BASE_COOKIE_DOMAIN).replace('{CLIENT}', ROVER_CLIENT_CODE)
 
 ############## CATALOG/DISCOVERY SERVICE API CLIENT CONFIGURATION ######################
 # The LMS communicates with the Catalog service via the EdxRestApiClient class
@@ -1121,3 +1116,13 @@ if 'figures' in INSTALLED_APPS:
 
 # McDaniel jul-2019: add querium apps
 INSTALLED_APPS.append('querium.stepwise')
+
+
+# mcdaniel mar-2019: Openstax Backend parameters
+# jul-2019: changed these to hard-coded values in order to remove from lms.env.json
+OPENSTAX_BACKEND_CLIENT_ID = 'd9c46de5a97776843189e8e2f77b96ae51333a814b1f91afcbae481d9ee734be'
+OPENSTAX_BACKEND_CLIENT_SECRET = 'b615e6ea4a66743f2d2bbc9d1561b59efc87c5f378a4d2203d5ca2365e1b593a'
+OPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://accounts.openstax.org/oauth/authorize'
+OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
+OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
+OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
