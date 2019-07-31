@@ -61,6 +61,13 @@ class Migration(migrations.Migration):
                 ('soft_ask_decision_date', models.DateTimeField(blank=True, null=True)),
                 ('estimated_enrollment', models.IntegerField(blank=True, null=True)),
                 ('latest_adoption_decision', models.CharField(blank=True, max_length=255, null=True)),
+                ('completed_am_page_tips', models.DateTimeField(blank=True, null=True)),
+                ('completed_building_assignments_training', models.DateTimeField(blank=True, null=True)),
+                ('completed_how_to_set_up_grading_page_tip', models.DateTimeField(blank=True, null=True)),
+                ('completed_super_training_wheel_1', models.DateTimeField(blank=True, null=True)),
+                ('created_a_course', models.DateTimeField(blank=True, null=True)),
+                ('downloaded_gsg', models.DateTimeField(blank=True, null=True)),
+                ('watched_video', models.DateTimeField(blank=True, null=True)),
                 ('campaign', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='salesforce.Campaign')),
             ],
             options={

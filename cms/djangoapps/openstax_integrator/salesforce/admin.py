@@ -27,20 +27,14 @@ class ContactAdmin(admin.ModelAdmin):
         u'soft_ask_decision',
         u'soft_ask_decision_date',
         u'estimated_enrollment',
-        u'latest_adoption_decision'
-
-        #
-        # McDaniel jul-2019: these cause errors in asset compilation in AWS production.
-        # guessing that's bc the db migration for these came later and that maybe does
-        # not exist inside this repo for some reason.
-        #
-        #u'Completed_super_training_wheel_1',
-        #u'Downloaded_GSG',
-        #u'Watched_video',
-        #u'Completed_AM_page_tips',
-        #u'Created_a_course',
-        #u'Completed_building_assignments_training',
-        #u'Completed_how_to_set_up_grading_page_tip'
+        u'latest_adoption_decision',
+        u'Completed_super_training_wheel_1',
+        u'Downloaded_GSG',
+        u'Watched_video',
+        u'Completed_AM_page_tips',
+        u'Created_a_course',
+        u'Completed_building_assignments_training',
+        u'Completed_how_to_set_up_grading_page_tip'
     )
     readonly_fields=(u'created', u'updated', )
 
