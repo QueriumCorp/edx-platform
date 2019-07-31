@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
+#       the values to the actual client code. Example:
+#           {CLIENT} = 'dev'
+#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
+def rover_env_token(token, default=None):
+    return ENV_TOKENS.get(token, default).replace('{CLIENT}', ROVER_CLIENT_CODE)
 
 """
 This is the default template for our main set of AWS servers.
@@ -1126,10 +1132,3 @@ OPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://accounts.openstax.org/oauth/author
 OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
 OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
 OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
-
-# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
-#       the values to the actual client code. Example:
-#           {CLIENT} = 'dev'
-#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
-def rover_env_token(token, default=None):
-    return ENV_TOKENS.get(token, default).replace('{CLIENT}', ROVER_CLIENT_CODE)

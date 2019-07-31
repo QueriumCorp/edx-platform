@@ -1,6 +1,12 @@
 """
 This is the default template for our main set of AWS servers.
 """
+# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
+#       the values to the actual client code. Example:
+#           {CLIENT} = 'dev'
+#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
+def rover_env_token(token, default=None):
+    return ENV_TOKENS.get(token, default).replace('{CLIENT}', ROVER_CLIENT_CODE)
 
 # We intentionally define lots of variables that aren't used, and
 # want to import all variables from base settings files
@@ -678,10 +684,3 @@ OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
 REDIRECT_AM_REGISTRATION = rover_env_token('REDIRECT_AM_REGISTRATION', '')
-
-# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
-#       the values to the actual client code. Example:
-#           {CLIENT} = 'dev'
-#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
-def rover_env_token(token, default=None):
-    return ENV_TOKENS.get(token, default).replace('{CLIENT}', ROVER_CLIENT_CODE)
