@@ -34,10 +34,9 @@ with open("/home/ubuntu/rover/rover.env.json") as rover_env_file:
 #           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
 def rover_env_token(token, default=None):
     if isinstance(token, str):
-        s = str(ENV_TOKENS.get(token, default))
-        return s.replace('{CLIENT}', ROVER_CLIENT_CODE)
+        return ENV_TOKENS.get(token, default).replace('{CLIENT}', ROVER_CLIENT_CODE)
     else:
-        return str(ENV_TOKENS.get(token, default))
+        return ENV_TOKENS.get(token, default)
 
 
 # SERVICE_VARIANT specifies name of the variant used, which decides what JSON
