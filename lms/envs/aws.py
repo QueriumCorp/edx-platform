@@ -1118,3 +1118,6 @@ if 'figures' in INSTALLED_APPS:
         WEBPACK_LOADER,
         CELERYBEAT_SCHEDULE,
         ENV_TOKENS.get('FIGURES', {}))
+
+# McDaniel jul-2019: add querium apps
+INSTALLED_APPS.append('querium.stepwise')
