@@ -1,14 +1,4 @@
 # -*- coding: utf-8 -*-
-# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
-#       the values to the actual client code. Example:
-#           {CLIENT} = 'dev'
-#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
-def rover_env_token(token, default=None):
-    if isinstance(token, str):
-        s = str(ENV_TOKENS.get(token, default))
-        return s.replace('{CLIENT}', ROVER_CLIENT_CODE)
-    else:
-        return str(ENV_TOKENS.get(token, default))
 
 """
 This is the default template for our main set of AWS servers.
@@ -39,6 +29,23 @@ import os
 
 from path import Path as path
 from xmodule.modulestore.modulestore_settings import convert_module_store_setting_if_needed
+
+# McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
+with open("/home/ubuntu/rover/rover.env.json") as rover_env_file:
+    ROVER_TOKENS = json.load(rover_env_file)
+    ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
+
+# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
+#       the values to the actual client code. Example:
+#           {CLIENT} = 'dev'
+#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
+def rover_env_token(token, default=None):
+    if isinstance(token, str):
+        s = str(ENV_TOKENS.get(token, default))
+        return s.replace('{CLIENT}', ROVER_CLIENT_CODE)
+    else:
+        return str(ENV_TOKENS.get(token, default))
+
 
 # SERVICE_VARIANT specifies name of the variant used, which decides what JSON
 # configuration files are read during startup.
@@ -117,10 +124,6 @@ CELERYBEAT_SCHEDULE = {}  # For scheduling tasks, entries can be added to this d
 with open(CONFIG_ROOT / CONFIG_PREFIX + "env.json") as env_file:
     ENV_TOKENS = json.load(env_file)
 
-# McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
-with open("/home/ubuntu/rover/rover.env.json") as rover_env_file:
-    ROVER_TOKENS = json.load(rover_env_file)
-    ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
 
 # STATIC_ROOT specifies the directory where static files are
 # collected
