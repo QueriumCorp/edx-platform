@@ -4,8 +4,11 @@
 #           {CLIENT} = 'dev'
 #           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
 def rover_env_token(token, default=None):
-    s = str(ENV_TOKENS.get(token, default))
-    return s.replace('{CLIENT}', ROVER_CLIENT_CODE)
+    if isinstance(token, str):
+        s = str(ENV_TOKENS.get(token, default))
+        return s.replace('{CLIENT}', ROVER_CLIENT_CODE)
+    else:
+        return str(ENV_TOKENS.get(token, default))
 
 """
 This is the default template for our main set of AWS servers.
