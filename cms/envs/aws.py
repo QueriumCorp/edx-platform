@@ -103,10 +103,10 @@ with open("/home/ubuntu/rover/rover.env.json") as rover_env_file:
 
 
 # Do NOT calculate this dynamically at startup with git because it's *slow*.
-EDX_PLATFORM_REVISION = ENV_TOKENS.get('EDX_PLATFORM_REVISION', EDX_PLATFORM_REVISION)
+EDX_PLATFORM_REVISION = rover_env_token('EDX_PLATFORM_REVISION', EDX_PLATFORM_REVISION)
 
 # STATIC_URL_BASE specifies the base url to use for static files
-STATIC_URL_BASE = ENV_TOKENS.get('STATIC_URL_BASE', None)
+STATIC_URL_BASE = rover_env_token('STATIC_URL_BASE', None)
 if STATIC_URL_BASE:
     # collectstatic will fail if STATIC_URL is a unicode string
     STATIC_URL = STATIC_URL_BASE.encode('ascii')
@@ -116,59 +116,59 @@ if STATIC_URL_BASE:
 
 
 # DEFAULT_COURSE_ABOUT_IMAGE_URL specifies the default image to show for courses that don't provide one
-DEFAULT_COURSE_ABOUT_IMAGE_URL = ENV_TOKENS.get('DEFAULT_COURSE_ABOUT_IMAGE_URL', DEFAULT_COURSE_ABOUT_IMAGE_URL)
+DEFAULT_COURSE_ABOUT_IMAGE_URL = rover_env_token('DEFAULT_COURSE_ABOUT_IMAGE_URL', DEFAULT_COURSE_ABOUT_IMAGE_URL)
 
-DEFAULT_COURSE_VISIBILITY_IN_CATALOG = ENV_TOKENS.get(
+DEFAULT_COURSE_VISIBILITY_IN_CATALOG = rover_env_token(
     'DEFAULT_COURSE_VISIBILITY_IN_CATALOG',
     DEFAULT_COURSE_VISIBILITY_IN_CATALOG
 )
 
 # DEFAULT_MOBILE_AVAILABLE specifies if the course is available for mobile by default
-DEFAULT_MOBILE_AVAILABLE = ENV_TOKENS.get(
+DEFAULT_MOBILE_AVAILABLE = rover_env_token(
     'DEFAULT_MOBILE_AVAILABLE',
     DEFAULT_MOBILE_AVAILABLE
 )
 
 # MEDIA_ROOT specifies the directory where user-uploaded files are stored.
-MEDIA_ROOT = ENV_TOKENS.get('MEDIA_ROOT', MEDIA_ROOT)
-MEDIA_URL = ENV_TOKENS.get('MEDIA_URL', MEDIA_URL)
+MEDIA_ROOT = rover_env_token('MEDIA_ROOT', MEDIA_ROOT)
+MEDIA_URL = rover_env_token('MEDIA_URL', MEDIA_URL)
 
 # GITHUB_REPO_ROOT is the base directory
 # for course data
-GITHUB_REPO_ROOT = ENV_TOKENS.get('GITHUB_REPO_ROOT', GITHUB_REPO_ROOT)
+GITHUB_REPO_ROOT = rover_env_token('GITHUB_REPO_ROOT', GITHUB_REPO_ROOT)
 
 # STATIC_ROOT specifies the directory where static files are
 # collected
 
-STATIC_ROOT_BASE = ENV_TOKENS.get('STATIC_ROOT_BASE', None)
+STATIC_ROOT_BASE = rover_env_token('STATIC_ROOT_BASE', None)
 if STATIC_ROOT_BASE:
     STATIC_ROOT = path(STATIC_ROOT_BASE) / 'studio'
     WEBPACK_LOADER['DEFAULT']['STATS_FILE'] = STATIC_ROOT / "webpack-stats.json"
 
-EMAIL_BACKEND = ENV_TOKENS.get('EMAIL_BACKEND', EMAIL_BACKEND)
-EMAIL_FILE_PATH = ENV_TOKENS.get('EMAIL_FILE_PATH', None)
+EMAIL_BACKEND = rover_env_token('EMAIL_BACKEND', EMAIL_BACKEND)
+EMAIL_FILE_PATH = rover_env_token('EMAIL_FILE_PATH', None)
 
-EMAIL_HOST = ENV_TOKENS.get('EMAIL_HOST', EMAIL_HOST)
-EMAIL_PORT = ENV_TOKENS.get('EMAIL_PORT', EMAIL_PORT)
-EMAIL_USE_TLS = ENV_TOKENS.get('EMAIL_USE_TLS', EMAIL_USE_TLS)
+EMAIL_HOST = rover_env_token('EMAIL_HOST', EMAIL_HOST)
+EMAIL_PORT = rover_env_token('EMAIL_PORT', EMAIL_PORT)
+EMAIL_USE_TLS = rover_env_token('EMAIL_USE_TLS', EMAIL_USE_TLS)
 
-LMS_BASE = ENV_TOKENS.get('LMS_BASE').replace('{CLIENT}', ROVER_CLIENT_CODE)
-LMS_ROOT_URL = ENV_TOKENS.get('LMS_ROOT_URL').replace('{CLIENT}', ROVER_CLIENT_CODE)
-LMS_INTERNAL_ROOT_URL = ENV_TOKENS.get('LMS_INTERNAL_ROOT_URL', LMS_ROOT_URL).replace('{CLIENT}', ROVER_CLIENT_CODE)
-ENTERPRISE_API_URL = ENV_TOKENS.get('ENTERPRISE_API_URL', LMS_INTERNAL_ROOT_URL + '/enterprise/api/v1/')
-ENTERPRISE_CONSENT_API_URL = ENV_TOKENS.get('ENTERPRISE_CONSENT_API_URL', LMS_INTERNAL_ROOT_URL + '/consent/api/v1/')
+LMS_BASE = rover_env_token('LMS_BASE')
+LMS_ROOT_URL = rover_env_token('LMS_ROOT_URL')
+LMS_INTERNAL_ROOT_URL = rover_env_token('LMS_INTERNAL_ROOT_URL', LMS_ROOT_URL)
+ENTERPRISE_API_URL = rover_env_token('ENTERPRISE_API_URL', LMS_INTERNAL_ROOT_URL + '/enterprise/api/v1/')
+ENTERPRISE_CONSENT_API_URL = rover_env_token('ENTERPRISE_CONSENT_API_URL', LMS_INTERNAL_ROOT_URL + '/consent/api/v1/')
 # Note that FEATURES['PREVIEW_LMS_BASE'] gets read in from the environment file.
 
-SITE_NAME = ENV_TOKENS['SITE_NAME'].replace('{CLIENT}', ROVER_CLIENT_CODE)
+SITE_NAME = ENV_TOKENS['SITE_NAME']
 
 ALLOWED_HOSTS = [
     # TODO: bbeggs remove this before prod, temp fix to get load testing running
     "*",
-    ENV_TOKENS.get('CMS_BASE').replace('{CLIENT}', ROVER_CLIENT_CODE)
+    rover_env_token('CMS_BASE')
 ]
 
 LOG_DIR = ENV_TOKENS['LOG_DIR']
-DATA_DIR = path(ENV_TOKENS.get('DATA_DIR', DATA_DIR))
+DATA_DIR = path(rover_env_token('DATA_DIR', DATA_DIR))
 
 CACHES = ENV_TOKENS['CACHES']
 # Cache used for location mapping -- called many times with the same key/value
@@ -179,46 +179,46 @@ if 'loc_cache' not in CACHES:
         'LOCATION': 'edx_location_mem_cache',
     }
 
-SESSION_COOKIE_DOMAIN = ENV_TOKENS.get('SESSION_COOKIE_DOMAIN').replace('{CLIENT}', ROVER_CLIENT_CODE)
-SESSION_COOKIE_HTTPONLY = ENV_TOKENS.get('SESSION_COOKIE_HTTPONLY', True)
-SESSION_ENGINE = ENV_TOKENS.get('SESSION_ENGINE', SESSION_ENGINE)
-SESSION_COOKIE_SECURE = ENV_TOKENS.get('SESSION_COOKIE_SECURE', SESSION_COOKIE_SECURE)
-SESSION_SAVE_EVERY_REQUEST = ENV_TOKENS.get('SESSION_SAVE_EVERY_REQUEST', SESSION_SAVE_EVERY_REQUEST)
+SESSION_COOKIE_DOMAIN = rover_env_token('SESSION_COOKIE_DOMAIN')
+SESSION_COOKIE_HTTPONLY = rover_env_token('SESSION_COOKIE_HTTPONLY', True)
+SESSION_ENGINE = rover_env_token('SESSION_ENGINE', SESSION_ENGINE)
+SESSION_COOKIE_SECURE = rover_env_token('SESSION_COOKIE_SECURE', SESSION_COOKIE_SECURE)
+SESSION_SAVE_EVERY_REQUEST = rover_env_token('SESSION_SAVE_EVERY_REQUEST', SESSION_SAVE_EVERY_REQUEST)
 
 # social sharing settings
-SOCIAL_SHARING_SETTINGS = ENV_TOKENS.get('SOCIAL_SHARING_SETTINGS', SOCIAL_SHARING_SETTINGS)
+SOCIAL_SHARING_SETTINGS = rover_env_token('SOCIAL_SHARING_SETTINGS', SOCIAL_SHARING_SETTINGS)
 
-REGISTRATION_EMAIL_PATTERNS_ALLOWED = ENV_TOKENS.get('REGISTRATION_EMAIL_PATTERNS_ALLOWED')
+REGISTRATION_EMAIL_PATTERNS_ALLOWED = rover_env_token('REGISTRATION_EMAIL_PATTERNS_ALLOWED')
 
 # allow for environments to specify what cookie name our login subsystem should use
 # this is to fix a bug regarding simultaneous logins between edx.org and edge.edx.org which can
 # happen with some browsers (e.g. Firefox)
-if ENV_TOKENS.get('SESSION_COOKIE_NAME', None):
+if rover_env_token('SESSION_COOKIE_NAME', None):
     # NOTE, there's a bug in Django (http://bugs.python.org/issue18012) which necessitates this being a str()
-    SESSION_COOKIE_NAME = str(ENV_TOKENS.get('SESSION_COOKIE_NAME'))
+    SESSION_COOKIE_NAME = str(rover_env_token('SESSION_COOKIE_NAME'))
 
 # Set the names of cookies shared with the marketing site
 # These have the same cookie domain as the session, which in production
 # usually includes subdomains.
-EDXMKTG_LOGGED_IN_COOKIE_NAME = ENV_TOKENS.get('EDXMKTG_LOGGED_IN_COOKIE_NAME', EDXMKTG_LOGGED_IN_COOKIE_NAME)
-EDXMKTG_USER_INFO_COOKIE_NAME = ENV_TOKENS.get('EDXMKTG_USER_INFO_COOKIE_NAME', EDXMKTG_USER_INFO_COOKIE_NAME)
+EDXMKTG_LOGGED_IN_COOKIE_NAME = rover_env_token('EDXMKTG_LOGGED_IN_COOKIE_NAME', EDXMKTG_LOGGED_IN_COOKIE_NAME)
+EDXMKTG_USER_INFO_COOKIE_NAME = rover_env_token('EDXMKTG_USER_INFO_COOKIE_NAME', EDXMKTG_USER_INFO_COOKIE_NAME)
 
 # Determines whether the CSRF token can be transported on
 # unencrypted channels. It is set to False here for backward compatibility,
 # but it is highly recommended that this is True for environments accessed
 # by end users.
-CSRF_COOKIE_SECURE = ENV_TOKENS.get('CSRF_COOKIE_SECURE', False)
+CSRF_COOKIE_SECURE = rover_env_token('CSRF_COOKIE_SECURE', False)
 
 #Email overrides
-DEFAULT_FROM_EMAIL = ENV_TOKENS.get('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL)
-DEFAULT_FEEDBACK_EMAIL = ENV_TOKENS.get('DEFAULT_FEEDBACK_EMAIL', DEFAULT_FEEDBACK_EMAIL)
-ADMINS = ENV_TOKENS.get('ADMINS', ADMINS)
-SERVER_EMAIL = ENV_TOKENS.get('SERVER_EMAIL', SERVER_EMAIL)
-MKTG_URLS = ENV_TOKENS.get('MKTG_URLS', MKTG_URLS)
-MKTG_URL_LINK_MAP.update(ENV_TOKENS.get('MKTG_URL_LINK_MAP', {}))
-TECH_SUPPORT_EMAIL = ENV_TOKENS.get('TECH_SUPPORT_EMAIL', TECH_SUPPORT_EMAIL)
+DEFAULT_FROM_EMAIL = rover_env_token('DEFAULT_FROM_EMAIL', DEFAULT_FROM_EMAIL)
+DEFAULT_FEEDBACK_EMAIL = rover_env_token('DEFAULT_FEEDBACK_EMAIL', DEFAULT_FEEDBACK_EMAIL)
+ADMINS = rover_env_token('ADMINS', ADMINS)
+SERVER_EMAIL = rover_env_token('SERVER_EMAIL', SERVER_EMAIL)
+MKTG_URLS = rover_env_token('MKTG_URLS', MKTG_URLS)
+MKTG_URL_LINK_MAP.update(rover_env_token('MKTG_URL_LINK_MAP', {}))
+TECH_SUPPORT_EMAIL = rover_env_token('TECH_SUPPORT_EMAIL', TECH_SUPPORT_EMAIL)
 
-for name, value in ENV_TOKENS.get("CODE_JAIL", {}).items():
+for name, value in rover_env_token("CODE_JAIL", {}).items():
     oldvalue = CODE_JAIL.get(name)
     if isinstance(oldvalue, dict):
         for subname, subvalue in value.items():
@@ -226,70 +226,70 @@ for name, value in ENV_TOKENS.get("CODE_JAIL", {}).items():
     else:
         CODE_JAIL[name] = value
 
-COURSES_WITH_UNSAFE_CODE = ENV_TOKENS.get("COURSES_WITH_UNSAFE_CODE", [])
+COURSES_WITH_UNSAFE_CODE = rover_env_token("COURSES_WITH_UNSAFE_CODE", [])
 
-ASSET_IGNORE_REGEX = ENV_TOKENS.get('ASSET_IGNORE_REGEX', ASSET_IGNORE_REGEX)
+ASSET_IGNORE_REGEX = rover_env_token('ASSET_IGNORE_REGEX', ASSET_IGNORE_REGEX)
 
 # McDaniel jul-2019: hard-coding this to simplify edxapp json config file.
-#COMPREHENSIVE_THEME_DIRS = ENV_TOKENS.get('COMPREHENSIVE_THEME_DIRS', COMPREHENSIVE_THEME_DIRS) or []
+#COMPREHENSIVE_THEME_DIRS = rover_env_token('COMPREHENSIVE_THEME_DIRS', COMPREHENSIVE_THEME_DIRS) or []
 COMPREHENSIVE_THEME_DIRS = ['/edx/app/edxapp/edx-platform/themes']
 
 # COMPREHENSIVE_THEME_LOCALE_PATHS contain the paths to themes locale directories e.g.
 # "COMPREHENSIVE_THEME_LOCALE_PATHS" : [
 #        "/edx/src/edx-themes/conf/locale"
 #    ],
-COMPREHENSIVE_THEME_LOCALE_PATHS = ENV_TOKENS.get('COMPREHENSIVE_THEME_LOCALE_PATHS', [])
+COMPREHENSIVE_THEME_LOCALE_PATHS = rover_env_token('COMPREHENSIVE_THEME_LOCALE_PATHS', [])
 
-DEFAULT_SITE_THEME = ENV_TOKENS.get('DEFAULT_SITE_THEME', DEFAULT_SITE_THEME)
-ENABLE_COMPREHENSIVE_THEMING = ENV_TOKENS.get('ENABLE_COMPREHENSIVE_THEMING', ENABLE_COMPREHENSIVE_THEMING)
+DEFAULT_SITE_THEME = rover_env_token('DEFAULT_SITE_THEME', DEFAULT_SITE_THEME)
+ENABLE_COMPREHENSIVE_THEMING = rover_env_token('ENABLE_COMPREHENSIVE_THEMING', ENABLE_COMPREHENSIVE_THEMING)
 
 #Timezone overrides
-TIME_ZONE = ENV_TOKENS.get('TIME_ZONE', TIME_ZONE)
+TIME_ZONE = rover_env_token('TIME_ZONE', TIME_ZONE)
 
 # Push to LMS overrides
-GIT_REPO_EXPORT_DIR = ENV_TOKENS.get('GIT_REPO_EXPORT_DIR', '/edx/var/edxapp/export_course_repos')
+GIT_REPO_EXPORT_DIR = rover_env_token('GIT_REPO_EXPORT_DIR', '/edx/var/edxapp/export_course_repos')
 
 # Translation overrides
-LANGUAGES = ENV_TOKENS.get('LANGUAGES', LANGUAGES)
-LANGUAGE_CODE = ENV_TOKENS.get('LANGUAGE_CODE', LANGUAGE_CODE)
-LANGUAGE_COOKIE = ENV_TOKENS.get('LANGUAGE_COOKIE', LANGUAGE_COOKIE)
+LANGUAGES = rover_env_token('LANGUAGES', LANGUAGES)
+LANGUAGE_CODE = rover_env_token('LANGUAGE_CODE', LANGUAGE_CODE)
+LANGUAGE_COOKIE = rover_env_token('LANGUAGE_COOKIE', LANGUAGE_COOKIE)
 
-USE_I18N = ENV_TOKENS.get('USE_I18N', USE_I18N)
-ALL_LANGUAGES = ENV_TOKENS.get('ALL_LANGUAGES', ALL_LANGUAGES)
+USE_I18N = rover_env_token('USE_I18N', USE_I18N)
+ALL_LANGUAGES = rover_env_token('ALL_LANGUAGES', ALL_LANGUAGES)
 
-ENV_FEATURES = ENV_TOKENS.get('FEATURES', {})
+ENV_FEATURES = rover_env_token('FEATURES', {})
 for feature, value in ENV_FEATURES.items():
     FEATURES[feature] = value
 
 # Additional installed apps
-for app in ENV_TOKENS.get('ADDL_INSTALLED_APPS', []):
+for app in rover_env_token('ADDL_INSTALLED_APPS', []):
     INSTALLED_APPS.append(app)
 
-WIKI_ENABLED = ENV_TOKENS.get('WIKI_ENABLED', WIKI_ENABLED)
+WIKI_ENABLED = rover_env_token('WIKI_ENABLED', WIKI_ENABLED)
 
 LOGGING = get_logger_config(LOG_DIR,
                             logging_env=ENV_TOKENS['LOGGING_ENV'],
                             service_variant=SERVICE_VARIANT)
 
 #theming start:
-PLATFORM_NAME = ENV_TOKENS.get('PLATFORM_NAME', PLATFORM_NAME)
-PLATFORM_DESCRIPTION = ENV_TOKENS.get('PLATFORM_DESCRIPTION', PLATFORM_DESCRIPTION)
-STUDIO_NAME = ENV_TOKENS.get('STUDIO_NAME', STUDIO_NAME)
-STUDIO_SHORT_NAME = ENV_TOKENS.get('STUDIO_SHORT_NAME', STUDIO_SHORT_NAME)
+PLATFORM_NAME = rover_env_token('PLATFORM_NAME', PLATFORM_NAME)
+PLATFORM_DESCRIPTION = rover_env_token('PLATFORM_DESCRIPTION', PLATFORM_DESCRIPTION)
+STUDIO_NAME = rover_env_token('STUDIO_NAME', STUDIO_NAME)
+STUDIO_SHORT_NAME = rover_env_token('STUDIO_SHORT_NAME', STUDIO_SHORT_NAME)
 
 # Event Tracking
 if "TRACKING_IGNORE_URL_PATTERNS" in ENV_TOKENS:
-    TRACKING_IGNORE_URL_PATTERNS = ENV_TOKENS.get("TRACKING_IGNORE_URL_PATTERNS")
+    TRACKING_IGNORE_URL_PATTERNS = rover_env_token("TRACKING_IGNORE_URL_PATTERNS")
 
 # Heartbeat
-HEARTBEAT_CHECKS = ENV_TOKENS.get('HEARTBEAT_CHECKS', HEARTBEAT_CHECKS)
-HEARTBEAT_EXTENDED_CHECKS = ENV_TOKENS.get('HEARTBEAT_EXTENDED_CHECKS', HEARTBEAT_EXTENDED_CHECKS)
-HEARTBEAT_CELERY_TIMEOUT = ENV_TOKENS.get('HEARTBEAT_CELERY_TIMEOUT', HEARTBEAT_CELERY_TIMEOUT)
+HEARTBEAT_CHECKS = rover_env_token('HEARTBEAT_CHECKS', HEARTBEAT_CHECKS)
+HEARTBEAT_EXTENDED_CHECKS = rover_env_token('HEARTBEAT_EXTENDED_CHECKS', HEARTBEAT_EXTENDED_CHECKS)
+HEARTBEAT_CELERY_TIMEOUT = rover_env_token('HEARTBEAT_CELERY_TIMEOUT', HEARTBEAT_CELERY_TIMEOUT)
 
 # Django CAS external authentication settings
-CAS_EXTRA_LOGIN_PARAMS = ENV_TOKENS.get("CAS_EXTRA_LOGIN_PARAMS", None)
+CAS_EXTRA_LOGIN_PARAMS = rover_env_token("CAS_EXTRA_LOGIN_PARAMS", None)
 if FEATURES.get('AUTH_USE_CAS'):
-    CAS_SERVER_URL = ENV_TOKENS.get("CAS_SERVER_URL", None)
+    CAS_SERVER_URL = rover_env_token("CAS_SERVER_URL", None)
     AUTHENTICATION_BACKENDS = [
         'django.contrib.auth.backends.ModelBackend',
         'django_cas.backends.CASBackend',
@@ -298,7 +298,7 @@ if FEATURES.get('AUTH_USE_CAS'):
     INSTALLED_APPS.append('django_cas')
 
     MIDDLEWARE_CLASSES.append('django_cas.middleware.CASMiddleware')
-    CAS_ATTRIBUTE_CALLBACK = ENV_TOKENS.get('CAS_ATTRIBUTE_CALLBACK', None)
+    CAS_ATTRIBUTE_CALLBACK = rover_env_token('CAS_ATTRIBUTE_CALLBACK', None)
     if CAS_ATTRIBUTE_CALLBACK:
         import importlib
         CAS_USER_DETAILS_RESOLVER = getattr(
@@ -307,12 +307,12 @@ if FEATURES.get('AUTH_USE_CAS'):
         )
 
 # Specific setting for the File Upload Service to store media in a bucket.
-FILE_UPLOAD_STORAGE_BUCKET_NAME = ENV_TOKENS.get('FILE_UPLOAD_STORAGE_BUCKET_NAME', FILE_UPLOAD_STORAGE_BUCKET_NAME)
-FILE_UPLOAD_STORAGE_PREFIX = ENV_TOKENS.get('FILE_UPLOAD_STORAGE_PREFIX', FILE_UPLOAD_STORAGE_PREFIX)
+FILE_UPLOAD_STORAGE_BUCKET_NAME = rover_env_token('FILE_UPLOAD_STORAGE_BUCKET_NAME', FILE_UPLOAD_STORAGE_BUCKET_NAME)
+FILE_UPLOAD_STORAGE_PREFIX = rover_env_token('FILE_UPLOAD_STORAGE_PREFIX', FILE_UPLOAD_STORAGE_PREFIX)
 
 # Zendesk
-ZENDESK_URL = ENV_TOKENS.get('ZENDESK_URL', ZENDESK_URL)
-ZENDESK_CUSTOM_FIELDS = ENV_TOKENS.get('ZENDESK_CUSTOM_FIELDS', ZENDESK_CUSTOM_FIELDS)
+ZENDESK_URL = rover_env_token('ZENDESK_URL', ZENDESK_URL)
+ZENDESK_CUSTOM_FIELDS = rover_env_token('ZENDESK_CUSTOM_FIELDS', ZENDESK_CUSTOM_FIELDS)
 
 ################ SECURE AUTH ITEMS ###############################
 # Secret things: passwords, access keys, etc.
@@ -328,8 +328,8 @@ if 'DJFS' in AUTH_TOKENS and AUTH_TOKENS['DJFS'] is not None:
 EMAIL_HOST_USER = AUTH_TOKENS.get('EMAIL_HOST_USER', EMAIL_HOST_USER)
 EMAIL_HOST_PASSWORD = AUTH_TOKENS.get('EMAIL_HOST_PASSWORD', EMAIL_HOST_PASSWORD)
 
-AWS_SES_REGION_NAME = ENV_TOKENS.get('AWS_SES_REGION_NAME', 'us-east-1')
-AWS_SES_REGION_ENDPOINT = ENV_TOKENS.get('AWS_SES_REGION_ENDPOINT', 'email.us-east-1.amazonaws.com')
+AWS_SES_REGION_NAME = rover_env_token('AWS_SES_REGION_NAME', 'us-east-1')
+AWS_SES_REGION_ENDPOINT = rover_env_token('AWS_SES_REGION_ENDPOINT', 'email.us-east-1.amazonaws.com')
 
 # Note that this is the Studio key for Segment. There is a separate key for the LMS.
 CMS_SEGMENT_KEY = AUTH_TOKENS.get('SEGMENT_KEY')
@@ -362,7 +362,7 @@ elif AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-COURSE_IMPORT_EXPORT_BUCKET = ENV_TOKENS.get('COURSE_IMPORT_EXPORT_BUCKET', '')
+COURSE_IMPORT_EXPORT_BUCKET = rover_env_token('COURSE_IMPORT_EXPORT_BUCKET', '')
 
 if COURSE_IMPORT_EXPORT_BUCKET:
     COURSE_IMPORT_EXPORT_STORAGE = 'contentstore.storage.ImportExportS3Storage'
@@ -389,12 +389,12 @@ for name, database in DATABASES.items():
 
 MODULESTORE = convert_module_store_setting_if_needed(AUTH_TOKENS.get('MODULESTORE', MODULESTORE))
 
-MODULESTORE_FIELD_OVERRIDE_PROVIDERS = ENV_TOKENS.get(
+MODULESTORE_FIELD_OVERRIDE_PROVIDERS = rover_env_token(
     'MODULESTORE_FIELD_OVERRIDE_PROVIDERS',
     MODULESTORE_FIELD_OVERRIDE_PROVIDERS
 )
 
-XBLOCK_FIELD_DATA_WRAPPERS = ENV_TOKENS.get(
+XBLOCK_FIELD_DATA_WRAPPERS = rover_env_token(
     'XBLOCK_FIELD_DATA_WRAPPERS',
     XBLOCK_FIELD_DATA_WRAPPERS
 )
@@ -403,17 +403,17 @@ CONTENTSTORE = AUTH_TOKENS['CONTENTSTORE']
 DOC_STORE_CONFIG = AUTH_TOKENS['DOC_STORE_CONFIG']
 # Datadog for events!
 DATADOG = AUTH_TOKENS.get("DATADOG", {})
-DATADOG.update(ENV_TOKENS.get("DATADOG", {}))
+DATADOG.update(rover_env_token("DATADOG", {}))
 
 # TODO: deprecated (compatibility with previous settings)
 if 'DATADOG_API' in AUTH_TOKENS:
     DATADOG['api_key'] = AUTH_TOKENS['DATADOG_API']
 
 # Celery Broker
-CELERY_ALWAYS_EAGER = ENV_TOKENS.get("CELERY_ALWAYS_EAGER", False)
-CELERY_BROKER_TRANSPORT = ENV_TOKENS.get("CELERY_BROKER_TRANSPORT", "")
-CELERY_BROKER_HOSTNAME = ENV_TOKENS.get("CELERY_BROKER_HOSTNAME", "")
-CELERY_BROKER_VHOST = ENV_TOKENS.get("CELERY_BROKER_VHOST", "")
+CELERY_ALWAYS_EAGER = rover_env_token("CELERY_ALWAYS_EAGER", False)
+CELERY_BROKER_TRANSPORT = rover_env_token("CELERY_BROKER_TRANSPORT", "")
+CELERY_BROKER_HOSTNAME = rover_env_token("CELERY_BROKER_HOSTNAME", "")
+CELERY_BROKER_VHOST = rover_env_token("CELERY_BROKER_VHOST", "")
 CELERY_BROKER_USER = AUTH_TOKENS.get("CELERY_BROKER_USER", "")
 CELERY_BROKER_PASSWORD = AUTH_TOKENS.get("CELERY_BROKER_PASSWORD", "")
 
@@ -422,18 +422,18 @@ BROKER_URL = "{0}://{1}:{2}@{3}/{4}".format(CELERY_BROKER_TRANSPORT,
                                             CELERY_BROKER_PASSWORD,
                                             CELERY_BROKER_HOSTNAME,
                                             CELERY_BROKER_VHOST)
-BROKER_USE_SSL = ENV_TOKENS.get('CELERY_BROKER_USE_SSL', False)
+BROKER_USE_SSL = rover_env_token('CELERY_BROKER_USE_SSL', False)
 
 # Message expiry time in seconds
-CELERY_EVENT_QUEUE_TTL = ENV_TOKENS.get('CELERY_EVENT_QUEUE_TTL', None)
+CELERY_EVENT_QUEUE_TTL = rover_env_token('CELERY_EVENT_QUEUE_TTL', None)
 
 # Allow CELERY_QUEUES to be overwritten by ENV_TOKENS,
-ENV_CELERY_QUEUES = ENV_TOKENS.get('CELERY_QUEUES', None)
+ENV_CELERY_QUEUES = rover_env_token('CELERY_QUEUES', None)
 if ENV_CELERY_QUEUES:
     CELERY_QUEUES = {queue: {} for queue in ENV_CELERY_QUEUES}
 
 # Then add alternate environment queues
-ALTERNATE_QUEUE_ENVS = ENV_TOKENS.get('ALTERNATE_WORKER_QUEUES', '').split()
+ALTERNATE_QUEUE_ENVS = rover_env_token('ALTERNATE_WORKER_QUEUES', '').split()
 ALTERNATE_QUEUES = [
     DEFAULT_PRIORITY_QUEUE.replace(QUEUE_VARIANT, alternate + '.')
     for alternate in ALTERNATE_QUEUE_ENVS
@@ -448,10 +448,10 @@ CELERY_QUEUES.update(
 )
 
 # Queue to use for updating grades due to grading policy change
-POLICY_CHANGE_GRADES_ROUTING_KEY = ENV_TOKENS.get('POLICY_CHANGE_GRADES_ROUTING_KEY', LOW_PRIORITY_QUEUE)
+POLICY_CHANGE_GRADES_ROUTING_KEY = rover_env_token('POLICY_CHANGE_GRADES_ROUTING_KEY', LOW_PRIORITY_QUEUE)
 
 # Rate limit for regrading tasks that a grading policy change can kick off
-POLICY_CHANGE_TASK_RATE_LIMIT = ENV_TOKENS.get('POLICY_CHANGE_TASK_RATE_LIMIT', POLICY_CHANGE_TASK_RATE_LIMIT)
+POLICY_CHANGE_TASK_RATE_LIMIT = rover_env_token('POLICY_CHANGE_TASK_RATE_LIMIT', POLICY_CHANGE_TASK_RATE_LIMIT)
 
 # Event tracking
 TRACKING_BACKENDS.update(AUTH_TOKENS.get("TRACKING_BACKENDS", {}))
@@ -460,27 +460,27 @@ EVENT_TRACKING_BACKENDS['segmentio']['OPTIONS']['processors'][0]['OPTIONS']['whi
     AUTH_TOKENS.get("EVENT_TRACKING_SEGMENTIO_EMIT_WHITELIST", []))
 
 ##### ACCOUNT LOCKOUT DEFAULT PARAMETERS #####
-MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED = ENV_TOKENS.get("MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED", 5)
-MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS = ENV_TOKENS.get("MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS", 15 * 60)
+MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED = rover_env_token("MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED", 5)
+MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS = rover_env_token("MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS", 15 * 60)
 
 #### PASSWORD POLICY SETTINGS #####
-PASSWORD_MIN_LENGTH = ENV_TOKENS.get("PASSWORD_MIN_LENGTH")
-PASSWORD_MAX_LENGTH = ENV_TOKENS.get("PASSWORD_MAX_LENGTH")
-PASSWORD_COMPLEXITY = ENV_TOKENS.get("PASSWORD_COMPLEXITY", {})
-PASSWORD_DICTIONARY_EDIT_DISTANCE_THRESHOLD = ENV_TOKENS.get("PASSWORD_DICTIONARY_EDIT_DISTANCE_THRESHOLD")
-PASSWORD_DICTIONARY = ENV_TOKENS.get("PASSWORD_DICTIONARY", [])
+PASSWORD_MIN_LENGTH = rover_env_token("PASSWORD_MIN_LENGTH")
+PASSWORD_MAX_LENGTH = rover_env_token("PASSWORD_MAX_LENGTH")
+PASSWORD_COMPLEXITY = rover_env_token("PASSWORD_COMPLEXITY", {})
+PASSWORD_DICTIONARY_EDIT_DISTANCE_THRESHOLD = rover_env_token("PASSWORD_DICTIONARY_EDIT_DISTANCE_THRESHOLD")
+PASSWORD_DICTIONARY = rover_env_token("PASSWORD_DICTIONARY", [])
 
 ### INACTIVITY SETTINGS ####
 SESSION_INACTIVITY_TIMEOUT_IN_SECONDS = AUTH_TOKENS.get("SESSION_INACTIVITY_TIMEOUT_IN_SECONDS")
 
 ##### X-Frame-Options response header settings #####
-X_FRAME_OPTIONS = ENV_TOKENS.get('X_FRAME_OPTIONS', X_FRAME_OPTIONS)
+X_FRAME_OPTIONS = rover_env_token('X_FRAME_OPTIONS', X_FRAME_OPTIONS)
 
 ##### Third-party auth options ################################################
 ##
 ## added by mcdaniel Feb-2019. copied from lms aws.py
 if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
-    tmp_backends = ENV_TOKENS.get('THIRD_PARTY_AUTH_BACKENDS', [
+    tmp_backends = rover_env_token('THIRD_PARTY_AUTH_BACKENDS', [
         'social_core.backends.google.GoogleOAuth2',
         'social_core.backends.linkedin.LinkedinOAuth2',
         'social_core.backends.facebook.FacebookOAuth2',
@@ -494,7 +494,7 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
     del tmp_backends
 
     # The reduced session expiry time during the third party login pipeline. (Value in seconds)
-    SOCIAL_AUTH_PIPELINE_TIMEOUT = ENV_TOKENS.get('SOCIAL_AUTH_PIPELINE_TIMEOUT', 600)
+    SOCIAL_AUTH_PIPELINE_TIMEOUT = rover_env_token('SOCIAL_AUTH_PIPELINE_TIMEOUT', 600)
 
     # Most provider configuration is done via ConfigurationModels but for a few sensitive values
     # we allow configuration via AUTH_TOKENS instead (optionally).
@@ -511,10 +511,10 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
     # third_party_auth config moved to ConfigurationModels. This is for data migration only:
     THIRD_PARTY_AUTH_OLD_CONFIG = AUTH_TOKENS.get('THIRD_PARTY_AUTH', None)
 
-    if ENV_TOKENS.get('THIRD_PARTY_AUTH_SAML_FETCH_PERIOD_HOURS', 24) is not None:
+    if rover_env_token('THIRD_PARTY_AUTH_SAML_FETCH_PERIOD_HOURS', 24) is not None:
         CELERYBEAT_SCHEDULE['refresh-saml-metadata'] = {
             'task': 'third_party_auth.fetch_saml_metadata',
-            'schedule': datetime.timedelta(hours=ENV_TOKENS.get('THIRD_PARTY_AUTH_SAML_FETCH_PERIOD_HOURS', 24)),
+            'schedule': datetime.timedelta(hours=rover_env_token('THIRD_PARTY_AUTH_SAML_FETCH_PERIOD_HOURS', 24)),
         }
 
     # The following can be used to integrate a custom login form with third_party_auth.
@@ -524,23 +524,23 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
 
 
 ##### ADVANCED_SECURITY_CONFIG #####
-ADVANCED_SECURITY_CONFIG = ENV_TOKENS.get('ADVANCED_SECURITY_CONFIG', {})
+ADVANCED_SECURITY_CONFIG = rover_env_token('ADVANCED_SECURITY_CONFIG', {})
 
 ################ ADVANCED COMPONENT/PROBLEM TYPES ###############
 
-ADVANCED_PROBLEM_TYPES = ENV_TOKENS.get('ADVANCED_PROBLEM_TYPES', ADVANCED_PROBLEM_TYPES)
+ADVANCED_PROBLEM_TYPES = rover_env_token('ADVANCED_PROBLEM_TYPES', ADVANCED_PROBLEM_TYPES)
 
 ################ VIDEO UPLOAD PIPELINE ###############
 
-VIDEO_UPLOAD_PIPELINE = ENV_TOKENS.get('VIDEO_UPLOAD_PIPELINE', VIDEO_UPLOAD_PIPELINE)
+VIDEO_UPLOAD_PIPELINE = rover_env_token('VIDEO_UPLOAD_PIPELINE', VIDEO_UPLOAD_PIPELINE)
 
 ################ VIDEO IMAGE STORAGE ###############
 
-VIDEO_IMAGE_SETTINGS = ENV_TOKENS.get('VIDEO_IMAGE_SETTINGS', VIDEO_IMAGE_SETTINGS)
+VIDEO_IMAGE_SETTINGS = rover_env_token('VIDEO_IMAGE_SETTINGS', VIDEO_IMAGE_SETTINGS)
 
 ################ VIDEO TRANSCRIPTS STORAGE ###############
 
-VIDEO_TRANSCRIPTS_SETTINGS = ENV_TOKENS.get('VIDEO_TRANSCRIPTS_SETTINGS', VIDEO_TRANSCRIPTS_SETTINGS)
+VIDEO_TRANSCRIPTS_SETTINGS = rover_env_token('VIDEO_TRANSCRIPTS_SETTINGS', VIDEO_TRANSCRIPTS_SETTINGS)
 
 ################ PUSH NOTIFICATIONS ###############
 
@@ -549,77 +549,77 @@ PARSE_KEYS = AUTH_TOKENS.get("PARSE_KEYS", {})
 
 # Video Caching. Pairing country codes with CDN URLs.
 # Example: {'CN': 'http://api.xuetangx.com/edx/video?s3_url='}
-VIDEO_CDN_URL = ENV_TOKENS.get('VIDEO_CDN_URL', {})
+VIDEO_CDN_URL = rover_env_token('VIDEO_CDN_URL', {})
 
 if FEATURES['ENABLE_COURSEWARE_INDEX'] or FEATURES['ENABLE_LIBRARY_INDEX']:
     # Use ElasticSearch for the search engine
     SEARCH_ENGINE = "search.elastic.ElasticSearchEngine"
 
-ELASTIC_SEARCH_CONFIG = ENV_TOKENS.get('ELASTIC_SEARCH_CONFIG', [{}])
+ELASTIC_SEARCH_CONFIG = rover_env_token('ELASTIC_SEARCH_CONFIG', [{}])
 
-XBLOCK_SETTINGS = ENV_TOKENS.get('XBLOCK_SETTINGS', {})
+XBLOCK_SETTINGS = rover_env_token('XBLOCK_SETTINGS', {})
 XBLOCK_SETTINGS.setdefault("VideoDescriptor", {})["licensing_enabled"] = FEATURES.get("LICENSING", False)
 XBLOCK_SETTINGS.setdefault("VideoModule", {})['YOUTUBE_API_KEY'] = AUTH_TOKENS.get('YOUTUBE_API_KEY', YOUTUBE_API_KEY)
 
 ################# PROCTORING CONFIGURATION ##################
 
 PROCTORING_BACKEND_PROVIDER = AUTH_TOKENS.get("PROCTORING_BACKEND_PROVIDER", PROCTORING_BACKEND_PROVIDER)
-PROCTORING_SETTINGS = ENV_TOKENS.get("PROCTORING_SETTINGS", PROCTORING_SETTINGS)
+PROCTORING_SETTINGS = rover_env_token("PROCTORING_SETTINGS", PROCTORING_SETTINGS)
 
 ################# MICROSITE ####################
 # microsite specific configurations.
-MICROSITE_CONFIGURATION = ENV_TOKENS.get('MICROSITE_CONFIGURATION', {})
-MICROSITE_ROOT_DIR = path(ENV_TOKENS.get('MICROSITE_ROOT_DIR', ''))
+MICROSITE_CONFIGURATION = rover_env_token('MICROSITE_CONFIGURATION', {})
+MICROSITE_ROOT_DIR = path(rover_env_token('MICROSITE_ROOT_DIR', ''))
 # this setting specify which backend to be used when pulling microsite specific configuration
-MICROSITE_BACKEND = ENV_TOKENS.get("MICROSITE_BACKEND", MICROSITE_BACKEND)
+MICROSITE_BACKEND = rover_env_token("MICROSITE_BACKEND", MICROSITE_BACKEND)
 # this setting specify which backend to be used when loading microsite specific templates
-MICROSITE_TEMPLATE_BACKEND = ENV_TOKENS.get("MICROSITE_TEMPLATE_BACKEND", MICROSITE_TEMPLATE_BACKEND)
+MICROSITE_TEMPLATE_BACKEND = rover_env_token("MICROSITE_TEMPLATE_BACKEND", MICROSITE_TEMPLATE_BACKEND)
 # TTL for microsite database template cache
-MICROSITE_DATABASE_TEMPLATE_CACHE_TTL = ENV_TOKENS.get(
+MICROSITE_DATABASE_TEMPLATE_CACHE_TTL = rover_env_token(
     "MICROSITE_DATABASE_TEMPLATE_CACHE_TTL", MICROSITE_DATABASE_TEMPLATE_CACHE_TTL
 )
 
 ############################ OAUTH2 Provider ###################################
 if FEATURES.get('ENABLE_OAUTH2_PROVIDER'):
     OAUTH_OIDC_ISSUER = ENV_TOKENS['OAUTH_OIDC_ISSUER']
-    OAUTH_ENFORCE_SECURE = ENV_TOKENS.get('OAUTH_ENFORCE_SECURE', True)
-    OAUTH_ENFORCE_CLIENT_SECURE = ENV_TOKENS.get('OAUTH_ENFORCE_CLIENT_SECURE', True)
+    OAUTH_ENFORCE_SECURE = rover_env_token('OAUTH_ENFORCE_SECURE', True)
+    OAUTH_ENFORCE_CLIENT_SECURE = rover_env_token('OAUTH_ENFORCE_CLIENT_SECURE', True)
     # Defaults for the following are defined in lms.envs.common
     OAUTH_EXPIRE_DELTA = datetime.timedelta(
-        days=ENV_TOKENS.get('OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS', OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS)
+        days=rover_env_token('OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS', OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS)
     )
     OAUTH_EXPIRE_DELTA_PUBLIC = datetime.timedelta(
-        days=ENV_TOKENS.get('OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS', OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS)
+        days=rover_env_token('OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS', OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS)
     )
-    OAUTH_ID_TOKEN_EXPIRATION = ENV_TOKENS.get('OAUTH_ID_TOKEN_EXPIRATION', OAUTH_ID_TOKEN_EXPIRATION)
-    OAUTH_DELETE_EXPIRED = ENV_TOKENS.get('OAUTH_DELETE_EXPIRED', OAUTH_DELETE_EXPIRED)
+    OAUTH_ID_TOKEN_EXPIRATION = rover_env_token('OAUTH_ID_TOKEN_EXPIRATION', OAUTH_ID_TOKEN_EXPIRATION)
+    OAUTH_DELETE_EXPIRED = rover_env_token('OAUTH_DELETE_EXPIRED', OAUTH_DELETE_EXPIRED)
 
 
 #### JWT configuration ####
-JWT_AUTH.update(ENV_TOKENS.get('JWT_AUTH', {}))
+JWT_AUTH.update(rover_env_token('JWT_AUTH', {}))
 
 ######################## CUSTOM COURSES for EDX CONNECTOR ######################
 if FEATURES.get('CUSTOM_COURSES_EDX'):
     INSTALLED_APPS.append('openedx.core.djangoapps.ccxcon.apps.CCXConnectorConfig')
 
 # Partner support link for CMS footer
-PARTNER_SUPPORT_EMAIL = ENV_TOKENS.get('PARTNER_SUPPORT_EMAIL', PARTNER_SUPPORT_EMAIL)
+PARTNER_SUPPORT_EMAIL = rover_env_token('PARTNER_SUPPORT_EMAIL', PARTNER_SUPPORT_EMAIL)
 
 # Affiliate cookie tracking
-AFFILIATE_COOKIE_NAME = ENV_TOKENS.get('AFFILIATE_COOKIE_NAME', AFFILIATE_COOKIE_NAME)
+AFFILIATE_COOKIE_NAME = rover_env_token('AFFILIATE_COOKIE_NAME', AFFILIATE_COOKIE_NAME)
 
 ############## Settings for Studio Context Sensitive Help ##############
 
-HELP_TOKENS_BOOKS = ENV_TOKENS.get('HELP_TOKENS_BOOKS', HELP_TOKENS_BOOKS)
+HELP_TOKENS_BOOKS = rover_env_token('HELP_TOKENS_BOOKS', HELP_TOKENS_BOOKS)
 
 ############## Settings for CourseGraph ############################
-COURSEGRAPH_JOB_QUEUE = ENV_TOKENS.get('COURSEGRAPH_JOB_QUEUE', LOW_PRIORITY_QUEUE)
+COURSEGRAPH_JOB_QUEUE = rover_env_token('COURSEGRAPH_JOB_QUEUE', LOW_PRIORITY_QUEUE)
 
 ########################## Parental controls config  #######################
 
 # The age at which a learner no longer requires parental consent, or None
 # if parental consent is never required.
-PARENTAL_CONSENT_AGE_LIMIT = ENV_TOKENS.get(
+PARENTAL_CONSENT_AGE_LIMIT = rover_env_token(
     'PARENTAL_CONSENT_AGE_LIMIT',
     PARENTAL_CONSENT_AGE_LIMIT
 )
@@ -627,13 +627,13 @@ PARENTAL_CONSENT_AGE_LIMIT = ENV_TOKENS.get(
 ########################## Extra middleware classes  #######################
 
 # Allow extra middleware classes to be added to the app through configuration.
-MIDDLEWARE_CLASSES.extend(ENV_TOKENS.get('EXTRA_MIDDLEWARE_CLASSES', []))
+MIDDLEWARE_CLASSES.extend(rover_env_token('EXTRA_MIDDLEWARE_CLASSES', []))
 
 ########################## Settings for Completion API #####################
 
 # Once a user has watched this percentage of a video, mark it as complete:
 # (0.0 = 0%, 1.0 = 100%)
-COMPLETION_VIDEO_COMPLETE_PERCENTAGE = ENV_TOKENS.get(
+COMPLETION_VIDEO_COMPLETE_PERCENTAGE = rover_env_token(
     'COMPLETION_VIDEO_COMPLETE_PERCENTAGE',
     COMPLETION_VIDEO_COMPLETE_PERCENTAGE,
 )
@@ -647,14 +647,14 @@ ENTERPRISE_REPORTING_SECRET = AUTH_TOKENS.get(
 )
 
 ############### Settings for Retirement #####################
-RETIRED_USERNAME_PREFIX = ENV_TOKENS.get('RETIRED_USERNAME_PREFIX', RETIRED_USERNAME_PREFIX)
-RETIRED_EMAIL_PREFIX = ENV_TOKENS.get('RETIRED_EMAIL_PREFIX', RETIRED_EMAIL_PREFIX)
-RETIRED_EMAIL_DOMAIN = ENV_TOKENS.get('RETIRED_EMAIL_DOMAIN', RETIRED_EMAIL_DOMAIN)
-RETIREMENT_SERVICE_WORKER_USERNAME = ENV_TOKENS.get(
+RETIRED_USERNAME_PREFIX = rover_env_token('RETIRED_USERNAME_PREFIX', RETIRED_USERNAME_PREFIX)
+RETIRED_EMAIL_PREFIX = rover_env_token('RETIRED_EMAIL_PREFIX', RETIRED_EMAIL_PREFIX)
+RETIRED_EMAIL_DOMAIN = rover_env_token('RETIRED_EMAIL_DOMAIN', RETIRED_EMAIL_DOMAIN)
+RETIREMENT_SERVICE_WORKER_USERNAME = rover_env_token(
     'RETIREMENT_SERVICE_WORKER_USERNAME',
     RETIREMENT_SERVICE_WORKER_USERNAME
 )
-RETIREMENT_STATES = ENV_TOKENS.get('RETIREMENT_STATES', RETIREMENT_STATES)
+RETIREMENT_STATES = rover_env_token('RETIREMENT_STATES', RETIREMENT_STATES)
 
 ####################### Plugin Settings ##########################
 
@@ -677,4 +677,11 @@ OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
 OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
-REDIRECT_AM_REGISTRATION = ENV_TOKENS.get('REDIRECT_AM_REGISTRATION', '')
+REDIRECT_AM_REGISTRATION = rover_env_token('REDIRECT_AM_REGISTRATION', '')
+
+# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
+#       the values to the actual client code. Example:
+#           {CLIENT} = 'dev'
+#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
+def rover_env_token(token, default=None):
+    return ENV_TOKENS.get(token, default).replace('{CLIENT}', ROVER_CLIENT_CODE)
