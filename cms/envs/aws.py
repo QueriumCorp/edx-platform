@@ -6,8 +6,8 @@ This is the default template for our main set of AWS servers.
 #           {CLIENT} = 'dev'
 #           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
 def rover_env_token(token, default=None):
-    str = string(ENV_TOKENS.get(token, default))
-    return str.replace('{CLIENT}', ROVER_CLIENT_CODE)
+    s = str(ENV_TOKENS.get(token, default))
+    return s.replace('{CLIENT}', ROVER_CLIENT_CODE)
 
 # We intentionally define lots of variables that aren't used, and
 # want to import all variables from base settings files
