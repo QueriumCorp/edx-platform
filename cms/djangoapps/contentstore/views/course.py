@@ -513,9 +513,9 @@ def course_listing(request):
 
     # mcdaniel jul-2019
     # trap and redirect authenticated users who are not course creators.
-    if request.user.is_authenticated and not (_get_course_creator_status(request.user) == 'granted'):
-        context = _get_login_context(request)
-        return render_to_response('home-noninstructor-oops.html', context)
+    #if request.user.is_authenticated and not (_get_course_creator_status(request.user) == 'granted'):
+    #    context = _get_login_context(request)
+    #    return render_to_response('home-noninstructor-oops.html', context)
 
     """
     List all courses and libraries available to the logged in user
