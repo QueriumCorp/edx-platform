@@ -19,6 +19,8 @@ from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
 
+import json
+
 log = logging.getLogger(__name__)
 
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -30,6 +32,8 @@ class LTIAuthBackend(BaseAuth):
     """
 
     name = 'lti'
+    log.info('class LTIAuthBackend - instantiated.')
+
 
     def start(self):
         """
@@ -41,6 +45,7 @@ class LTIAuthBackend(BaseAuth):
         from request parameters, and not calling backend.start() to avoid
         an unwanted redirect to the non-existent login page.
         """
+        log.info('class LTIAuthBackend (lti) - start()')
 
         # Save validated LTI parameters (or None if invalid or not submitted)
         validated_lti_params = self.get_validated_lti_params(self.strategy)
@@ -87,6 +92,7 @@ class LTIAuthBackend(BaseAuth):
         """
         Completes third-part-auth authentication
         """
+        log.info('lti.py - auth_complete()')
         lti_params = self.strategy.session_get(LTI_PARAMS_KEY)
         kwargs.update({'response': {LTI_PARAMS_KEY: lti_params}, 'backend': self})
         return self.strategy.authenticate(*args, **kwargs)
@@ -96,12 +102,28 @@ class LTIAuthBackend(BaseAuth):
         Computes social auth username from LTI parameters
         """
         lti_params = response[LTI_PARAMS_KEY]
+        log.info("lti.py - get_user_id(): lti_params['oauth_consumer_key']={oauth_consumer_key}, user_id={user_id}".format(
+            oauth_consumer_key=lti_params['oauth_consumer_key'],
+            user_id=lti_params['user_id']
+        ))
         return lti_params['oauth_consumer_key'] + ":" + lti_params['user_id']
+
 
     def get_user_details(self, response):
         """
         Retrieves user details from LTI parameters
         """
+        def default(o):
+            if isinstance(o, (datetime.date, datetime.datetime)):
+                return o.isoformat()
+
+        log.info('lti.py - get_user_details() - response: {response}'.format(
+            response=json.dumps(response,
+                    indent=4,
+                    sort_keys=True,
+                    default=default
+            )
+        ))
         details = {}
         lti_params = response[LTI_PARAMS_KEY]
 
@@ -109,13 +131,34 @@ class LTIAuthBackend(BaseAuth):
             """
             Adds LTI parameter to user details dict if it exists
             """
+            log.info('lti.py - add_if_exists()')
             if lti_key in lti_params and lti_params[lti_key]:
                 details[details_key] = lti_params[lti_key]
 
-        add_if_exists('email', 'email')
+        def add_faculty_status(lti_key):
+            if lti_key in lti_params and lti_params[lti_key]:
+                if lti_params[lti_key] == 'Instructor':
+                    faculty_status='confirmed_faculty'
+                else:
+                    faculty_status='no_faculty_info'
+            else:
+                faculty_status='no_faculty_info'
+            details['faculty_status'] = faculty_status
+
+        #add_if_exists('email', 'email')
+        add_if_exists('lis_person_contact_email_primary', 'email')
+        add_if_exists('user_id', 'username')
         add_if_exists('lis_person_name_full', 'fullname')
         add_if_exists('lis_person_name_given', 'first_name')
         add_if_exists('lis_person_name_family', 'last_name')
+        add_faculty_status('roles')
+        log.info('lti.py - get_user_details() - {details}'.format(
+            details=json.dumps(details,
+                    indent=4,
+                    sort_keys=True,
+                    default=default
+                    )
+        ))
         return details
 
     @classmethod
@@ -123,6 +166,7 @@ class LTIAuthBackend(BaseAuth):
         """
         Validates LTI signature and returns LTI parameters
         """
+        log.info('lti.py - get_validated_lti_params()')
         request = Request(
             uri=strategy.request.build_absolute_uri(), http_method=strategy.request.method, body=strategy.request.body
         )
@@ -145,6 +189,9 @@ class LTIAuthBackend(BaseAuth):
     @classmethod
     def _get_validated_lti_params_from_values(cls, request, current_time,
                                               lti_consumer_valid, lti_consumer_secret, lti_max_timestamp_age):
+        log.info('lti.py - _get_validated_lti_params_from_values() - request.body: {request}'.format(
+            request=str(request.body).replace('&', ' \n\r')
+        ))
         """
         Validates LTI signature and returns LTI parameters
         """
@@ -194,6 +241,7 @@ class LTIAuthBackend(BaseAuth):
         """
         Retrieves LTI consumer details from database
         """
+        log.info('lti.py - load_lti_consumer()')
         from .models import LTIProviderConfig
         provider_config = LTIProviderConfig.current(lti_consumer_key)
         if provider_config and provider_config.enabled_for_current_site:
