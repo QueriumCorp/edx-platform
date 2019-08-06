@@ -112,6 +112,9 @@ class LTIAuthBackend(BaseAuth):
     def get_user_details(self, response):
         """
         Retrieves user details from LTI parameters
+
+        McDaniel aug-2019: had to modify this to add several additional fields for first-time logins:
+        username, email, faculty_status.
         """
         def default(o):
             if isinstance(o, (datetime.date, datetime.datetime)):
