@@ -682,8 +682,8 @@ derive_settings(__name__)
 INSTALLED_APPS.append('openstax_integrator.salesforce')
 
 # mcdaniel mar-2019: Openstax Backend parameters
-OPENSTAX_BACKEND_CLIENT_ID = 'd9c46de5a97776843189e8e2f77b96ae51333a814b1f91afcbae481d9ee734be'
-OPENSTAX_BACKEND_CLIENT_SECRET = 'b615e6ea4a66743f2d2bbc9d1561b59efc87c5f378a4d2203d5ca2365e1b593a'
+OPENSTAX_BACKEND_CLIENT_ID = ''
+OPENSTAX_BACKEND_CLIENT_SECRET = ''
 OPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://accounts.openstax.org/oauth/authorize'
 OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
 OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
