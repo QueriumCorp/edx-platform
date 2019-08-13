@@ -571,7 +571,18 @@ def course_listing(request):
     active_courses, archived_courses = _process_courses_list(courses_iter, in_process_course_actions, split_archived)
     in_process_course_actions = [format_in_process_course_view(uca) for uca in in_process_course_actions]
 
+    # mcdaniel aug-2019: this is to provide stray students who might have wandered into AM with a means
+    #                    of getting back to the LMS
+    site_domain = settings.SITE_NAME
+    site_protocol = 'https' if settings.HTTPS == 'on' else 'http'
+    live_view_url=u"{protocol}://{domain}{path}".format(
+                    protocol=site_protocol,
+                    domain=site_domain,
+                    path=''
+                )
+
     retdict = {
+        u'live_view_url': live_view_url,
         u'courses': active_courses,
         u'archived_courses': archived_courses,
         u'in_process_course_actions': in_process_course_actions,
