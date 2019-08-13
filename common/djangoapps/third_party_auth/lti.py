@@ -227,12 +227,40 @@ class LTIAuthBackend(BaseAuth):
             # As this must take constant time, do not use shortcutting operators such as 'and'.
             # Instead, use constant time operators such as '&', which is the bitwise and.
             valid = (lti_consumer_valid)
+            log.info('lti_consumer_valid: {val}'.format(
+                val=lti_consumer_valid
+            ))
+
             valid = valid & (submitted_signature == computed_signature)
+            log.info('submitted_signature == computed_signature: {val}'.format(
+                val=(submitted_signature == computed_signature)
+            ))
+
             valid = valid & (request.oauth_version == '1.0')
+            log.info('request.oauth_version == 1.0: {val}'.format(
+                val=(request.oauth_version == '1.0')
+            ))
+
             valid = valid & (request.oauth_signature_method == 'HMAC-SHA1')
+            log.info('request.oauth_signature_method == HMAC-SHA1: {val}'.format(
+                val=(request.oauth_signature_method == 'HMAC-SHA1')
+            ))
+
             valid = valid & ('user_id' in data)  # Not required by LTI but can't log in without one
+            log.info('user_id in data: {val}'.format(
+                val=('user_id' in data)
+            ))
+
             valid = valid & (oauth_timestamp >= current_time - lti_max_timestamp_age)
+            log.info('oauth_timestamp >= current_time - lti_max_timestamp_age: {val}'.format(
+                val=(oauth_timestamp >= current_time - lti_max_timestamp_age)
+            ))
+
             valid = valid & (oauth_timestamp <= current_time)
+            log.info('oauth_timestamp <= current_time: {val}'.format(
+                val=(oauth_timestamp <= current_time)
+            ))
+
             if valid:
                 return data
         except AttributeError as error:
