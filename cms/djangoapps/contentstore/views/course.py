@@ -70,6 +70,8 @@ from openedx.core.lib.courses import course_image_url
 from student import auth
 from student.auth import has_course_author_access, has_studio_read_access, has_studio_write_access
 from student.roles import CourseCreatorRole, CourseInstructorRole, CourseStaffRole, GlobalStaff, UserBasedRole
+# mcdaniel aug-2019: for _get_course_creator_status modifications
+from student.models import UserProfile
 from util.course import get_link_for_about_page
 from util.date_utils import get_default_time_display
 from util.json_request import JsonResponse, JsonResponseBadRequest, expect_json
@@ -569,7 +571,7 @@ def course_listing(request):
     active_courses, archived_courses = _process_courses_list(courses_iter, in_process_course_actions, split_archived)
     in_process_course_actions = [format_in_process_course_view(uca) for uca in in_process_course_actions]
 
-    return render_to_response(u'index.html', {
+    retdict = {
         u'courses': active_courses,
         u'archived_courses': archived_courses,
         u'in_process_course_actions': in_process_course_actions,
@@ -587,7 +589,8 @@ def course_listing(request):
         u'allow_unicode_course_id': settings.FEATURES.get(u'ALLOW_UNICODE_COURSE_ID', False),
         u'allow_course_reruns': settings.FEATURES.get(u'ALLOW_COURSE_RERUNS', True),
         u'optimization_enabled': optimization_enabled
-    })
+    }
+    return render_to_response(u'index.html', retdict)
 
 
 def _get_rerun_link_for_item(course_key):
@@ -1796,11 +1799,22 @@ def _get_course_creator_status(user):
     If the user passed in has not previously visited the index page, it will be
     added with status 'unrequested' if the course creator group is in use.
     """
+    profile = UserProfile.objects.get(user=user)
+    faculty_status = profile.faculty_status
+    log.info('_get_course_creator_status() user: {user}, faculty_status: {faculty_status}'.format(
+            user = user.username,
+            faculty_status = faculty_status
+            ))
 
     if user.is_staff:
         course_creator_status = 'granted'
     elif settings.FEATURES.get('DISABLE_COURSE_CREATION', False):
         course_creator_status = 'disallowed_for_this_site'
+    elif faculty_status == 'confirmed_faculty':
+        log.info('_get_course_creator_status() user {user} is confirmed_faculty, so granting course creator status'.format(
+                user = user.username
+                ))
+        course_creator_status = 'granted'
     elif settings.FEATURES.get('ENABLE_CREATOR_GROUP', False):
         course_creator_status = get_course_creator_status(user)
         if course_creator_status is None:
