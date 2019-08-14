@@ -57,52 +57,22 @@ course_sections = blocks.get('children')
                 %>
                       <li class="subsection accordion ${ 'current' if subsection['resume_block'] else '' }">
 
-<!--
-                % if gated_subsection and not completed_prereqs:
-                                <a href="${ subsection['lms_web_url'] }">
-                                    <button class="subsection-text prerequisite-button"
-                                            id="${ subsection['id'] }">
-                                    <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                                    <h4 class="subsection-title">
-                                        ${ subsection['display_name'] }
-                                    </h4>
-                                    <div class="details prerequisite">
-                                        ${ _("Prerequisite: ") }
-                                            <%
-                                                prerequisite_id = gated_content[subsection['id']]['prerequisite']
-                                                prerequisite_name = xblock_display_names.get(prerequisite_id)
-                                            %>
-                                            ${ prerequisite_name }
-                                    </div>
-                % else:
-                                    <button class="subsection-text accordion-trigger"
-                                            id="${ subsection['id'] }"
-                                            aria-expanded="${ 'true' if subsection_is_auto_opened else 'false' }"
-                                            aria-controls="${ subsection['id'] }_contents">
-                                        <span class="fa fa-chevron-right ${ 'fa-rotate-90' if subsection_is_auto_opened else '' }"
-                                              aria-hidden="true"></span>
-                                        <h4 class="subsection-title">
-                                            ${ subsection['display_name'] }
-                                        </h4>
-                    % if subsection.get('complete'):
-                                        <span class="complete-checkmark fa fa-check"></span>
-                    % endif
-                % endif
-
-                subsection.get('children')[0].get('lms_web_url')
--->
-                % if assignment_url:
-                    <a href="${assignment_url}">
-                % else:
-                    <a class="empty_assignment">
-                % endif
-
                     <button class="subsection-text assignment-button"
                             id="${ subsection['id'] }">
                     <div class="assignment_icon" aria-hidden="true"></div>
-                    <h4 class="subsection-title">
-                        ${ subsection['display_name'] }
-                    </h4>
+
+                    ## mcdaniel aug-2019: moved the anchor from outside to inside the button
+                    ## the anchors were being placed outside the chevron navigators, causing
+                    ## the appearance of a mysterious "auto navigation".
+                    % if assignment_url:
+                    <a href="${assignment_url}">
+                    % else:
+                    <a class="empty_assignment">
+                    % endif
+                      <h4 class="subsection-title">
+                          ${ subsection['display_name'] }
+                      </h4>
+                    </a>
 
 
                 <div class="details">
@@ -165,9 +135,6 @@ course_sections = blocks.get('children')
                 % endif
                                         </div> <!-- /details -->
                                     </button> <!-- /subsection-text -->
-                % if gated_subsection and not completed_prereqs:
-                                </a>
-                % endif
                             </li>
             % endfor
                     </ol>
