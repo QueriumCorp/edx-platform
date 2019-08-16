@@ -1139,3 +1139,10 @@ OPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://accounts.openstax.org/oauth/author
 OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
 OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
 OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
+"""
+mcdaniel aug-2019
+On projects behind a reverse proxy that uses HTTPS, the redirect URIs can have the wrong schema (http:// instead of https://) if the request lacks the appropriate headers, which might cause errors during the auth process. To force HTTPS in the final URIs set this setting to True
+
+more: https://python-social-auth-docs.readthedocs.io/en/latest/configuration/settings.html#processing-redirects-and-urlopen
+"""
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True

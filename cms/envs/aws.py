@@ -691,3 +691,10 @@ OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
 REDIRECT_AM_REGISTRATION = rover_env_token('REDIRECT_AM_REGISTRATION', '')
+"""
+mcdaniel aug-2019
+On projects behind a reverse proxy that uses HTTPS, the redirect URIs can have the wrong schema (http:// instead of https://) if the request lacks the appropriate headers, which might cause errors during the auth process. To force HTTPS in the final URIs set this setting to True
+
+more: https://python-social-auth-docs.readthedocs.io/en/latest/configuration/settings.html#processing-redirects-and-urlopen
+"""
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
