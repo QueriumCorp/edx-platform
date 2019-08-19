@@ -698,3 +698,50 @@ On projects behind a reverse proxy that uses HTTPS, the redirect URIs can have t
 more: https://python-social-auth-docs.readthedocs.io/en/latest/configuration/settings.html#processing-redirects-and-urlopen
 """
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+"""
+mcdaniel aug-2019
+CORS setup for salesforce api. The features test and settings below are copied from lms/envs/aws.py.
+for some reason the CORS middlware is not added to CMS. 
+"""
+CORS_URLS_REGEX = r'^/salesforce/v1/contacts/.*$'
+
+############# CORS headers for cross-domain requests #################
+
+if FEATURES.get('ENABLE_CORS_HEADERS') or FEATURES.get('ENABLE_CROSS_DOMAIN_CSRF_COOKIE'):
+    CORS_ALLOW_CREDENTIALS = True
+    CORS_ORIGIN_WHITELIST = rover_env_token('CORS_ORIGIN_WHITELIST', ())
+    CORS_ORIGIN_ALLOW_ALL = rover_env_token('CORS_ORIGIN_ALLOW_ALL', False)
+    CORS_ALLOW_INSECURE = rover_env_token('CORS_ALLOW_INSECURE', False)
+
+    # If setting a cross-domain cookie, it's really important to choose
+    # a name for the cookie that is DIFFERENT than the cookies used
+    # by each subdomain.  For example, suppose the applications
+    # at these subdomains are configured to use the following cookie names:
+    #
+    # 1) foo.example.com --> "csrftoken"
+    # 2) baz.example.com --> "csrftoken"
+    # 3) bar.example.com --> "csrftoken"
+    #
+    # For the cross-domain version of the CSRF cookie, you need to choose
+    # a name DIFFERENT than "csrftoken"; otherwise, the new token configured
+    # for ".example.com" could conflict with the other cookies,
+    # non-deterministically causing 403 responses.
+    #
+    # Because of the way Django stores cookies, the cookie name MUST
+    # be a `str`, not unicode.  Otherwise there will `TypeError`s will be raised
+    # when Django tries to call the unicode `translate()` method with the wrong
+    # number of parameters.
+    CROSS_DOMAIN_CSRF_COOKIE_NAME = str(rover_env_token('CROSS_DOMAIN_CSRF_COOKIE_NAME'))
+
+    # When setting the domain for the "cross-domain" version of the CSRF
+    # cookie, you should choose something like: ".example.com"
+    # (note the leading dot), where both the referer and the host
+    # are subdomains of "example.com".
+    #
+    # Browser security rules require that
+    # the cookie domain matches the domain of the server; otherwise
+    # the cookie won't get set.  And once the cookie gets set, the client
+    # needs to be on a domain that matches the cookie domain, otherwise
+    # the client won't be able to read the cookie.
+    CROSS_DOMAIN_CSRF_COOKIE_DOMAIN = rover_env_token('CROSS_DOMAIN_CSRF_COOKIE_DOMAIN')

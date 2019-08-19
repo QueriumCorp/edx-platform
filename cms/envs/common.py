@@ -502,6 +502,16 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'track.middleware.TrackMiddleware',
 
+    # CORS and CSRF
+    # mcdaniel aug-2019: setup CORS for salesforce api
+    # ------------------
+    'corsheaders.middleware.CorsMiddleware',
+    'openedx.core.djangoapps.cors_csrf.middleware.CorsCSRFMiddleware',
+    'openedx.core.djangoapps.cors_csrf.middleware.CsrfCrossDomainCookieMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    # ------------------
+    
+
     # This is used to set or update the user language preferences.
     'openedx.core.djangoapps.lang_pref.middleware.LanguagePreferenceMiddleware',
 
