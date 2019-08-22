@@ -21,10 +21,13 @@
 </div>
 
 <% if (!context.syncLearnerProfileData) { %>
-        <div class="toggle-form">
-                <span class="text"><%- edx.StringUtils.interpolate(gettext('Already have a {platformName} account?'), {platformName: context.platformName }) %></span>
-                <a href="#login" class="form-toggle" data-type="login"><%- gettext("Sign in.") %></a>
-        </div>
+      <div>
+        <h2>Welcome to Rover! Lets get you logged in.</h2>
+      </div>
+      <div class="toggle-form rover-hidden">
+              <span class="text"><%- edx.StringUtils.interpolate(gettext('Already have a {platformName} account?'), {platformName: context.platformName }) %></span>
+              <a href="#login" class="form-toggle" data-type="login"><%- gettext("Sign in.") %></a>
+      </div>
 <% } %>
 
 <form id="register" class="register-form" autocomplete="off" tabindex="-1" method="POST">
