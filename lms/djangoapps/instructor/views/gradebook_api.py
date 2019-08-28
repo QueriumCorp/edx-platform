@@ -17,7 +17,7 @@ from lms.djangoapps.instructor.views.api import require_level
 from xmodule.modulestore.django import modulestore
 
 # Grade book: max students per page
-MAX_STUDENTS_PER_PAGE_GRADE_BOOK = 20
+MAX_STUDENTS_PER_PAGE_GRADE_BOOK = 35		# Fuka changed for CalStateLA 8/27/2019
 
 
 def calculate_page_info(offset, total_students):
@@ -93,14 +93,16 @@ def get_grade_book_page(request, course, course_key):
 
                 # mcdaniel mar-2019: add a fully formatted first & last name
                 # for the gradebook recordset
-                'full_name': student.first_name + ' ' + student.last_name,
+		        # fuka aug-2019: order the results by Lastname,Firstname
+                'full_name': student.last_name.capitalize() + ',' + student.first_name.capitalize(),
                 'id': student.id,
                 'email': student.email,
                 'grade_summary': CourseGradeFactory().read(student, course).summary
             }
             for student in enrolled_students
         ]
-    return student_info, page
+    # fuka aug-2019: order the results by Lastname,Firstname
+    return sorted(student_info, key = lambda i: i['full_name']), page
 
 
 @transaction.non_atomic_requests
