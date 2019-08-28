@@ -476,6 +476,19 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
         else:
             return True
 
+
+    def due_date_has_passed(self):
+        """
+          if a due date was assigned to this problem and the date has passed
+          then return true
+        """
+        if self.closed():
+            return False
+        else:
+            return True
+
+
+
     def should_show_reset_button(self):
         """
         Return True/False to indicate whether to show the "Reset" button.
@@ -703,6 +716,14 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
         submit_button_submitting = self.submit_button_submitting_name()
         should_enable_submit_button = self.should_enable_submit_button()
 
+        #----------------------------------------------------------
+        #
+        # mcdaniel aug-2019: if the due date for this problem has passed then
+        # we will show a text message near the submit button.
+        due_date_has_passed = self.due_date_has_passed()
+        #
+        #----------------------------------------------------------
+
         content = {
             'name': self.display_name_with_default,
             'html': smart_text(html),
@@ -729,6 +750,13 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
             'submit_button': submit_button,
             'submit_button_submitting': submit_button_submitting,
             'should_enable_submit_button': should_enable_submit_button,
+            # --------------------------------------------
+            # mcdaniel: created and added due_date_has_passed to manage UI
+            # messages to users when the due date has passed.
+            #
+            'due_date_has_passed': due_date_has_passed,
+            #
+            # --------------------------------------------
             'reset_button': self.should_show_reset_button(),
             'save_button': self.should_show_save_button(),
             'answer_available': self.answer_available(),
