@@ -448,7 +448,8 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
     Verified track.
     """
     css_class = 'verified-upgrade-deadline'
-    link_text = ugettext_lazy('Upgrade to Verified Certificate')
+    #link_text = ugettext_lazy('Upgrade to Verified Certificate')
+    link_text = ugettext_lazy('Buy Rover by OpenStax')
 
     @property
     def link(self):
@@ -481,11 +482,15 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
 
     @property
     def title(self):
+        # mcdaniel: sep-2019 switch out the text for Rover marketing CTA stuff.
+
         dynamic_deadline = self._dynamic_deadline()
         if dynamic_deadline is not None:
-            return _('Upgrade to Verified Certificate')
+            #return _('Upgrade to Verified Certificate')
+            return _('Buy Rover by OpenStax')
 
-        return _('Verification Upgrade Deadline')
+        #return _('Verification Upgrade Deadline')
+        return _('Rover Free Trial End Date - Payment Deadline')
 
     def _dynamic_deadline(self):
         if not self.enrollment:
@@ -495,13 +500,20 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
 
     @property
     def description(self):
+        # mcdaniel: sep-2019 switch out the text for Rover marketing CTA stuff.
         dynamic_deadline = self._dynamic_deadline()
         if dynamic_deadline is not None:
-            return _('Don\'t miss the opportunity to highlight your new knowledge and skills by earning a verified'
-                     ' certificate.')
+            #return _('Don\'t miss the opportunity to highlight your new knowledge and skills by earning a verified'
+            #         ' certificate.')
+            return _('You will need to pay for Rover by OpenStax before your free trial period ends or you will not be able to submit homework assignments in this course. '
+                     'If you are in the Educational Opportunity Program (EOP) at your institution and cannot afford Rover, read our FAQs for information on payment assistance.')
 
-        return _('You are still eligible to upgrade to a Verified Certificate! '
-                 'Pursue it to highlight the knowledge and skills you gain in this course.')
+        #return _('You are still eligible to upgrade to a Verified Certificate! '
+        #         'Pursue it to highlight the knowledge and skills you gain in this course.')
+        return _('You will need to pay for Rover by OpenStax before your free trial period ends or you will not be able to submit homework assignments in this course. '
+                 'If you are in the Educational Opportunity Program (EOP) at your institution and cannot afford Rover, read our FAQs for information on payment assistance.')
+
+
 
     @property
     def relative_datestring(self):
