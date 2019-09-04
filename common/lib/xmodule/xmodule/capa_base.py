@@ -483,9 +483,9 @@ class CapaMixin(ScorableXBlockMixin, CapaFields):
           then return true
         """
         if self.closed():
-            return False
-        else:
             return True
+        else:
+            return False
 
 
 
