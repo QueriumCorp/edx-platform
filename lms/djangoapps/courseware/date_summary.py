@@ -506,12 +506,12 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
             #return _('Don\'t miss the opportunity to highlight your new knowledge and skills by earning a verified'
             #         ' certificate.')
             return _('You will need to pay for Rover by OpenStax before your free trial period ends or you will not be able to submit homework assignments in this course. '
-                     'If you are in the Educational Opportunity Program (EOP) at your institution and cannot afford Rover, read our FAQs for information on payment assistance.')
+                     'If you are in the Educational Opportunity Program (EOP) at your institution and cannot afford Rover, read our FAQs (see link in the footer of this page) for information on payment assistance.')
 
         #return _('You are still eligible to upgrade to a Verified Certificate! '
         #         'Pursue it to highlight the knowledge and skills you gain in this course.')
         return _('You will need to pay for Rover by OpenStax before your free trial period ends or you will not be able to submit homework assignments in this course. '
-                 'If you are in the Educational Opportunity Program (EOP) at your institution and cannot afford Rover, read our FAQs for information on payment assistance.')
+                 'If you are in the Educational Opportunity Program (EOP) at your institution and cannot afford Rover, read our FAQs (see link in the footer of this page) for information on payment assistance.')
 
 
 
