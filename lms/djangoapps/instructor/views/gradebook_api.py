@@ -107,7 +107,7 @@ def get_grade_book_page(request, course, course_key):
 
 @transaction.non_atomic_requests
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
-@require_level('staff')
+@require_level('instructor')
 def spoc_gradebook(request, course_id):
     """
     Show the gradebook for this course:
