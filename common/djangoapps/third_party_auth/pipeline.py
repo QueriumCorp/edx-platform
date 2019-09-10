@@ -816,9 +816,3 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     profile = student.models.UserProfile.objects.get(user=user)
     profile.faculty_status = faculty_status
     profile.save()
-
-    # mcdaniel sep-2019: make all confirmed_faculty "staff" so that staff-only
-    # features such as the Gradebook are accessible.
-    if (faculty_status == 'confirmed_faculty') and not user.is_staff:
-        user.is_staff = True
-        user.save()
