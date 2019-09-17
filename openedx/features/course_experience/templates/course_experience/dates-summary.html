@@ -2,7 +2,6 @@
 from django.utils.translation import ugettext as _
 %>
 <%page args="course_date" expression_filter="h"/>
-<%namespace name='static' file='../static_content.html'/>
 <div class="date-summary-container">
     <div class="date-summary date-summary-${course_date.css_class}">
         % if course_date.title:
@@ -11,95 +10,6 @@ from django.utils.translation import ugettext as _
             % else:
                 <span class="hd hd-6 heading">${course_date.title}</span>
             % endif
-
-            ## mcdaniel sep-2019: rover Buy Now popup
-            ## note: python objects originate from lms/djangoapps/courseware/date_summary.py
-
-            % if course_date.css_class == 'verified-upgrade-deadline':
-            <%block name="headextra">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />
-
-            <style>
-              .rover-dog-img {
-                text-align: right;
-              }
-              .rover-dog-img img {
-                width: 200px;
-              }
-              .buy-rover-btn {
-                text-align: center;
-              }
-              .buy-rover-btn a {
-                font-family: Arial, Helvetica, sans-serif;
-                text-decoration: none;
-                padding: 10px;
-                background-color: #0dc0dc;
-                color: #fff;
-                font-size: 1.25em;
-                font-weight: bolder;
-                border-radius: 3px;
-              }
-              .buy-rover-btn a:hover {
-                transition-timing-function: ease-in;
-                box-shadow: 0 1px 5px 1px #cccccc;
-              }
-
-              #RoverExpiredAlert h2 {
-                font-family: Arial, Helvetica, sans-serif;
-                text-align: center;
-                color: #424242;
-              }
-              .message-text {
-                font-family: Arial, Helvetica, sans-serif;
-                margin-bottom: 50px;
-                color: #424242;
-              }
-              .modal {
-                left: 0% !Important;
-              }
-            </style>
-            </%block>
-
-            <div id="RoverExpiredAlert" class="modal">
-              <h2>Your Trial Period Has Expired.</h2>
-              <div class="message-text">
-                <p>We hope you've had the chance to check out Rover by OpenStax for completing your math homework.  Your free access period has now expired.  Please click the button below to complete your payment for Rover so you can continue to use it for the remaining homework assignments in your course.  If you are an EOP member at your institution, please email us at <a href="mailto:roversupport@querium.com">roversupport@querium.com</a> so we can help you with the purchase process.  See this page in our <a href="https://openstax.secure.force.com/help/articles/FAQ/How-do-I-pay-for-Rover" target="_blank">FAQ</a> for more information on paying for Rover.</p>
-                <p>Thanks for using Rover by OpenStax!</p>
-                <p>The Rover Team at OpenStax</p>
-              </div>
-              <div class="buy-rover-btn">
-                <a href="#RoverBuyNow" target="_self">${course_date.link_text}</a>
-              </div>
-              <div class="rover-dog-img">
-                <img src="${static.url("images/rover-angled-corner.svg")}" alt="Rover Angled Corner">
-              </div>
-            </div>
-            <script type="text/javascript">
-
-              $(function() {
-                $('#RoverExpiredAlert').modal({
-                  fadeDuration: 1000,
-                  fadeDelay: 1.25,
-                  escapeClose: false,
-                  clickClose: false,
-                  showClose: false
-                });
-
-                $('a[href="#RoverBuyNow"]').click(function(event) {
-                     console.log('Buy Rover now');
-                     event.preventDefault();
-                     $(this).modal.close;
-                     window.location.replace("${course_date.link}");
-                });
-              });
-            </script>
-
-            <%block name="js_extra">
-              ## mcdaniel sep-2019: jQuery Modal for Rover "Buy Now" popup
-              <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
-            </%block>
-
-            % endif     ## if course_date.css_class == 'verified-upgrade-deadline'
         % endif
         % if course_date.date and course_date.title != 'current_datetime':
             <p class="hd hd-6 date localized-datetime" data-format="shortDate" data-datetime="${course_date.date}" data-timezone="${user_timezone}" data-language="${user_language}" data-string="${_(course_date.relative_datestring)}"></p>
