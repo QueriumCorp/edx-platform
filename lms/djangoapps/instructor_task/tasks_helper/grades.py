@@ -228,7 +228,7 @@ class CourseGradeReport(object):
         Returns a list of all applicable column headers for this grade report.
         """
         return (
-            ["Student ID", "Email", "Username"] +
+            ["Student ID", "Email", "Username", "First Name", "Last Name"] +
             self._grades_header(context) +
             (['Cohort Name'] if context.cohorts_enabled else []) +
             [u'Experiment Group ({})'.format(partition.name) for partition in context.course_experiments] +
@@ -342,15 +342,20 @@ class CourseGradeReport(object):
 
     def _user_assignment_average(self, course_grade, subsection_grades, assignment_info):
         if assignment_info['separate_subsection_avg_headers']:
+            # TASK_LOG.info("KENTGRADE CourseGradeReport._user_assignment_average course_grade.percent={a} course_grade.letter_grade={b} course_grade.passed={c}".format(a=course_grade.percent,b=course_grade.letter_grade,c=course_grade.passed))
+            # TASK_LOG.info("KENTGRADE CourseGradeReport._user_assignment_average subsection_grades={b}".format(b=subsection_grades))
+            # TASK_LOG.info("KENTGRADE CourseGradeReport._user_assignment_average assignment_info={a}".format(a=assignment_info))
             if assignment_info['grader']:
                 if course_grade.attempted:
                     subsection_breakdown = [
                         {'percent': subsection_grade.percent_graded}
                         for subsection_grade in subsection_grades
                     ]
+                    # TASK_LOG.info("KENTGRADE CourseGradeReport._user_assignment_average subsection_breakdown={d}".format(d=subsection_breakdown))
                     assignment_average, _ = assignment_info['grader'].total_with_drops(subsection_breakdown)
                 else:
                     assignment_average = 0.0
+                # TASK_LOG.info("KENTGRADE CourseGradeReport._user_assignment_average assignment_average={e}".format(e=assignment_average))
                 return assignment_average
 
     def _user_cohort_group_names(self, user, context):
@@ -442,8 +447,9 @@ class CourseGradeReport(object):
                     # An empty gradeset means we failed to grade a student.
                     error_rows.append([user.id, user.username, text_type(error)])
                 else:
+                    # TASK_LOG.info(u'KENTGRADE CourseGradeReport._rows_for_users user.id=%s user.email=%s user.username=%s user.first_name=%s user.last_name=%s', user.id, user.email, user.username, user.first_name, user.last_name)
                     success_rows.append(
-                        [user.id, user.email, user.username] +
+                        [user.id, user.email, user.username, user.first_name, user.last_name] +
                         self._user_grades(course_grade, context) +
                         self._user_cohort_group_names(user, context) +
                         self._user_experiment_group_names(user, context) +
@@ -471,7 +477,7 @@ class ProblemGradeReport(object):
         # This struct encapsulates both the display names of each static item in the
         # header row as values as well as the django User field names of those items
         # as the keys.  It is structured in this way to keep the values related.
-        header_row = OrderedDict([('id', 'Student ID'), ('email', 'Email'), ('username', 'Username')])
+        header_row = OrderedDict([('id', 'Student ID'), ('email', 'Email'), ('username', 'Username'), ('first_name','First Name'), ('last_name','Last Name')])
 
         course = get_course_by_id(course_id)
         graded_scorable_blocks = cls._graded_scorable_blocks_to_header(course)
