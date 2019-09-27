@@ -1812,19 +1812,12 @@ def _get_course_creator_status(user):
     """
     profile = UserProfile.objects.get(user=user)
     faculty_status = profile.faculty_status
-    log.info('_get_course_creator_status() user: {user}, faculty_status: {faculty_status}'.format(
-            user = user.username,
-            faculty_status = faculty_status
-            ))
 
     if user.is_staff:
         course_creator_status = 'granted'
     elif settings.FEATURES.get('DISABLE_COURSE_CREATION', False):
         course_creator_status = 'disallowed_for_this_site'
     elif faculty_status == 'confirmed_faculty':
-        log.info('_get_course_creator_status() user {user} is confirmed_faculty, so granting course creator status'.format(
-                user = user.username
-                ))
         course_creator_status = 'granted'
     elif settings.FEATURES.get('ENABLE_CREATOR_GROUP', False):
         course_creator_status = get_course_creator_status(user)
@@ -1836,5 +1829,4 @@ def _get_course_creator_status(user):
     else:
         course_creator_status = 'granted'
 
-    log.info('_get_course_creator_status() user: {user} - {status}'.format(user = user.username, status = course_creator_status))
     return course_creator_status
