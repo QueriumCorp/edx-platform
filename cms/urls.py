@@ -63,8 +63,8 @@ urlpatterns = [
     # mcdaniel feb-2019
     # Redirect for new user sign up. we'll send these to LMS and restart the oauth
     # process there.
-    url(r'^register/$', RedirectView.as_view(url=registration_redirect() , permanent=False)),
-    url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=False)),
+    url(r'^register/$', RedirectView.as_view(url=registration_redirect() , permanent=True)),
+    url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=True)),
 
     # mcdaniel feb-2019 - add salesforce REST api
     url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
@@ -111,7 +111,12 @@ urlpatterns = [
     url(r'^$', contentstore.views.howitworks, name='homepage'),
     url(r'^howitworks$', contentstore.views.howitworks, name='howitworks'),
     url(r'^signup$', contentstore.views.signup, name='signup'),
-    url(r'^signin$', contentstore.views.login_page, name='login'),
+
+    # mcdaniel oct-2019: scrubbing out any remaining manual login screens so that
+    # oAuth via Openstax is the only means of authenticating.
+    #url(r'^signin$', contentstore.views.login_page, name='login'),
+    url(r'^signin$', RedirectView.as_view(url='/' , permanent=True)),
+
     url(r'^request_course_creator$', contentstore.views.request_course_creator, name='request_course_creator'),
     url(r'^course_team/{}(?:/(?P<email>.+))?$'.format(COURSELIKE_KEY_PATTERN),
         contentstore.views.course_team_handler, name='course_team_handler'),
