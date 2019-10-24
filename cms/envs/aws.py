@@ -689,6 +689,15 @@ OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
 OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
 OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 
+# mcdaniel oct-2019: Added backend for oauth provider roverbyopenstax.org
+ROVERBYOPENSTAX_BACKEND_CLIENT_ID = ''
+ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET = ''
+ROVERBYOPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://roverbyopenstax.org/o/authorize'
+ROVERBYOPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://roverbyopenstax.org/o/token'
+ROVERBYOPENSTAX_BACKEND_USER_QUERY = 'https://roverbyopenstax.org/o/api/users?'
+ROVERBYOPENSTAX_BACKEND_USERS_QUERY = 'https://roverbyopenstax.org/o/api/users?'
+
+
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
 REDIRECT_AM_REGISTRATION = rover_env_token('REDIRECT_AM_REGISTRATION', '')
 """
@@ -702,7 +711,7 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
 """
 mcdaniel aug-2019
 CORS setup for salesforce api. The features test and settings below are copied from lms/envs/aws.py.
-for some reason the CORS middlware is not added to CMS. 
+for some reason the CORS middlware is not added to CMS.
 """
 CORS_URLS_REGEX = r'^/salesforce/v1/contacts/.*$'
 
