@@ -692,10 +692,6 @@ OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 # mcdaniel oct-2019: Added backend for oauth provider roverbyopenstax.org
 ROVERBYOPENSTAX_BACKEND_CLIENT_ID = ''
 ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET = ''
-ROVERBYOPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://roverbyopenstax.org/o/authorize'
-ROVERBYOPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://roverbyopenstax.org/o/token'
-ROVERBYOPENSTAX_BACKEND_USER_QUERY = 'https://roverbyopenstax.org/o/api/users?'
-ROVERBYOPENSTAX_BACKEND_USERS_QUERY = 'https://roverbyopenstax.org/o/api/users?'
 
 
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
