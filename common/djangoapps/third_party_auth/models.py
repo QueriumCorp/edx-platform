@@ -728,7 +728,11 @@ class LTIProviderConfig(ProviderConfig):
     backend_name = 'lti'
 
     # This provider is not visible to users
-    icon_class = None
+    #icon_class = None
+    icon_class = 'fa-sign-in'
+    # mcdaniel oct-2019: you get an impossible to correct "missing icon_class" error
+    # if this field is set to None.
+
     icon_image = None
     secondary = False
 
