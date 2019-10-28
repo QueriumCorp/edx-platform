@@ -501,6 +501,7 @@ if FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
         'third_party_auth.saml.SAMLAuthBackend',
         'third_party_auth.lti.LTIAuthBackend',
         'openstax_oauth_backend.openstax.OpenStaxOAuth2',
+        'openstax_oauth_backend.openstax.RoverOAuth2',
     ])
 
     AUTHENTICATION_BACKENDS = list(tmp_backends) + list(AUTHENTICATION_BACKENDS)
