@@ -85,10 +85,6 @@ from . import provider
 import os
 SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
 
-# mcdaniel jun-2019 - Willo Labs LTI integration
-from lti_faculty_verification import is_lti_faculty
-
-
 
 # These are the query string params you can pass
 # to the URL that starts the authentication process.
@@ -800,15 +796,9 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     faculty_status = "Unassigned"
     backend_name = strategy.request.backend.name
     logger.info('set_id_verification_status() - backend: {}'.format(backend_name))
-    if backend_name == "openstax":
+    if (backend_name in ("openstax", "lti")):
         try:
             faculty_status = details['faculty_status']
-        except ValueError:
-            pass
-
-    if backend_name == "lti":
-        try:
-            faculty_status = is_lti_faculty(strategy, details, user)
         except ValueError:
             pass
 

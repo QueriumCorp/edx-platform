@@ -108,8 +108,12 @@ roles_param_examples = (
     'urn:lti:instrole:ims/lis/Administrator'
 )
 
-def is_lti_faculty(strategy, details, user=None, *args, **kwargs):
+import logging
+log = logging.getLogger(__name__)
 
+def get_lti_faculty_status(details):
+
+    log.info('get_lti_faculty_status() - start')
     """
     Extract the LTI roles tuples parameter from details, if it exists.
     Example:
@@ -125,21 +129,35 @@ def is_lti_faculty(strategy, details, user=None, *args, **kwargs):
     """
     roles_param = details.get("roles_param", ())
 
-    for role_param in roles_param:
-        # build the lti_params dict similar to what exists in openedx third_party_auth LTIAuthBackend
-        lti_params = {
-            'email': 'matt.hanger@willolabs.com',
-            'lis_person_name_full': 'Matt Hanger',
-            'lis_person_name_given': 'Matt',
-            'lis_person_name_family': 'Hanger',
-            'roles': role_param
-        }
-        # extract the roles from lti_params
-        user_roles = {x.strip() for x in lti_params.get('roles', '').split(',')}
-        # check if the lti_params represent an instructor
-        # use python set intersection operator "&" to simplify the check
-        is_instructor = bool(user_roles & instructor_roles)
-        if is_instructor:
+    if roles_param != ():
+        log.info('get_lti_faculty_status() - found roles_param: {}'.format(roles_param))
+        for role_param in roles_param:
+            # build the lti_params dict similar to what exists in openedx third_party_auth LTIAuthBackend
+            lti_params = {
+                'email': 'matt.hanger@willolabs.com',
+                'lis_person_name_full': 'Matt Hanger',
+                'lis_person_name_given': 'Matt',
+                'lis_person_name_family': 'Hanger',
+                'roles': role_param
+            }
+            # extract the roles from lti_params
+            user_roles = {x.strip() for x in lti_params.get('roles', '').split(',')}
+            # check if the lti_params represent an instructor
+            # use python set intersection operator "&" to simplify the check
+            is_instructor = bool(user_roles & instructor_roles)
+            if is_instructor:
+                return "confirmed_faculty"
+
+    """
+        mcdaniel oct-2019
+        example from University of Kansas:
+        "roles": "urn:lti:role:ims/lis/Instructor",
+
+    """
+    roles = details.get("roles", None)
+    if roles:
+        log.info('get_lti_faculty_status() - found roles: {}'.format(roles))
+        if roles in instructor_roles:
             return "confirmed_faculty"
 
     return "no_faculty_info"

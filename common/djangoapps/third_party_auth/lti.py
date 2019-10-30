@@ -4,6 +4,7 @@ Third-party-auth module for Learning Tools Interoperability
 import calendar
 import logging
 import time
+import json
 
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from oauthlib.common import Request
@@ -18,11 +19,9 @@ from six import text_type
 from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
-
-import json
+from lti_faculty_verification import get_lti_faculty_status
 
 log = logging.getLogger(__name__)
-
 LTI_PARAMS_KEY = 'tpa-lti-params'
 
 
@@ -138,23 +137,12 @@ class LTIAuthBackend(BaseAuth):
             if lti_key in lti_params and lti_params[lti_key]:
                 details[details_key] = lti_params[lti_key]
 
-        def add_faculty_status(lti_key):
-            if lti_key in lti_params and lti_params[lti_key]:
-                if lti_params[lti_key] == 'Instructor':
-                    faculty_status='confirmed_faculty'
-                else:
-                    faculty_status='no_faculty_info'
-            else:
-                faculty_status='no_faculty_info'
-            details['faculty_status'] = faculty_status
-
-        #add_if_exists('email', 'email')
         add_if_exists('lis_person_contact_email_primary', 'email')
         add_if_exists('user_id', 'username')
         add_if_exists('lis_person_name_full', 'fullname')
         add_if_exists('lis_person_name_given', 'first_name')
         add_if_exists('lis_person_name_family', 'last_name')
-        add_faculty_status('roles')
+        details['faculty_status'] = get_lti_faculty_status(lti_params)
         log.info('lti.py - get_user_details() - {details}'.format(
             details=json.dumps(details,
                     indent=4,
