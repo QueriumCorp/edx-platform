@@ -1136,3 +1136,13 @@ if 'figures' in settings.INSTALLED_APPS:
                 url(r'^figures/',
                     include('figures.urls', namespace='figures')),
         )
+
+# mcdaniel nov-2019
+# to activate the URL endpoints currently defined in the LMS grades module.
+# Question: why weren't these already added to urls.py?????
+#
+#   ----- :/ -----
+urlpatterns += (
+    url(r'^grades_api/',
+        include('lms.djangoapps.grades.api.urls')),
+)

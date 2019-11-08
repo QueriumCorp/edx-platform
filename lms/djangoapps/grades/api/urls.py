@@ -20,5 +20,6 @@ urlpatterns = [
         ),
         views.CourseGradingPolicy.as_view(), name='course_grading_policy'
     ),
-    url(r'^v1/', include('grades.api.v1.urls', namespace='v1'))
+    url(r'^v1/', include('grades.api.v1.urls', namespace='v1')),
+    url(r'^v2/', include('grades.api.v2.urls', namespace='v2')),
 ]
