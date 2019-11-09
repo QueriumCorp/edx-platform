@@ -1,4 +1,4 @@
-""" API v0 views. """
+""" API v2 views. """
 import logging
 
 from django.contrib.auth import get_user_model
@@ -29,6 +29,7 @@ USER_MODEL = get_user_model()
 from django.contrib.auth.decorators import login_required
 from lms.djangoapps.grades.course_grade import CourseGrade
 from lms.djangoapps.grades.course_data import CourseData
+import json
 
 class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     """
@@ -128,7 +129,8 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         # in turn contain several prebuilt methods to return grade data at
         # varying levels of detail.
         self.course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
-        self.course_grade = CourseGrade(user=self.grade_user, course_data=self.course_data)
+        self.course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
+        #self.course_grade = CourseGrade(user=self.grade_user, course_data=self.course_data)
 
         log.info('AbstractGradesView - get() - course_data effective_structure: {}'.format(self.course_data.effective_structure))
         log.info('AbstractGradesView - get() - course_data full_string: {}'.format(self.course_data.full_string()))
@@ -202,8 +204,7 @@ class CourseGradeView(AbstractGradesView):
         """
 
         try:
-            course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
-            return Response(self._make_grade_response(self.grade_user, self.course_key, course_grade))
+            return Response(self._make_grade_response(self.grade_user, self.course_key, self.course_grade))
         except:
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -219,6 +220,7 @@ class SubsectionGradesView(AbstractGradesView):
 
         #o = self.course_grade.subsection_grades()
         #log.info('SubsectionGradesView - retval: {}'.format(o))
+
         return Response(self.test_response())
 
 class ChapterGradesView(AbstractGradesView):
@@ -226,9 +228,23 @@ class ChapterGradesView(AbstractGradesView):
         # do some assignments and valiations...
         super(ChapterGradesView, self).get(request, course_id)
 
-        #o = self.course_grade.chapter_grades()
-        #log.info('SubsectionGradesView - retval: {}'.format(o))
-        return Response(self.test_response())
+        grades = []
+        for chapter in self.course_grade.chapter_grades.itervalues():
+            for subsection_grade in chapter['sections']:
+                # the are lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
+                grades.append(
+                    {
+                    'username': self.grade_user.username,
+                    #'course_key': str(self.course_key),
+                    'course_id': self.course_id,
+                    'url_name': subsection_grade.url_name,
+                    'display_name': subsection_grade.display_name,
+                    'earned': subsection_grade.all_total.earned,
+                    'possible': subsection_grade.all_total.possible
+                    }
+                )
+
+        return Response(grades)
 
 class ProblemGradeView(AbstractGradesView):
     def get(self, request, course_id=None):
