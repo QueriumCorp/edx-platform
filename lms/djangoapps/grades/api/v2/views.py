@@ -29,7 +29,7 @@ USER_MODEL = get_user_model()
 from django.contrib.auth.decorators import login_required
 from lms.djangoapps.grades.course_grade import CourseGrade
 from lms.djangoapps.grades.course_data import CourseData
-import json
+from django.conf import settings
 
 class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     """
@@ -45,6 +45,9 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
       of our parameter validations here in the abstract class so that our
       deployable classes only have to deal with grabbing and packaging data.
     """
+    host = settings.SITE_NAME
+    scheme = u"https" if settings.HTTPS == "on" else u"http"
+
     authentication_classes = (
         JwtAuthentication,
         OAuth2AuthenticationAllowInactiveUser,
@@ -61,6 +64,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     course_key = None
     course_data = None
     course_grade = None
+    course_url = None
 
     #@login_required
     def get(self, request, course_id=None):
@@ -124,17 +128,24 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 error_code='user_not_enrolled'
             )
 
+
+        self.course_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/'.format(
+                scheme = self.scheme,
+                host=self.host,
+                url_prefix='courses',
+                course_id=self.course_id
+                )
+
         # use our validated user and course_key to create a CourseData object.
         # then use the CourseData object to create a CourseGrade object, which
         # in turn contain several prebuilt methods to return grade data at
         # varying levels of detail.
         self.course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
         self.course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
-        #self.course_grade = CourseGrade(user=self.grade_user, course_data=self.course_data)
 
-        log.info('AbstractGradesView - get() - course_data effective_structure: {}'.format(self.course_data.effective_structure))
-        log.info('AbstractGradesView - get() - course_data full_string: {}'.format(self.course_data.full_string()))
-        log.info('AbstractGradesView - get() - course_data location: {}'.format(self.course_data.location))
+        #log.info('AbstractGradesView - get() - course_data effective_structure: {}'.format(self.course_data.effective_structure))
+        #log.info('AbstractGradesView - get() - course_data full_string: {}'.format(self.course_data.full_string()))
+        #log.info('AbstractGradesView - get() - course_data location: {}'.format(self.course_data.location))
 
         return
 
@@ -224,6 +235,7 @@ class SubsectionGradesView(AbstractGradesView):
         return Response(self.test_response())
 
 class ChapterGradesView(AbstractGradesView):
+
     def get(self, request, course_id=None):
         # do some assignments and valiations...
         super(ChapterGradesView, self).get(request, course_id)
@@ -232,15 +244,24 @@ class ChapterGradesView(AbstractGradesView):
         for chapter in self.course_grade.chapter_grades.itervalues():
             for subsection_grade in chapter['sections']:
                 # the are lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
+                log.info('chapter: {}'.format(
+                    chapter
+                ))
                 grades.append(
                     {
                     'username': self.grade_user.username,
-                    #'course_key': str(self.course_key),
+                    'url': self.course_url + chapter['url_name'] + '/' + subsection_grade.url_name,
+                    'chapter_url': chapter['url_name'],
+                    'subsection_url': subsection_grade.url_name,
                     'course_id': self.course_id,
-                    'url_name': subsection_grade.url_name,
-                    'display_name': subsection_grade.display_name,
+                    'chapter_display_name': chapter['display_name'],
+                    'subsection_display_name': subsection_grade.display_name,
                     'earned': subsection_grade.all_total.earned,
-                    'possible': subsection_grade.all_total.possible
+                    'possible': subsection_grade.all_total.possible,
+                    'due_date': None,
+                    'completed_date': None,
+                    'attempted': None,
+                    'location': str(subsection_grade.location)
                     }
                 )
 
