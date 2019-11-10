@@ -1,4 +1,13 @@
-""" API v2 views. """
+"""
+API v2 views.
+
+written by:     mcdaniel
+date:           nov-2019
+
+usage:          created as a generic set of grade data apis to be used to provide
+                grade synch services to external LMS' via LTI, and more
+                specifically, via Willo Labs LTI integration services.
+"""
 import logging
 
 from django.contrib.auth import get_user_model
@@ -58,10 +67,9 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
     required_scopes = ['grades:read']
 
-    # to be assign in get() but made available to the class
     course_id = None
     username = None
-    user = None             # for the decorator
+    user = None
     grade_user = None
     course_key = None
     course_data = None
@@ -145,18 +153,8 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         self.course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
         self.course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
 
-        #log.info('AbstractGradesView - get() - course_data effective_structure: {}'.format(self.course_data.effective_structure))
-        #log.info('AbstractGradesView - get() - course_data full_string: {}'.format(self.course_data.full_string()))
-        #log.info('AbstractGradesView - get() - course_data location: {}'.format(self.course_data.location))
-
         return
 
-    def test_response(self):
-        return {
-            'username': 'Tom Sawyer',
-            'email': 'not yet invented',
-            'course_id': 'No time for schooling.',
-        }
     def _make_grade_response(self, user, course_key, course_grade):
         """
         Serialize a single grade to dict to use in Responses
@@ -169,6 +167,75 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             'percent': course_grade.percent,
             'letter_grade': course_grade.letter_grade,
         }
+
+    def _calc_grade_percentage(self, earned, possible):
+        """
+            calculate the floating point percentage grade score based on the
+            integer parameters "earned" and "possible"
+        """
+        f_grade = float(0)
+        if possible != 0:
+            f_grade = float(earned) / float(possible)
+        return f_grade
+
+    def get_subsection_problem_grades(self, section):
+        """
+            returns an array of tuples of the individual problem grade results from a subsection of a chapter.
+
+            * note: subsections are identifyable as "Sections" in the LMS UI.
+        """
+        grades_factory = SubsectionGradeFactory(student=self.grade_user, course=None, course_structure=None, course_data=self.course_data)
+        subsection_grades = grades_factory.create(subsection=section, read_only=True)
+        problems = []
+        for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
+            problems.append(
+                (
+                str(problem_key_BlockUsageLocator),
+                {
+                'raw_earned': problem_ProblemScore.raw_earned,
+                'raw_possible': problem_ProblemScore.raw_possible,
+                'earned': problem_ProblemScore.earned,
+                'possible': problem_ProblemScore.possible,
+                'weight': problem_ProblemScore.weight,
+                'grade_percentage': self._calc_grade_percentage(
+                                        problem_ProblemScore.earned,
+                                        problem_ProblemScore.possible
+                                        )
+                }
+                )
+            )
+
+        return problems
+
+    def get_subsection_tuple(self, section, chapter, problems):
+        """
+            returns a tuple dictionary of grade data for one subsection of a chapter.
+
+            * note: subsections are identifyable as "Sections" in the LMS UI.
+        """
+        return (
+            str(section.location),
+            {
+            'username': self.grade_user.username,
+            'url': self.course_url + chapter['url_name'] + '/' + section.url_name,
+            'chapter_url': chapter['url_name'],
+            'subsection_url': section.url_name,
+            'course_id': self.course_id,
+            'chapter_display_name': chapter['display_name'],
+            'subsection_display_name': section.display_name,
+            'earned': section.all_total.earned,
+            'possible': section.all_total.possible,
+            'due_date': None,
+            'completed_date': None,
+            'attempted': None,
+            'subsection_grades': problems,
+            'grade_percentage':  self._calc_grade_percentage(
+                                    section.all_total.earned,
+                                    section.all_total.possible
+                                    )
+
+            }
+                )
 
 
 class CourseGradeView(AbstractGradesView):
@@ -228,63 +295,21 @@ class CourseGradeView(AbstractGradesView):
 
 class SubsectionGradesView(AbstractGradesView):
     def get(self, request, course_id=None):
-        # do some assignments and valiations...
         super(SubsectionGradesView, self).get(request, course_id)
-
-        #o = self.course_grade.subsection_grades()
-        #log.info('SubsectionGradesView - retval: {}'.format(o))
 
         return Response(self.test_response())
 
 class ChapterGradesView(AbstractGradesView):
 
     def get(self, request, course_id=None):
-        # do some assignments and valiations...
         super(ChapterGradesView, self).get(request, course_id)
 
         grades = []
         for chapter in self.course_grade.chapter_grades.itervalues():
-            for subsection_grade in chapter['sections']:
-                grades_factory = SubsectionGradeFactory(student=self.grade_user, course=None, course_structure=None, course_data=self.course_data)
-                subsection_grades = grades_factory.create(subsection=subsection_grade, read_only=True)
-
-                #log.info('subsection grades: {}'.format(
-                #    subsection_grades.problem_scores
-                #))
-
-                problems = []
-                for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
-
-                    problems.append(
-                        (
-                        str(problem_key_BlockUsageLocator),
-                        {
-                        'raw_earned': problem_ProblemScore.raw_earned,
-                        'raw_possible': problem_ProblemScore.raw_possible,
-                        'earned': problem_ProblemScore.earned,
-                        'possible': problem_ProblemScore.possible,
-                        'weight': problem_ProblemScore.weight
-                        }
-                        )
-                    )
-
+            for section in chapter['sections']:
+                problems = self.get_subsection_problem_grades(section)
                 grades.append(
-                    {
-                    'username': self.grade_user.username,
-                    'url': self.course_url + chapter['url_name'] + '/' + subsection_grade.url_name,
-                    'chapter_url': chapter['url_name'],
-                    'subsection_url': subsection_grade.url_name,
-                    'course_id': self.course_id,
-                    'chapter_display_name': chapter['display_name'],
-                    'subsection_display_name': subsection_grade.display_name,
-                    'earned': subsection_grade.all_total.earned,
-                    'possible': subsection_grade.all_total.possible,
-                    'due_date': None,
-                    'completed_date': None,
-                    'attempted': None,
-                    'location': str(subsection_grade.location),
-                    'subsection_grades': problems
-                    }
+                    self.get_subsection_tuple(section, chapter, problems)
                 )
 
         return Response(grades)
