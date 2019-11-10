@@ -29,6 +29,8 @@ USER_MODEL = get_user_model()
 from django.contrib.auth.decorators import login_required
 from lms.djangoapps.grades.course_grade import CourseGrade
 from lms.djangoapps.grades.course_data import CourseData
+from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
+import json
 from django.conf import settings
 
 class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
@@ -243,10 +245,29 @@ class ChapterGradesView(AbstractGradesView):
         grades = []
         for chapter in self.course_grade.chapter_grades.itervalues():
             for subsection_grade in chapter['sections']:
-                # the are lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
-                log.info('chapter: {}'.format(
-                    chapter
-                ))
+                grades_factory = SubsectionGradeFactory(student=self.grade_user, course=None, course_structure=None, course_data=self.course_data)
+                subsection_grades = grades_factory.create(subsection=subsection_grade, read_only=True)
+
+                #log.info('subsection grades: {}'.format(
+                #    subsection_grades.problem_scores
+                #))
+
+                problems = []
+                for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
+
+                    problems.append(
+                        (
+                        str(problem_key_BlockUsageLocator),
+                        {
+                        'raw_earned': problem_ProblemScore.raw_earned,
+                        'raw_possible': problem_ProblemScore.raw_possible,
+                        'earned': problem_ProblemScore.earned,
+                        'possible': problem_ProblemScore.possible,
+                        'weight': problem_ProblemScore.weight
+                        }
+                        )
+                    )
+
                 grades.append(
                     {
                     'username': self.grade_user.username,
@@ -261,7 +282,8 @@ class ChapterGradesView(AbstractGradesView):
                     'due_date': None,
                     'completed_date': None,
                     'attempted': None,
-                    'location': str(subsection_grade.location)
+                    'location': str(subsection_grade.location),
+                    'subsection_grades': problems
                     }
                 )
 
