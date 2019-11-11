@@ -269,13 +269,9 @@ class CourseGradeView(AbstractGradesView):
     def get(self, request, course_id=None):
         super(CourseGradeView, self).get(request, course_id, chapter_id=None, section_id=None)
 
-        chapters = []
+        chapters = {}
         for chapter in self.course_grade.chapter_grades.itervalues():
-            chapters.append(
-                {
-                    chapter['url_name']: self.get_chapter_dict(chapter)
-                }
-            )
+            chapters[chapter['url_name']] = self.get_chapter_dict(chapter)
 
         return Response({
                         'username': self.grade_user.username,
