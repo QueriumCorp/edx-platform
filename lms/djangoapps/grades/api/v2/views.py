@@ -33,6 +33,7 @@ from student.models import CourseEnrollment
 # mcdaniel nov-2019
 # additional stuff that we need for V2
 import json
+from django.http import HttpResponseNotFound
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from lms.djangoapps.grades.course_grade import CourseGrade
@@ -131,11 +132,11 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
 
         # ID validations
         #---------------------------------------------------------
-        if not self.course_id and not self.chapter_id and not self.section_id:
+        if not self.course_id:
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
-                developer_message='You must provide at least one of course_id, chapter_id, section_id for this view.',
-                error_code='missing_id'
+                developer_message='You must provide a course_id for this view.',
+                error_code='missing_course_id'
             )
 
         # Validate course exists with provided course_id
@@ -293,8 +294,10 @@ class ChapterGradeView(AbstractGradesView):
         for chapter in self.course_grade.chapter_grades.itervalues():
             if chapter['url_name'] == chapter_id:
                 return Response(self.get_chapter_dict(chapter))
-        return Response({})
 
+        return HttpResponseNotFound("HTTP Error 404: Requested chapter_id {chapter_id} not found.".format(
+            chapter_id=self.chapter_id
+            ))
 
 
 class SectionGradeView(AbstractGradesView):
@@ -310,4 +313,8 @@ class SectionGradeView(AbstractGradesView):
                 for section in chapter['sections']:
                     if section.url_name == section_id:
                         return Response(self.get_section_dict(chapter, section))
-        return Response({})
+
+        return HttpResponseNotFound("HTTP Error 404: Requested chapter_id/section_id {chapter_id}/{section_id} not found.".format(
+            chapter_id=self.chapter_id,
+            section_id=self.section_id
+            ))
