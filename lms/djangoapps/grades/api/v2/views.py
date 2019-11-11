@@ -39,6 +39,7 @@ from django.conf import settings
 from lms.djangoapps.grades.course_grade import CourseGrade
 from lms.djangoapps.grades.course_data import CourseData
 from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
+#from openedx.core.djangoapps.models.course_details import CourseDetails
 
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
@@ -80,6 +81,12 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     course_data = None
     course_grade = None
     course_url = None
+
+    organization = None
+    course = None
+    course_run = None
+
+    course_name = None
 
     def get(self, request, course_id=None, chapter_id=None, section_id=None):
 
@@ -149,12 +156,36 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 error_code='invalid_course_key'
             )
 
-        if not CourseOverview.get_from_id_if_exists(self.course_key):
+        self.organization = CourseKey.from_string(self.course_id).org
+        self.course = CourseKey.from_string(self.course_id).course
+        self.course_run = CourseKey.from_string(self.course_id).run
+
+        if not CourseOverview.get_from_id(self.course_key):
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message="Requested grade for unknown course {course}".format(course=self.course_id),
                 error_code='course_does_not_exist'
             )
+
+        #self.course_name = CourseDetails.fetch(self.course_key).title
+        self.course_name = CourseOverview.get_from_id(self.course_key).display_name
+        self.course_version = CourseOverview.get_from_id(self.course_key).version
+        self.course_image_url = CourseOverview.get_from_id(self.course_key).course_image_url
+        self.course_start_date = CourseOverview.get_from_id(self.course_key).start
+        self.course_end_date = CourseOverview.get_from_id(self.course_key).end
+        self.course_has_started = CourseOverview.get_from_id(self.course_key).has_started()
+        self.course_has_ended = CourseOverview.get_from_id(self.course_key).has_ended()
+        self.course_lowest_passing_grade = CourseOverview.get_from_id(self.course_key).lowest_passing_grade
+        self.course_enrollment_start = CourseOverview.get_from_id(self.course_key).enrollment_start
+        self.course_enrollment_end = CourseOverview.get_from_id(self.course_key).enrollment_end
+        self.course_prerequisites = CourseOverview.get_from_id(self.course_key)._pre_requisite_courses_json
+        self.course_description = CourseOverview.get_from_id(self.course_key).short_description
+        self.course_effort = CourseOverview.get_from_id(self.course_key).effort
+        self.course_self_paced = CourseOverview.get_from_id(self.course_key).self_paced
+        self.course_marketing_url = CourseOverview.get_from_id(self.course_key).marketing_url
+        self.course_eligible_for_financial_aid = CourseOverview.get_from_id(self.course_key).eligible_for_financial_aid
+        self.course_language = CourseOverview.get_from_id(self.course_key).closest_released_language
+
 
         if not enrollment_data.get_course_enrollment(self.username, str(self.course_key)):
             raise self.api_error(
@@ -274,12 +305,44 @@ class CourseGradeView(AbstractGradesView):
             chapters[chapter['url_name']] = self.get_chapter_dict(chapter)
 
         return Response({
-                        'username': self.grade_user.username,
-                        'course_url': self.course_url,
+                        'student': {
+                            'username': self.grade_user.username,
+                            'email': self.grade_user.email,
+                            'first_name': self.grade_user.first_name,
+                            'last_name': self.grade_user.last_name,
+                        },
+                        'course_grade': {
+                            'course_passed': self.course_grade.passed,
+                            'course_grade_percent': self.course_grade.percent,
+                            'course_grade_letter': self.course_grade.letter_grade,
+                        },
+                        # course meta data
                         'course_id': self.course_id,
-                        'course_passed': self.course_grade.passed,
-                        'course_grade_percent': self.course_grade.percent,
-                        'course_grade_letter': self.course_grade.letter_grade,
+                        'course': self.course,
+                        'organization': self.organization,
+                        'course_run': self.course_run,
+                        'course_url': self.course_url,
+                        'course_name': self.course_name,
+                        'course_image_url': self.course_image_url,
+
+                        # course details
+                        'course_version': self.course_version,
+                        'course_image_url': self.course_image_url,
+                        'course_start_date': self.course_start_date,
+                        'course_end': self.course_end_date,
+                        'course_has_started': self.course_has_started,
+                        'course_has_ended': self.course_has_ended,
+                        'course_lowest_passing_grade': self.course_lowest_passing_grade,
+                        'course_enrollment_start': self.course_enrollment_start,
+                        'course_enrollment_end': self.course_enrollment_end,
+                        'course_prerequisites': self.course_prerequisites,
+                        'course_description': self.course_description,
+                        'course_effort': self.course_effort,
+                        'course_self_paced': self.course_self_paced,
+                        'course_marketing_url': self.course_marketing_url,
+                        'course_eligible_for_financial_aid': self.course_eligible_for_financial_aid,
+                        'course_language': self.course_language,
+
                         'course_chapters': chapters
                         })
 
