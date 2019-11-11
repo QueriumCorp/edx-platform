@@ -30,17 +30,19 @@ from openedx.core.lib.api.authentication import (
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
 from student.models import CourseEnrollment
 
-log = logging.getLogger(__name__)
-USER_MODEL = get_user_model()
-
 # mcdaniel nov-2019
 # additional stuff that we need for V2
+import json
 from django.contrib.auth.decorators import login_required
+from django.conf import settings
 from lms.djangoapps.grades.course_grade import CourseGrade
 from lms.djangoapps.grades.course_data import CourseData
 from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
-import json
-from django.conf import settings
+
+log = logging.getLogger(__name__)
+USER_MODEL = get_user_model()
+
+
 
 class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     """
@@ -76,7 +78,6 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     course_grade = None
     course_url = None
 
-    #@login_required
     def get(self, request, course_id=None):
 
         if 'username' in request.GET:
@@ -155,19 +156,12 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
 
         return
 
-    def _make_grade_response(self, user, course_key, course_grade):
-        """
-        Serialize a single grade to dict to use in Responses
-        """
-        return {
-            'username': user.username,
-            'email': user.email,
-            'course_id': str(course_key),
-            'passed': course_grade.passed,
-            'percent': course_grade.percent,
-            'letter_grade': course_grade.letter_grade,
+    def test_response(self, course_id=None, chapter_id=None):
+        return  {
+            'key': 'success!',
+            'course_id': str(course_id),
+            'chapter_id': str(chapter_id)
         }
-
     def _calc_grade_percentage(self, earned, possible):
         """
             calculate the floating point percentage grade score based on the
@@ -192,12 +186,12 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 (
                 str(problem_key_BlockUsageLocator),
                 {
-                'raw_earned': problem_ProblemScore.raw_earned,
-                'raw_possible': problem_ProblemScore.raw_possible,
-                'earned': problem_ProblemScore.earned,
-                'possible': problem_ProblemScore.possible,
-                'weight': problem_ProblemScore.weight,
-                'grade_percentage': self._calc_grade_percentage(
+                'problem_raw_earned': problem_ProblemScore.raw_earned,
+                'problem_raw_possible': problem_ProblemScore.raw_possible,
+                'problem_earned': problem_ProblemScore.earned,
+                'problem_possible': problem_ProblemScore.possible,
+                'problem_weight': problem_ProblemScore.weight,
+                'problem_grade_percentage': self._calc_grade_percentage(
                                         problem_ProblemScore.earned,
                                         problem_ProblemScore.possible
                                         )
@@ -217,19 +211,19 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             str(section.location),
             {
             'username': self.grade_user.username,
-            'url': self.course_url + chapter['url_name'] + '/' + section.url_name,
-            'chapter_url': chapter['url_name'],
-            'subsection_url': section.url_name,
+            'section_url': self.course_url + chapter['url_name'] + '/' + section.url_name,
+            'chapter_slug': chapter['url_name'],
+            'section_slug': section.url_name,
             'course_id': self.course_id,
             'chapter_display_name': chapter['display_name'],
-            'subsection_display_name': section.display_name,
-            'earned': section.all_total.earned,
-            'possible': section.all_total.possible,
-            'due_date': None,
-            'completed_date': None,
-            'attempted': None,
-            'subsection_grades': problems,
-            'grade_percentage':  self._calc_grade_percentage(
+            'section_display_name': section.display_name,
+            'section_earned': section.all_total.earned,
+            'section_possible': section.all_total.possible,
+            'section_due_date': None,
+            'section_completed_date': None,
+            'section_attempted': None,
+            'section_problems': problems,
+            'section_grade_percentage':  self._calc_grade_percentage(
                                     section.all_total.earned,
                                     section.all_total.possible
                                     )
@@ -238,71 +232,11 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 )
 
 
+
 class CourseGradeView(AbstractGradesView):
-    """
-    **Use Case**
-        * Get course grades of the current user, if enrolled in the course.
-    **Example Request**
-        GET /api/grades/v1/courses/{course_id}/?username={username}          - Get grades for specific user in course
-        GET /api/grades/v1/courses/?course_id={course_id}&username={username}- Get grades for specific user in course
-    **GET Parameters**
-        A GET request may include the following parameters.
-        * course_id: (required) A string representation of a Course ID.
-        * username:  (required) A string representation of a user's username.
-    **GET Response Values**
-        If the request for information about the course grade
-        is successful, an HTTP 200 "OK" response is returned.
-        The HTTP 200 response has the following values.
-        * username: A string representation of a user's username passed in the request.
-        * email: A string representation of a user's email.
-        * course_id: A string representation of a Course ID.
-        * passed: Boolean representing whether the course has been
-                  passed according to the course's grading policy.
-        * percent: A float representing the overall grade for the course
-        * letter_grade: A letter grade as defined in grading policy (e.g. 'A' 'B' 'C' for 6.002x) or None
-    **Example GET Response**
-        {
-            "username": "fred",
-            "email": "fred@example.com",
-            "course_id": "course-v1:edX+DemoX+Demo_Course",
-            "passed": true,
-            "percent": 0.83,
-            "letter_grade": "B",
-        }
-    """
 
     def get(self, request, course_id=None):
         super(CourseGradeView, self).get(request, course_id)
-        """
-        Gets a course progress status.
-        Args:
-            request (Request): Django request object.
-            course_id (string): URI element specifying the course location.
-                                Can also be passed as a GET parameter instead.
-        Return:
-            A JSON serialized representation of the requesting user's current grade status.
-        """
-
-        try:
-            return Response(self._make_grade_response(self.grade_user, self.course_key, self.course_grade))
-        except:
-            raise self.api_error(
-                status_code=status.HTTP_404_NOT_FOUND,
-                developer_message='An unhandled exception ocurred in CourseGradeView.get()',
-                error_code='unhandled_exception'
-            )
-
-
-class SubsectionGradesView(AbstractGradesView):
-    def get(self, request, course_id=None):
-        super(SubsectionGradesView, self).get(request, course_id)
-
-        return Response(self.test_response())
-
-class ChapterGradesView(AbstractGradesView):
-
-    def get(self, request, course_id=None):
-        super(ChapterGradesView, self).get(request, course_id)
 
         grades = []
         for chapter in self.course_grade.chapter_grades.itervalues():
@@ -314,10 +248,26 @@ class ChapterGradesView(AbstractGradesView):
 
         return Response(grades)
 
-class ProblemGradeView(AbstractGradesView):
-    def get(self, request, course_id=None):
-        # do some assignments and valiations...
-        super(ProblemGradeView, self).get(request, course_id)
+class ChapterGradeView(AbstractGradesView):
+    def get(self, request, course_id=None, chapter_id=None):
+        log.info('ChapterGradeView: course_id={course_id}, chapter_id={chapter_id}'.format(
+            course_id=course_id,
+            chapter_id=chapter_id
+        ))
+
+        super(ChapterGradeView, self).get(request, course_id)
+
+        return Response(self.test_response(course_id=course_id, chapter_id=chapter_id))
+
+
+class SectionGradeView(AbstractGradesView):
+    def get(self, request, course_id=None, chapter_id=None, section_id=None):
+        log.info('ChapterGradeView: course_id={course_id}, chapter_id={chapter_id}, section_id={section_id}'.format(
+            course_id=course_id,
+            chapter_id=chapter_id,
+            section_id=section_id
+        ))
+        super(SectionGradeView, self).get(request, course_id)
 
         #o = self.course_grade.problem_scores()
         #log.info('SubsectionGradesView - retval: {}'.format(o))
