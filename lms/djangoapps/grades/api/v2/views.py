@@ -196,7 +196,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         return f_grade
 
 
-    def get_chapter_tuple(self, chapter):
+    def get_chapter_dict(self, chapter):
         """
             returns one chapter tuple, with an array of sections.
         """
@@ -204,19 +204,18 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         sections = []
         for section in chapter['sections']:
             sections.append(
-                self.get_section_tuple(chapter, section)
+                {
+                    section.url_name: self.get_section_dict(chapter, section)
+                }
             )
 
-        return (
-                    chapter['url_name'],
-                    {
+        return {
                     'chapter_url': self.course_url + chapter['url_name'],
                     'chapter_display_name': chapter['display_name'],
                     'chapter_sections': sections,
-                    }
-                )
+                }
 
-    def get_section_tuple(self, chapter, section):
+    def get_section_dict(self, chapter, section):
         """
             returns a tuple dictionary of grade data for one subsection of a chapter.
 
@@ -227,14 +226,15 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         problems = []
         for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
             problems.append(
-                self.get_problem_tuple(
-                    problem_key_BlockUsageLocator,
-                    problem_ProblemScore
-                ))
+                {
+                str(problem_key_BlockUsageLocator): self.get_problem_dict(
+                                                            problem_key_BlockUsageLocator,
+                                                            problem_ProblemScore
+                                                        )
+                }
+            )
 
-        return (
-            section.url_name,
-            {
+        return {
             'section_url': self.course_url + chapter['url_name'] + '/' + section.url_name,
             'section_location': str(section.location),
             'section_display_name': section.display_name,
@@ -250,17 +250,14 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                                     )
 
             }
-                )
 
-    def get_problem_tuple(self, problem_key_BlockUsageLocator, problem_ProblemScore):
+    def get_problem_dict(self, problem_key_BlockUsageLocator, problem_ProblemScore):
         """
             returns an array of tuples of the individual problem grade results from a subsection of a chapter.
 
             * note: subsections are identifyable as "Sections" in the LMS UI.
         """
-        return (
-                str(problem_key_BlockUsageLocator),
-                {
+        return {
                 'problem_raw_earned': problem_ProblemScore.raw_earned,
                 'problem_raw_possible': problem_ProblemScore.raw_possible,
                 'problem_earned': problem_ProblemScore.earned,
@@ -271,7 +268,6 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                                         problem_ProblemScore.possible
                                         )
                 }
-                )
 
 
 
@@ -282,7 +278,11 @@ class CourseGradeView(AbstractGradesView):
 
         chapters = []
         for chapter in self.course_grade.chapter_grades.itervalues():
-            chapters.append(self.get_chapter_tuple(chapter))
+            chapters.append(
+                {
+                    chapter['url_name']: self.get_chapter_dict(chapter)
+                }
+            )
 
         return Response({
                         'username': self.grade_user.username,
@@ -298,8 +298,11 @@ class ChapterGradeView(AbstractGradesView):
             chapter_id=chapter_id
         ))
         super(ChapterGradeView, self).get(request, course_id, chapter_id, section_id=None)
+        for chapter in self.course_grade.chapter_grades.itervalues():
+            if chapter['url_name'] == chapter_id:
+                return Response(self.get_chapter_dict(chapter))
+        return Response({})
 
-        return Response(self.test_response(course_id=course_id, chapter_id=chapter_id))
 
 
 class SectionGradeView(AbstractGradesView):
@@ -310,7 +313,9 @@ class SectionGradeView(AbstractGradesView):
             section_id=section_id
         ))
         super(SectionGradeView, self).get(request, course_id, chapter_id, section_id)
-
-        #o = self.course_grade.problem_scores()
-        #log.info('SubsectionGradesView - retval: {}'.format(o))
-        return Response(self.test_response())
+        for chapter in self.course_grade.chapter_grades.itervalues():
+            if chapter['url_name'] == chapter_id:
+                for section in chapter['sections']:
+                    if section.url_name == section_id:
+                        return Response(self.get_section_dict(chapter, section))
+        return Response({})
