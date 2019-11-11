@@ -281,7 +281,10 @@ class CourseGradeView(AbstractGradesView):
                         'username': self.grade_user.username,
                         'course_url': self.course_url,
                         'course_id': self.course_id,
-                        'chapters': chapters
+                        'course_passed': self.course_grade.passed,
+                        'course_grade_percent': self.course_grade.percent,
+                        'course_grade_letter': self.course_grade.letter_grade,
+                        'course_chapters': chapters
                         })
 
 class ChapterGradeView(AbstractGradesView):
