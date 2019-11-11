@@ -70,6 +70,8 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     required_scopes = ['grades:read']
 
     course_id = None
+    chapter_id = None
+    section_id = None
     username = None
     user = None
     grade_user = None
@@ -78,8 +80,10 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     course_grade = None
     course_url = None
 
-    def get(self, request, course_id=None):
+    def get(self, request, course_id=None, chapter_id=None, section_id=None):
 
+        # set and validate username
+        #---------------------------------------------------------
         if 'username' in request.GET:
             self.username = request.GET.get('username')
         else:
@@ -92,18 +96,6 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 error_code='missing_username'
             )
 
-        if course_id:
-            self.course_id = course_id
-        else:
-            self.course_id = request.GET.get('course_id')
-
-        if not self.course_id:
-            raise self.api_error(
-                status_code=status.HTTP_404_NOT_FOUND,
-                developer_message='course_id is required for this view.',
-                error_code='missing_course_id'
-            )
-
         try:
             self.grade_user = USER_MODEL.objects.get(username=self.username)
             self.user = self.grade_user
@@ -114,6 +106,37 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 error_code='user_does_not_exist'
             )
 
+        # set and validate course_id
+        #---------------------------------------------------------
+        if course_id:
+            self.course_id = course_id
+        else:
+            self.course_id = request.GET.get('course_id')
+
+
+        # set and validate chapter_id
+        #---------------------------------------------------------
+        if chapter_id:
+            self.chapter_id = chapter_id
+        else:
+            self.chapter_id = request.GET.get('chapter_id')
+
+        # set and validate section_id
+        #---------------------------------------------------------
+        if section_id:
+            self.section_id = section_id
+        else:
+            self.section_id = request.GET.get('section_id')
+
+
+        # ID validations
+        #---------------------------------------------------------
+        if not self.course_id and not self.chapter_id and not self.section_id:
+            raise self.api_error(
+                status_code=status.HTTP_404_NOT_FOUND,
+                developer_message='You must provide at least one of course_id, chapter_id, section_id for this view.',
+                error_code='missing_id'
+            )
 
         # Validate course exists with provided course_id
         try:
@@ -172,9 +195,30 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             f_grade = float(earned) / float(possible)
         return f_grade
 
-    def get_subsection_problem_grades(self, section):
+
+    def get_chapter_tuple(self, chapter):
         """
-            returns an array of tuples of the individual problem grade results from a subsection of a chapter.
+            returns one chapter tuple, with an array of sections.
+        """
+
+        sections = []
+        for section in chapter['sections']:
+            sections.append(
+                self.get_section_tuple(chapter, section)
+            )
+
+        return (
+                    chapter['url_name'],
+                    {
+                    'chapter_url': self.course_url + chapter['url_name'],
+                    'chapter_display_name': chapter['display_name'],
+                    'chapter_sections': sections,
+                    }
+                )
+
+    def get_section_tuple(self, chapter, section):
+        """
+            returns a tuple dictionary of grade data for one subsection of a chapter.
 
             * note: subsections are identifyable as "Sections" in the LMS UI.
         """
@@ -183,39 +227,16 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         problems = []
         for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
             problems.append(
-                (
-                str(problem_key_BlockUsageLocator),
-                {
-                'problem_raw_earned': problem_ProblemScore.raw_earned,
-                'problem_raw_possible': problem_ProblemScore.raw_possible,
-                'problem_earned': problem_ProblemScore.earned,
-                'problem_possible': problem_ProblemScore.possible,
-                'problem_weight': problem_ProblemScore.weight,
-                'problem_grade_percentage': self._calc_grade_percentage(
-                                        problem_ProblemScore.earned,
-                                        problem_ProblemScore.possible
-                                        )
-                }
-                )
-            )
+                self.get_problem_tuple(
+                    problem_key_BlockUsageLocator,
+                    problem_ProblemScore
+                ))
 
-        return problems
-
-    def get_subsection_tuple(self, section, chapter, problems):
-        """
-            returns a tuple dictionary of grade data for one subsection of a chapter.
-
-            * note: subsections are identifyable as "Sections" in the LMS UI.
-        """
         return (
-            str(section.location),
+            section.url_name,
             {
-            'username': self.grade_user.username,
             'section_url': self.course_url + chapter['url_name'] + '/' + section.url_name,
-            'chapter_slug': chapter['url_name'],
-            'section_slug': section.url_name,
-            'course_id': self.course_id,
-            'chapter_display_name': chapter['display_name'],
+            'section_location': str(section.location),
             'section_display_name': section.display_name,
             'section_earned': section.all_total.earned,
             'section_possible': section.all_total.possible,
@@ -231,22 +252,44 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             }
                 )
 
+    def get_problem_tuple(self, problem_key_BlockUsageLocator, problem_ProblemScore):
+        """
+            returns an array of tuples of the individual problem grade results from a subsection of a chapter.
+
+            * note: subsections are identifyable as "Sections" in the LMS UI.
+        """
+        return (
+                str(problem_key_BlockUsageLocator),
+                {
+                'problem_raw_earned': problem_ProblemScore.raw_earned,
+                'problem_raw_possible': problem_ProblemScore.raw_possible,
+                'problem_earned': problem_ProblemScore.earned,
+                'problem_possible': problem_ProblemScore.possible,
+                'problem_weight': problem_ProblemScore.weight,
+                'problem_grade_percentage': self._calc_grade_percentage(
+                                        problem_ProblemScore.earned,
+                                        problem_ProblemScore.possible
+                                        )
+                }
+                )
+
 
 
 class CourseGradeView(AbstractGradesView):
 
     def get(self, request, course_id=None):
-        super(CourseGradeView, self).get(request, course_id)
+        super(CourseGradeView, self).get(request, course_id, chapter_id=None, section_id=None)
 
-        grades = []
+        chapters = []
         for chapter in self.course_grade.chapter_grades.itervalues():
-            for section in chapter['sections']:
-                problems = self.get_subsection_problem_grades(section)
-                grades.append(
-                    self.get_subsection_tuple(section, chapter, problems)
-                )
+            chapters.append(self.get_chapter_tuple(chapter))
 
-        return Response(grades)
+        return Response({
+                        'username': self.grade_user.username,
+                        'course_url': self.course_url,
+                        'course_id': self.course_id,
+                        'chapters': chapters
+                        })
 
 class ChapterGradeView(AbstractGradesView):
     def get(self, request, course_id=None, chapter_id=None):
@@ -254,8 +297,7 @@ class ChapterGradeView(AbstractGradesView):
             course_id=course_id,
             chapter_id=chapter_id
         ))
-
-        super(ChapterGradeView, self).get(request, course_id)
+        super(ChapterGradeView, self).get(request, course_id, chapter_id, section_id=None)
 
         return Response(self.test_response(course_id=course_id, chapter_id=chapter_id))
 
@@ -267,7 +309,7 @@ class SectionGradeView(AbstractGradesView):
             chapter_id=chapter_id,
             section_id=section_id
         ))
-        super(SectionGradeView, self).get(request, course_id)
+        super(SectionGradeView, self).get(request, course_id, chapter_id, section_id)
 
         #o = self.course_grade.problem_scores()
         #log.info('SubsectionGradesView - retval: {}'.format(o))

@@ -5,14 +5,24 @@ from django.conf.urls import url
 from lms.djangoapps.grades.api.v2.views import CourseGradeView
 from lms.djangoapps.grades.api.v2.views import ChapterGradeView
 from lms.djangoapps.grades.api.v2.views import SectionGradeView
-
 from lms.djangoapps.grades.api.views import CourseGradingPolicy
 
 
 from rest_framework.documentation import include_docs_urls
 from rest_framework_swagger.views import get_swagger_view
 
-COURSE_ID_PATTERN = r'(?P<course_id>[^/+]+(/|\+)[^/+]+(/|\+)[^/?]+)'
+"""
+  mcdaniel nov-2019
+  i found the reference pattern
+
+  COURSE_ID_PATTERN = r'(?P<course_id>[^/+]+(/|\+)[^/+]+(/|\+)[^/?]+)'
+
+  in openedx/core/constants.py
+
+  the slugs for chapter and section are both 32-character length alphanumeric
+  strings. Example: c0a9afb73af311e98367b7d76f928163
+
+"""
 SECTION_ID_PATTERN = r'(?P<section_id>\b[a-z0-9]{32}\b)'
 CHAPTER_ID_PATTERN = r'(?P<chapter_id>\b[a-z0-9]{32}\b)'
 
@@ -24,7 +34,6 @@ docs = include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)
 
 urlpatterns = [
 
-    url(u'docs/', get_swagger_view(title=API_TITLE)), # formatted swagger documentation
     url(
         r'^policy/courses/{course_id}/$'.format(
             course_id=settings.COURSE_ID_PATTERN,
@@ -32,6 +41,12 @@ urlpatterns = [
         CourseGradingPolicy.as_view(),
         name='course_grading_policy'
     ),
+
+    # ----------------------------------------------------------------------
+    # mcdaniel nov-2019
+    # Add fully formatted Swagger documentation 
+    # ----------------------------------------------------------------------
+    url(u'docs/', get_swagger_view(title=API_TITLE)),
 
     # ----------------------------------------------------------------------
     # mcdaniel nov-2019
