@@ -184,12 +184,6 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
 
         return
 
-    def test_response(self, course_id=None, chapter_id=None):
-        return  {
-            'key': 'success!',
-            'course_id': str(course_id),
-            'chapter_id': str(chapter_id)
-        }
     def _calc_grade_percentage(self, earned, possible):
         """
             calculate the floating point percentage grade score based on the
@@ -200,6 +194,45 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             f_grade = float(earned) / float(possible)
         return f_grade
 
+    def get_course_dict(self):
+        return {
+            'student': {
+                'username': self.grade_user.username,
+                'email': self.grade_user.email,
+                'first_name': self.grade_user.first_name,
+                'last_name': self.grade_user.last_name,
+            },
+            'course_grade': {
+                'course_passed': self.course_grade.passed,
+                'course_grade_percent': self.course_grade.percent,
+                'course_grade_letter': self.course_grade.letter_grade,
+            },
+            # course identifiers
+            'course_id': self.course_id,
+            'course': CourseKey.from_string(self.course_id).course,
+            'organization': CourseKey.from_string(self.course_id).org,
+            'course_run': CourseKey.from_string(self.course_id).run,
+            'course_url': self.course_url,
+            'course_name': CourseOverview.get_from_id(self.course_key).display_name,
+
+            # course details
+            'course_version': CourseOverview.get_from_id(self.course_key).version,
+            'course_image_url': CourseOverview.get_from_id(self.course_key).course_image_url,
+            'course_start_date': CourseOverview.get_from_id(self.course_key).start,
+            'course_end': CourseOverview.get_from_id(self.course_key).end,
+            'course_has_started': CourseOverview.get_from_id(self.course_key).has_started(),
+            'course_has_ended': CourseOverview.get_from_id(self.course_key).has_ended(),
+            'course_lowest_passing_grade': CourseOverview.get_from_id(self.course_key).lowest_passing_grade,
+            'course_enrollment_start': CourseOverview.get_from_id(self.course_key).enrollment_start,
+            'course_enrollment_end': CourseOverview.get_from_id(self.course_key).enrollment_end,
+            'course_prerequisites': CourseOverview.get_from_id(self.course_key)._pre_requisite_courses_json,
+            'course_description': CourseOverview.get_from_id(self.course_key).short_description,
+            'course_effort': CourseOverview.get_from_id(self.course_key).effort,
+            'course_self_paced': CourseOverview.get_from_id(self.course_key).self_paced,
+            'course_marketing_url': CourseOverview.get_from_id(self.course_key).marketing_url,
+            'course_eligible_for_financial_aid': CourseOverview.get_from_id(self.course_key).eligible_for_financial_aid,
+            'course_language': CourseOverview.get_from_id(self.course_key).closest_released_language,
+            }
 
     def get_chapter_dict(self, chapter):
         """
@@ -277,46 +310,10 @@ class CourseGradeView(AbstractGradesView):
         for chapter in self.course_grade.chapter_grades.itervalues():
             chapters[chapter['url_name']] = self.get_chapter_dict(chapter)
 
-        return Response({
-                        'student': {
-                            'username': self.grade_user.username,
-                            'email': self.grade_user.email,
-                            'first_name': self.grade_user.first_name,
-                            'last_name': self.grade_user.last_name,
-                        },
-                        'course_grade': {
-                            'course_passed': self.course_grade.passed,
-                            'course_grade_percent': self.course_grade.percent,
-                            'course_grade_letter': self.course_grade.letter_grade,
-                        },
-                        # course meta data
-                        'course_id': self.course_id,
-                        'course': CourseKey.from_string(self.course_id).course,
-                        'organization': CourseKey.from_string(self.course_id).org,
-                        'course_run': CourseKey.from_string(self.course_id).run,
-                        'course_url': self.course_url,
-                        'course_name': CourseOverview.get_from_id(self.course_key).display_name,
+        course_dict = self.get_course_dict()
+        course_dict['course_chapters'] = chapters
 
-                        # course details
-                        'course_version': CourseOverview.get_from_id(self.course_key).version,
-                        'course_image_url': CourseOverview.get_from_id(self.course_key).course_image_url,
-                        'course_start_date': CourseOverview.get_from_id(self.course_key).start,
-                        'course_end': CourseOverview.get_from_id(self.course_key).end,
-                        'course_has_started': CourseOverview.get_from_id(self.course_key).has_started(),
-                        'course_has_ended': CourseOverview.get_from_id(self.course_key).has_ended(),
-                        'course_lowest_passing_grade': CourseOverview.get_from_id(self.course_key).lowest_passing_grade,
-                        'course_enrollment_start': CourseOverview.get_from_id(self.course_key).enrollment_start,
-                        'course_enrollment_end': CourseOverview.get_from_id(self.course_key).enrollment_end,
-                        'course_prerequisites': CourseOverview.get_from_id(self.course_key)._pre_requisite_courses_json,
-                        'course_description': CourseOverview.get_from_id(self.course_key).short_description,
-                        'course_effort': CourseOverview.get_from_id(self.course_key).effort,
-                        'course_self_paced': CourseOverview.get_from_id(self.course_key).self_paced,
-                        'course_marketing_url': CourseOverview.get_from_id(self.course_key).marketing_url,
-                        'course_eligible_for_financial_aid': CourseOverview.get_from_id(self.course_key).eligible_for_financial_aid,
-                        'course_language': CourseOverview.get_from_id(self.course_key).closest_released_language,
-
-                        'course_chapters': chapters
-                        })
+        return Response(course_dict)
 
 class ChapterGradeView(AbstractGradesView):
     def get(self, request, course_id=None, chapter_id=None):
