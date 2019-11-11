@@ -201,13 +201,9 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             returns one chapter tuple, with an array of sections.
         """
 
-        sections = []
+        sections = {}
         for section in chapter['sections']:
-            sections.append(
-                {
-                    section.url_name: self.get_section_dict(chapter, section)
-                }
-            )
+            sections[section.url_name] = self.get_section_dict(chapter, section)
 
         return {
                     'chapter_url': self.course_url + chapter['url_name'],
@@ -223,16 +219,12 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         """
         grades_factory = SubsectionGradeFactory(student=self.grade_user, course=None, course_structure=None, course_data=self.course_data)
         subsection_grades = grades_factory.create(subsection=section, read_only=True)
-        problems = []
+        problems = {}
         for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
-            problems.append(
-                {
-                str(problem_key_BlockUsageLocator): self.get_problem_dict(
+            problems[str(problem_key_BlockUsageLocator)] = self.get_problem_dict(
                                                             problem_key_BlockUsageLocator,
                                                             problem_ProblemScore
-                                                        )
-                }
-            )
+                                                            )
 
         return {
             'section_url': self.course_url + chapter['url_name'] + '/' + section.url_name,
