@@ -268,17 +268,23 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             'section_url': self.course_url + chapter['url_name'] + '/' + section.url_name,
             'section_location': str(section.location),
             'section_display_name': section.display_name,
-            'section_earned': section.all_total.earned,
-            'section_possible': section.all_total.possible,
-            'section_due_date': None,
+            'section_due_date': section.due,
             'section_completed_date': None,
-            'section_attempted': None,
             'section_problems': problems,
-            'section_grade_percentage':  self._calc_grade_percentage(
-                                    section.all_total.earned,
-                                    section.all_total.possible
-                                    )
-
+            'section_course_version': str(section.course_version),
+            'section_format': section.format,
+            'section_graded': section.graded,
+            'section_show_correctness': section.show_correctness,
+            'section_subtree_edited_timestamp': section.subtree_edited_timestamp,
+            'section_grade': {
+                'section_attempted_graded': section.attempted_graded,
+                'section_grade_earned': section.all_total.earned,
+                'section_grade_possible': section.all_total.possible,
+                'section_grade_percent':  self._calc_grade_percentage(
+                                        section.all_total.earned,
+                                        section.all_total.possible
+                                        ),
+                },
             }
 
     def get_problem_dict(self, problem_key_BlockUsageLocator, problem_ProblemScore):
