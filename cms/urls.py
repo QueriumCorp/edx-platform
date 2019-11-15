@@ -28,6 +28,9 @@ from openedx.core.djangoapps.auth_exchange.views import LoginWithAccessTokenView
 from logging import getLogger
 logger = getLogger(__name__)
 
+# mcdaniel nov-2019: to dynamically determine oauth backend name
+# this comes from common.djangoapps.third_party_auth.provider
+from third_party_auth.provider import Registry
 
 
 django_autodiscover()
@@ -52,11 +55,22 @@ new users are bounced over to LMS to leverage the legacy registration codebase.
 This method builds up the URL for LMS.
 """
 def registration_redirect():
+    backend = None
+    providers = Registry.displayed_for_login()
+    if providers:
+        backend = providers[0].slug
+
     scheme = u"https" if settings.HTTPS == "on" else u"http"
-    url = u'{scheme}://{domain}/auth/login/roverbyopenstax/'.format(
+    url = u'{scheme}://{domain}/'.format(
             scheme = scheme,
             domain=settings.SESSION_COOKIE_DOMAIN
             )
+
+    if backend:
+        url += u'auth/login/{backend}/'.format(
+                backend=backend
+                )
+
     return url
 
 urlpatterns = [

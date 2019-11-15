@@ -58,6 +58,10 @@ from util import views as util_views
 from logging import getLogger
 logger = getLogger(__name__)
 
+# mcdaniel nov-2019: to dynamically determine oauth backend name
+# this comes from common.djangoapps.third_party_auth.provider
+from third_party_auth.provider import Registry
+
 if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
     django_autodiscover()
     admin.site.site_header = _('LMS Administration')
@@ -86,12 +90,23 @@ if not redirect_url and settings.SESSION_COOKIE_DOMAIN is not None:
     redirect_url = 'am.' + settings.SESSION_COOKIE_DOMAIN
 
 def am_redirect():
+
+    backend = None
+    providers = Registry.displayed_for_login()
+    if providers:
+        backend = providers[0].slug
+
     scheme = u"https" if settings.HTTPS == "on" else u"http"
-    url = u'{scheme}://{url}/auth/login/roverbyopenstax/'.format(
+    url = u'{scheme}://{url}/'.format(
             scheme = scheme,
             url=redirect_url
             )
-    #logger.debug('am_redirect() - {}'.format(url))
+
+    if backend:
+        url += u'auth/login/{backend}/'.format(
+                backend=backend
+                )
+    logger.debug('am_redirect() - {}'.format(url))
     return url
 
 
