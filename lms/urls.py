@@ -76,7 +76,7 @@ We seize this opportunity to redirect them back over to AM. this method
 builds up the URL for AM.
 
 note: settings.SESSION_COOKIE_DOMAIN sporadically was unassigned, leading
-      to a redirect url of https://am./auth/login/openstax/
+      to a redirect url of https://am./auth/login/roverbyopenstax/
       the following is obviously overkill, but, i digress.
 """
 redirect_url = settings.CMS_BASE
@@ -87,7 +87,7 @@ if not redirect_url and settings.SESSION_COOKIE_DOMAIN is not None:
 
 def am_redirect():
     scheme = u"https" if settings.HTTPS == "on" else u"http"
-    url = u'{scheme}://{url}/auth/login/openstax/'.format(
+    url = u'{scheme}://{url}/auth/login/roverbyopenstax/'.format(
             scheme = scheme,
             url=redirect_url
             )

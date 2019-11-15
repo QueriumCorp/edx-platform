@@ -53,7 +53,7 @@ This method builds up the URL for LMS.
 """
 def registration_redirect():
     scheme = u"https" if settings.HTTPS == "on" else u"http"
-    url = u'{scheme}://{domain}/auth/login/openstax/'.format(
+    url = u'{scheme}://{domain}/auth/login/roverbyopenstax/'.format(
             scheme = scheme,
             domain=settings.SESSION_COOKIE_DOMAIN
             )
