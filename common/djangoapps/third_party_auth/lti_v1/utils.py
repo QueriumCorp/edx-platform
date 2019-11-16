@@ -77,45 +77,19 @@
     	urn:lti:instrole:ims/lis/Administrator
     Is instructor: True
 """
-# from the LTI role vocabulary
-# https://www.imsglobal.org/specs/ltiv1p1/implementation-guide#toc-8
-# you need to decide which roles you'll treat as instructor, but here is
-# a reasonable starting point
-instructor_roles = set((
-    'Instructor',
-    'urn:lti:role:ims/lis/Instructor',
-    'urn:lti:instrole:ims/lis/Instructor',
-    'Faculty',
-    'urn:lti:instrole:ims/lis/Faculty',
-    'ContentDeveloper',
-    'urn:lti:role:ims/lis/ContentDeveloper',
-    'TeachingAssistant',
-    'urn:lti:role:ims/lis/TeachingAssistant',
-    'Administrator',
-    'urn:lti:role:ims/lis/Administrator',
-    'urn:lti:instrole:ims/lis/Administrator',
-    'urn:lti:sysrole:ims/lis/Administrator'
-))
 
-# each of the following is an example of what can be expected in
-# a single LTI message
-roles_param_examples = (
-    'Learner',
-    'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
-    'Instructor',
-    'Instructor,urn:lti:sysrole:ims/lis/Administrator,urn:lti:instrole:ims/lis/Administrator',
-    'TeachingAssistant',
-    'urn:lti:instrole:ims/lis/Administrator'
-)
-
+from third_party_auth.lti_v1.constants import instructor_roles
 import logging
 log = logging.getLogger(__name__)
 
-def get_lti_faculty_status(details):
-
-    log.info('get_lti_faculty_status() - start')
+def get_lti_faculty_status(lti_params):
     """
-    Extract the LTI roles tuples parameter from details, if it exists.
+    Input parameters:
+    ===================
+    lti_params - a tpa_lti_params dictionary that is part of the http response body
+    in an LTI authentication. see ./sample_data/tpa_lti_params.json for an example.
+
+    Extract the LTI roles tuples parameter from lti_params, if it exists.
     Example:
     =======================
     roles_param = (
@@ -127,8 +101,10 @@ def get_lti_faculty_status(details):
         'urn:lti:instrole:ims/lis/Administrator'
     )
     """
-    roles_param = details.get("roles_param", ())
+    log.info('get_lti_faculty_status() - start')
 
+
+    roles_param = lti_params.get("roles_param", ())
     if roles_param != ():
         log.info('get_lti_faculty_status() - found roles_param: {}'.format(roles_param))
         for role_param in roles_param:
@@ -154,7 +130,7 @@ def get_lti_faculty_status(details):
         "roles": "urn:lti:role:ims/lis/Instructor",
 
     """
-    roles = details.get("roles", None)
+    roles = lti_params.get("roles", None)
     if roles:
         log.info('get_lti_faculty_status() - found roles: {}'.format(roles))
         if roles in instructor_roles:

@@ -792,11 +792,11 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
                 identity_provider_slug=current_provider.slug,
             )
 
-    # try to extract and synch the faculty_status from the backend, if the backend if openstax
+    # try to extract and synch the faculty_status from the backend, if the backend is openstax
     faculty_status = "Unassigned"
     backend_name = strategy.request.backend.name
     logger.info('set_id_verification_status() - backend: {}'.format(backend_name))
-    if (backend_name in ("openstax", "lti")):
+    if (backend_name in ("roverbyopenstax", "openstax", "lti")):
         try:
             faculty_status = details['faculty_status']
         except ValueError:

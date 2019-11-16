@@ -19,7 +19,10 @@ from six import text_type
 from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
-from lti_faculty_verification import get_lti_faculty_status
+from lti_v1.utils import get_lti_faculty_status
+
+# mcdaniel nov-2019
+from lti_v1.provisioners import LTIProvisioningTools
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -150,6 +153,17 @@ class LTIAuthBackend(BaseAuth):
                     default=default
                     )
         ))
+
+        #----------------------------------------------------------------------
+        # mcdaniel nov-2019
+        # add auto-provisioning logic to
+        #   a) for instructors: map LTI context_id to Rover course_id
+        #   b) for students: auto enroll students in Rover course corresponding to context_id
+        #----------------------------------------------------------------------
+        provisioning_tools = LTIProvisioningTools(self.strategy, response[LTI_PARAMS_KEY])
+        provisioning_tools.check_enrollment()
+        provisioning_tools.check_context_link()
+
         return details
 
     @classmethod
