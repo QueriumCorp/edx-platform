@@ -60,7 +60,7 @@ logger = getLogger(__name__)
 
 # mcdaniel nov-2019: to dynamically determine oauth backend name
 # this comes from common.djangoapps.third_party_auth.provider
-from third_party_auth.provider import Registry
+from third_party_auth.utils import preferred_querium_backend
 
 if settings.DEBUG or settings.FEATURES.get('ENABLE_DJANGO_ADMIN_SITE'):
     django_autodiscover()
@@ -90,12 +90,7 @@ if not redirect_url and settings.SESSION_COOKIE_DOMAIN is not None:
     redirect_url = 'am.' + settings.SESSION_COOKIE_DOMAIN
 
 def am_redirect():
-
-    backend = None
-    providers = Registry.displayed_for_login()
-    if providers:
-        backend = providers[0].slug
-
+    backend = preferred_querium_backend()
     scheme = u"https" if settings.HTTPS == "on" else u"http"
     url = u'{scheme}://{url}/'.format(
             scheme = scheme,
