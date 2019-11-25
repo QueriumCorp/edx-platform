@@ -620,9 +620,9 @@ class CourseOverview(TimeStampedModel):
 
         # mcdaniel oct-2019: hack to fix the missing course cards from the LMS
         # home screen. 
-        if "precalculus" in display_name.lower():
+        if "precalculus" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/precalculus.svg'
-        elif "trig" in display_name.lower():
+        elif "trig" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/algebra_trigonometry.svg'
         else:
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/college_algebra.svg'
