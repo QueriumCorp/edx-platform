@@ -22,7 +22,7 @@ from social_core.utils import sanitize_redirect
 from lti_v1.utils import get_lti_faculty_status
 
 # mcdaniel nov-2019
-from lti_v1.provisioners import LTIProvisioningTools
+#from lti_v1.provisioners import LTIProvisioningTools
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -160,9 +160,9 @@ class LTIAuthBackend(BaseAuth):
         #   a) for instructors: map LTI context_id to Rover course_id
         #   b) for students: auto enroll students in Rover course corresponding to context_id
         #----------------------------------------------------------------------
-        provisioning_tools = LTIProvisioningTools(self.strategy, response[LTI_PARAMS_KEY])
-        provisioning_tools.check_enrollment()
-        provisioning_tools.check_context_link()
+        #provisioning_tools = LTIProvisioningTools(self.strategy, response[LTI_PARAMS_KEY])
+        #provisioning_tools.check_enrollment()
+        #provisioning_tools.check_context_link()
 
         return details
 

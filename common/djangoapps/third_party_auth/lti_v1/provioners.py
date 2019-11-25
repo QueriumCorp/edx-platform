@@ -54,19 +54,22 @@ class LTIProvisioningTools(Object):
 
     def __init__(self, strategy, lti_params):
         log.info('LTIProvisioningTools - __init__()')
-        # important-seeming stuff...
+        # stuff that seems important...
+        # ----------------------------------------------------
         self.stragegy = strategy            # this originates from BaseAuth
         self.request = strategy.request
         self.lti_params = lti_params        # originates from the http response body from LTI auth
 
-        # stuff that we really need for this class...
+        # stuff that really is important ...
+        # ----------------------------------------------------
         self.user = strategy.request.user
         self.context_id = getattr(lti_params, 'context_id', None)
         self.roles = getattr(lti_params, 'roles', '')
         self.course_id = None
         self.is_faculty = is_faculty(self.user)
 
-        # local cached list of instructor's courses
+        # cached local values of class properties....
+        # ----------------------------------------------------
         self._instructor_courses = None
 
         # local cached instance of LTIContextCourse
