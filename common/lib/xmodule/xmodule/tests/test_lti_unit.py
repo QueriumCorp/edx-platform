@@ -425,7 +425,7 @@ class LTIModuleTest(LogicTest):
         Tests that tool provider returned grade back with wrong XML Namespace.
         """
         with self.assertRaises(IndexError):
-            mocked_request = self.get_signed_grade_mock_request(namespace_lti_v1p1=False)
+            mocked_request = self.get_signed_grade_mock_request(namespace_lti_willolabsp1=False)
             self.xmodule.parse_grade_xml_body(mocked_request.body)
 
     def test_parse_grade_xml_body(self):
@@ -454,7 +454,7 @@ class LTIModuleTest(LogicTest):
             req = self.get_signed_grade_mock_request()
             self.xmodule.verify_oauth_body_sign(req)
 
-    def get_signed_grade_mock_request(self, namespace_lti_v1p1=True):
+    def get_signed_grade_mock_request(self, namespace_lti_willolabsp1=True):
         """
         Example of signed request from LTI Provider.
 
@@ -476,7 +476,7 @@ class LTIModuleTest(LogicTest):
         mock_request.http_method = u'POST'
 
         params = {}
-        if not namespace_lti_v1p1:
+        if not namespace_lti_willolabsp1:
             params = {
                 'namespace': "http://www.fakenamespace.com/fake"
             }

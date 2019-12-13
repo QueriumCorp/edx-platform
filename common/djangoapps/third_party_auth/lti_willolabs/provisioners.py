@@ -37,8 +37,8 @@ from opaque_keys.edx.keys import CourseKey
 
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
-from common.djangoapps.third_party_auth.lti_v1.models import LTIContextCourse
-from common.djangoapps.third_party_auth.lti_v1.exceptions import LTIBusinessRuleError
+from common.djangoapps.third_party_auth.lti_willolabs.models import LTIContextCourse
+from common.djangoapps.third_party_auth.lti_willolabs.exceptions import LTIBusinessRuleError
 
 from cms.djangoapps.contenstore.views.course import get_courses_accessible_to_user, _process_courses_list
 from common.djangoapps.student.models import is_faculty, CourseEnrollment
@@ -102,13 +102,12 @@ class LTIProvisioningTools(Object):
             raise LTIBusinessRuleError("Student context_id is not mapped to a Rover course.")
 
         # This is our expected (ie hoped-for) case.
-        if self.enrollment is not None:
-            return
+        return self.enrollment if self.enrollment is not none
 
         # Student is not yet enrolled in the Rover course corresponding to the
         # context_id in their lti_params. So, lets get them enrolled!
         self.enrollment = CourseEnrollment.enroll(self.user, self.course_id)
-        return
+        return self.enrollment
 
     def check_context_link(self):
         """
