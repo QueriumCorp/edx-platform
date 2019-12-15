@@ -42,13 +42,16 @@ from .exceptions import LTIBusinessRuleError
 from .coursecache import LTIWilloSession
 from .utils import is_willo_lti, is_valid_course_id
 
-from cms.djangoapps.contenstore.views.course import get_courses_accessible_to_user, _process_courses_list
+#from cms.djangoapps.contentstore.views.course import (
+#    get_courses_accessible_to_user, 
+#    _process_courses_list
+#    )
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class CourseProvisioner(Object):
+class CourseProvisioner():
     """
     Instantiated during LTI authentication. Try to enroll user in a Rover course
     based on information received in the lti_params object from LTI authentication http response.

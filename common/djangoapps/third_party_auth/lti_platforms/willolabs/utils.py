@@ -8,14 +8,18 @@
   Usage:        determine whether an LTI-authenticated user is faculty.
 """
 from __future__ import absolute_import
-from third_party_auth.lti.willolabs.constants import (
+from third_party_auth.lti_platforms.willolabs.constants import (
     WILLO_INSTRUCTOR_ROLES, 
     WILLO_DOMAINS
     )
-from urllib.parse import urlparse
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
 import logging
 log = logging.getLogger(__name__)
