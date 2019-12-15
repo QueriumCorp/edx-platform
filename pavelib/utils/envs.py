@@ -242,7 +242,12 @@ class Env(object):
             django_cmd(
                 system,
                 settings,
-                "print_setting {django_setting} 2>/dev/null".format(
+                #"print_setting {django_setting} 2>/dev/null".format(
+                #    django_setting=django_setting
+                #)
+                #
+                # mcdaniel dec-2019: point paver output to console.
+                "print_setting {django_setting}".format(
                     django_setting=django_setting
                 )
             ),
