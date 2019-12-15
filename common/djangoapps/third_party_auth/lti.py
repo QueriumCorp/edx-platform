@@ -23,7 +23,6 @@ from willolabs.utils import get_lti_faculty_status
 
 # mcdaniel nov-2019
 from third_party_auth.lti.willolabs.provisioners import CourseProvisioner
-from third_party_auth.lti.willolabs.coursecache import LTIWilloSession
 from third_party_auth.lti.willolabs.utils import is_willo_lti
 
 log = logging.getLogger(__name__)
