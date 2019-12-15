@@ -94,11 +94,10 @@ class CourseProvisioner(Object):
         # then we don't need to be here.
         return if \
             self.is_faculty or \
-            self.course_id is None
-
-        # our expected case: the student is already enrolled, so nothing more to do.
-        return if CourseEnrollment.is_enrolled(self.user, self.course_id)
-
+            self.course_id is None or \
+            CourseEnrollment.is_enrolled(self.user, self.course_id)     # our expected case: the student is already enrolled
+                                                                        # so nothing more to do.
+            
         # Student is not yet enrolled in the Rover course corresponding to the
         # context_id in their lti_params. So, lets get them enrolled!
         CourseEnrollment.enroll(self.user, self.course_id)
@@ -202,14 +201,17 @@ class CourseProvisioner(Object):
     @property
     def willow_session(self):
         """
-        Try to return a cached instance of a LTIWilloSession object
-        otherwise try to create one based on whatever parameter we've
-        accumlated 
+        Cache manager for Willo Lab external system cached objects: 
+            course      -> maps context_id to course_id
+            enrollments -> maps user + course_id to lti_params values
+            grades      -> maps user assignment grades to be exported to external system
         """
+        # Try to return a cached instance of a LTIWilloSession object
         return self._willo_session if self._willo_session is not None
 
+        # otherwise try to instantiate a new Willow Session
         self._willo_session = LTIWilloSession(
-            tpa_lti_params=self.lti_params, 
+            lti_params=self.lti_params, 
             user=self.user, 
             context_id=self.context_id, 
             course_id=self._course_id
