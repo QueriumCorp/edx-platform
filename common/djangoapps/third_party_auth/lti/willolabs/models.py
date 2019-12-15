@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 # LTI Integration for Willo Labs Grade Sync
 # --------------------------------------------------------------------------------------------------
 
-class LTIWilloLabsGradeSynCourse(TimeStampedModel):
+class LTIWilloLabsExternalCourse(TimeStampedModel):
     """
     Course data originating from Willo Labs LTI authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
@@ -104,7 +104,7 @@ class LTIWilloLabsGradeSynCourse(TimeStampedModel):
 
 
     class Meta(object):
-        app_label = "lti_willolabs_grade_sync_course"
+        app_label = "willolabs_grade_sync_course"
         verbose_name = "LTI Willo Labs Grade Sync - Course"
         verbose_name_plural = verbose_name
         unique_together = [['context_id', 'course_id']]
@@ -112,13 +112,13 @@ class LTIWilloLabsGradeSynCourse(TimeStampedModel):
 
 
 
-class LTIWilloLabsGradeSynCourseEnrollment(TimeStampedModel):
+class LTIWilloLabsExternalCourseEnrollment(TimeStampedModel):
     """
     Course Enrollment data originating from Willo Labs LTI authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
     """
-    context_id = models.ForeignKey('LTIWilloLabsGradeSynCourse', on_delete=models.CASCADE)
+    context_id = models.ForeignKey('LTIWilloLabsExternalCourse', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     user_id = models.CharField(
@@ -205,14 +205,14 @@ class LTIWilloLabsGradeSynCourseEnrollment(TimeStampedModel):
         )
 
     class Meta(object):
-        app_label = "lti_willolabs_grade_sync_course_enrollment"
+        app_label = "willolabs_grade_sync_course_enrollment"
         verbose_name = "LTI Willo Labs Grade Sync - Course Enrollment"
         verbose_name_plural = verbose_name
         unique_together = [['context_id', 'user']]
         #ordering = ('-fetched_at', )
 
 
-class LTIWilloLabsGradeSynCourseEnrollmentGrades(TimeStampedModel):
+class LTIWilloLabsExternalCourseEnrollmentGrades(TimeStampedModel):
     """
     Grade output from Course Enrollments originating from Willo Labs LTI authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
@@ -231,7 +231,7 @@ class LTIWilloLabsGradeSynCourseEnrollmentGrades(TimeStampedModel):
         blank=True
         )
 
-    context_id = models.ForeignKey('LTIWilloLabsGradeSynCourse', on_delete=models.CASCADE)
+    context_id = models.ForeignKey('LTIWilloLabsExternalCourse', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
@@ -288,7 +288,7 @@ class LTIWilloLabsGradeSynCourseEnrollmentGrades(TimeStampedModel):
 
 
     class Meta(object):
-        app_label = "lti_willolabs_grade_sync_course_enrollment_grades"
+        app_label = "willolabs_grade_sync_course_enrollment_grades"
         verbose_name = "LTI Willo Labs Grade Sync - Course Enrollment Grades"
         verbose_name_plural = verbose_name
         unique_together = [
@@ -308,137 +308,3 @@ class LTIWilloLabsGradeSynCourseEnrollmentGrades(TimeStampedModel):
             ('modified', 'course_id', 'usage_key'),
             ('first_attempted', 'course_id', 'user_id')
         ]
-
-
-
-"""
-    TO DELETE ----------------------------------------------------------------------------------------
-"""
-class LTIContextCourse(models.Model):
-    """
-    Relationship of LTI tpa_lti_params.context_id to Rover course_id.
-    """
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    course = models.ForeignKey(
-        CourseOverview,
-        on_delete=models.CASCADE,
-        primary_key=True,
-        )
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        )
-
-    context_id = models.CharField(
-        max_length=32,
-        unique=True,
-        help_text=(
-            'Uniquely identify a course from an LTI consumer LMS. Provided an' \
-            ' a tpa_lti_params parameter during LTI authentication.'
-        )
-    )
-
-    ext_wl_outcome_service_url = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text=(
-            'Requests to the Grade Sync API must be made to a course-specific' \
-            'service URL, which is supplied to tool providers on launches. The' \
-            'service URL will be provided in the parameter.'
-        )
-    )
-
-    @property
-    def course_id(self):
-        """ Return course id. """
-        course_id = CourseKey.from_string(unicode(self.course.id))
-
-        try:
-            return str(CourseOverview.get_from_id(course_id).id)
-        except CourseOverview.DoesNotExist:
-            log.warning('Failed to retrieve CourseOverview for [%s]. Using empty course name.', course_id)
-            return None
-
-    @property
-    def name(self):
-        """ Return course name. """
-        course_id = CourseKey.from_string(unicode(self.course.id))
-
-        try:
-            return CourseOverview.get_from_id(course_id).display_name
-        except CourseOverview.DoesNotExist:
-            log.warning('Failed to retrieve CourseOverview for [%s]. Using empty course name.', course_id)
-            return None
-
-    class Meta(object):
-        app_label = "lti_willolabs"
-        verbose_name = "LTI Context Course Map"
-        verbose_name_plural = verbose_name
-        ordering = ('-fetched_at', )
-
-"""
-    This is used to track LTI Grade Synch posts back to the LTI consumer LMS systems.
-"""
-class LTIContextCourseSection(models.Model):
-    """
-    Tracking data for individual course assignments to LTIContextCourse.
-    """
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    lti_context_course = models.ForeignKey(
-        LTIContextCourse,
-        on_delete=models.CASCADE,
-        primary_key=True
-        )
-
-    id = models.CharField(
-        max_length=32,
-        unique=True,
-        help_text=(
-            'Unique slug identifier of a course section from a Rover course.' \
-            'Maps to section.url_name.'
-            )
-        )
-
-    location = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text=(
-            'Alternate unique identifier of a course section from a Rover course.' \
-            'Maps to section.location.'
-            )
-        )
-
-    title = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text=(
-            'Title of Rover course section. Use course name????' \
-            'Maps to course.name'
-            )
-        )
-
-    description = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text=(
-            'Text description of Rover course section.'
-            )
-        )
-
-    points_possible = models.IntegerField(
-        help_text=(
-            'Gross points that can be earned from this assignment.' \
-            'Maps to section_grade.section_grade_possible'
-            )
-        )
-
-    class Meta(object):
-        app_label = "lti_willolabs"
-        verbose_name = "LTI Context Course Sub-sections tracking data"
-        verbose_name_plural = verbose_name
-        ordering = ('-fetched_at', )

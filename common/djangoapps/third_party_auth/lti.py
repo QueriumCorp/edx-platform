@@ -19,11 +19,12 @@ from six import text_type
 from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
-from lti_willolabs.utils import get_lti_faculty_status
+from willolabs.utils import get_lti_faculty_status
 
 # mcdaniel nov-2019
-from third_party_auth.lti_willolabs.provisioners import LTIProvisioningTools
-from third_party_auth.lti_willolabs.utils import WilloLTISession
+from third_party_auth.lti.willolabs.provisioners import CourseProvisioner
+from third_party_auth.lti.willolabs.coursecache import LTIWilloSession
+from third_party_auth.lti.willolabs.utils import is_willo_lti
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -155,28 +156,16 @@ class LTIAuthBackend(BaseAuth):
                     )
         ))
 
-        #----------------------------------------------------------------------
-        # mcdaniel nov-2019
-        # add auto-provisioning logic to
-        #   a) for instructors: map LTI context_id to Rover course_id
-        #   b) for students: auto enroll students in Rover course corresponding to context_id
-        #----------------------------------------------------------------------
-        provisioning_tools = LTIProvisioningTools(self.strategy, response[LTI_PARAMS_KEY])
-        provisioning_tools.check_enrollment()
-        provisioning_tools.check_context_link()
+        if is_willo_lti(lti_params):
+            #----------------------------------------------------------------------
+            # mcdaniel nov-2019
+            # add auto-provisioning logic to
+            #   a) for instructors: map LTI context_id to Rover course_id
+            #   b) for students: auto enroll students in Rover course corresponding to context_id
+            #----------------------------------------------------------------------
+            course_provisioner = CourseProvisioner(self.strategy.request.user, lti_params)
+            course_provisioner.check_enrollment()
 
-        #----------------------------------------------------------------------
-        # mcdaniel dec-2019
-        # add our custom Willo LTI session object. This persists course and 
-        # enrollment data from tpa-lti-params and establishes a link between
-        # the Willo extrernal course (from Canvas, Blackboard, Moodle, etc) to Rover
-        #----------------------------------------------------------------------
-        willo_session = WilloLTISession(
-            tpa_lti_params=details,
-            response=response,
-            user=self.strategy.request.user,
-            course_id=None
-            )
 
         return details
 

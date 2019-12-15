@@ -1,6 +1,13 @@
 Querium  Open edX Platform Fork
 This is the main edX platform which consists of LMS and Studio.
 
+Summary of Customizations
+------------
+
+.. _Grades API: lms/djangoapps/grades/api/v2/
+.. _Willo Labs Grade Synch: common/djangoapps/third_party_auth/willolabs
+
+
 
 Installation / Updates (as per Lawrence McDaniel)
 ------------
