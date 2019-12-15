@@ -19,11 +19,9 @@ from six import text_type
 from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
-from willolabs.utils import get_lti_faculty_status
 
-# mcdaniel nov-2019
-from third_party_auth.lti.willolabs.provisioners import CourseProvisioner
-from third_party_auth.lti.willolabs.utils import is_willo_lti
+from third_party_auth.lti_platforms.willolabs.utils import get_lti_faculty_status, is_willo_lti
+from third_party_auth.lti_platforms.willolabs.provisioners import CourseProvisioner
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'

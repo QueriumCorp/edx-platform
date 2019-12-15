@@ -1120,6 +1120,9 @@ INSTALLED_APPS = [
     'openedx.core.djangoapps.oauth_dispatch.apps.OAuthDispatchAppConfig',
     'third_party_auth',
 
+    # mcdaniel dec-2019
+    # add Willo Labs LTI Grade Sync module
+    'third_party_auth.lti_platforms.willolabs',
 
     # These are apps that aren't strictly needed by Studio, but are imported by
     # other apps that are.  Django 1.8 wants to have imported models supported

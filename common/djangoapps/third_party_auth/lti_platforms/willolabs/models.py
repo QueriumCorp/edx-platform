@@ -1,11 +1,22 @@
-import logging
+# -*- coding: utf-8 -*-
+"""
+Models used to implement LTI Willo Labs Grade Sync support in third_party_auth
+"""
+from __future__ import absolute_import
 from django.contrib.auth.models import User
+from model_utils.models import TimeStampedModel
+from django.db import models
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
+from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
+from .fields import UnsignedBigIntAutoField
+
+import logging
 log = logging.getLogger(__name__)
+
 
 # --------------------------------------------------------------------------------------------------
 # mcdaniel dec-2019
@@ -36,64 +47,77 @@ class LTIWilloLabsExternalCourse(TimeStampedModel):
         blank=True, 
         null=True
         )
+
     context_label = models.CharField(
         verbose_name="Context Label",
         help_text="Example: Rover",
         max_length=50
         )
-	ext_wl_launch_key = models.CharField(
+
+    ext_wl_launch_key = models.CharField(
         verbose_name="External WilloLab Launch Key",
         help_text="Example: QcTz6q",
         max_length=50
         )
-	ext_wl_launch_url = models.URLField(
+        
+    ext_wl_launch_url = models.URLField(
         verbose_name="External WilloLab Launch URL",
         help_text="Example: https://stage.willolabs.com/launch/QcTz6q/8cmzcd",
         )
-	ext_wl_version = models.CharField(
+
+    ext_wl_version = models.CharField(
         verbose_name="External WilloLab Version",
         help_text="Example: 1.0",
         max_length=25
         )
-	ext_wl_outcome_service_url = models.URLField(
-        verbose_name="External WilloLabs Outcome Service URL"
+
+    ext_wl_outcome_service_url = models.URLField(
+        verbose_name="External WilloLabs Outcome Service URL",
         help_text="Example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/",
         )
-	custom_canvas_api_domain = models.CharField(
+
+    custom_canvas_api_domain = models.CharField(
         verbose_name="Custom Canvas API Domain",
         help_text="Example: willowlabs.instructure.com",
         max_length=255
         )
-	custom_canvas_course_id = models.CharField(
+
+    custom_canvas_course_id = models.CharField(
         verbose_name="Custom Canvas Course ID",
         help_text="Example: 421",
         max_length=50
         )
-	custom_canvas_course_startat = models.DateTimeField(
+
+    custom_canvas_course_startat = models.DateTimeField(
         verbose_name="Custom Canvas Course Start At",
         help_text="Example: 2019-12-11 16:18:01 -0500",
         db_index=False,
         null=False
         )
-	tool_consumer_info_product_family_code = models.CharField(
+
+    tool_consumer_info_product_family_code = models.CharField(
         verbose_name="Tool Consumer - Product Family Code",
         help_text="Example: canvas",
         max_length=50
         )
+
     tool_consumer_info_version = models.CharField(
         verbose_name="Tool Consumer - Version",
         help_text="Example: cloud",
         max_length=50
         )
+
     tool_consumer_instance_contact_email = models.EmailField(
         verbose_name="Tool Consumer - Contact Email Address",
         help_text="Example: notifications@instructure.com"
     )
+
     tool_consumer_instance_guid = models.CharField(
         verbose_name="Tool Consumer - Instance GUID",
         help_text="Example: 7M58pE4F4Y56gZHUe6jaxhQ1csaktjA00ZiVNQb7:canvas-lms",
         max_length=100
         )
+
     tool_consumer_instance_name = models.CharField(
         verbose_name="Tool Consumer - Instance Name",
         help_text="Example: Willo Labs",
@@ -127,7 +151,7 @@ class LTIWilloLabsExternalCourseEnrollment(TimeStampedModel):
         max_length=255
         )
 
-	custom_canvas_user_id = models.CharField(
+    custom_canvas_user_id = models.CharField(
         verbose_name="Canvas User ID",
         help_text="Canvas User ID provided to WilloLabs. Example: 394",
         max_length=25,
@@ -136,7 +160,7 @@ class LTIWilloLabsExternalCourseEnrollment(TimeStampedModel):
         null=True
         )
 
-	custom_canvas_user_login_id = models.CharField(
+    custom_canvas_user_login_id = models.CharField(
         verbose_name="Canvas Username",
         help_text="Canvas Username provided to WilloLabs. Example: rover_student",
         max_length=50,
@@ -145,59 +169,59 @@ class LTIWilloLabsExternalCourseEnrollment(TimeStampedModel):
         null=True
         )
 
-	custom_canvas_person_timezone = models.CharField(
+    custom_canvas_person_timezone = models.CharField(
         verbose_name="Canvas user time zone",
-        help_text="Canvas time zone from user's profile, provided to Willo Labs. Example: America/New_York"
+        help_text="Canvas time zone from user's profile, provided to Willo Labs. Example: America/New_York",
         max_length=50,
         default=None, 
         blank=True, 
         null=True
         )
 
-	ext_roles = models.CharField(
+    ext_roles = models.CharField(
         verbose_name="External System Roles",
-        help_text="User permitted roles in external system. Example: urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User"
+        help_text="User permitted roles in external system. Example: urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
         max_length=255,
         default=None, 
         blank=True, 
         null=True
         )
 
-	ext_wl_privacy_mode = models.CharField(
+    ext_wl_privacy_mode = models.CharField(
         verbose_name="External WilloLab Privacy Mode",
-        help_text="Privacy settings from external system, provided to Willo Lab. Example: allow-pii-all"
+        help_text="Privacy settings from external system, provided to Willo Lab. Example: allow-pii-all",
         max_length=50,
         default=None, 
         blank=True, 
         null=True
         )
 
-	lis_person_contact_email_primary = models.EmailField(
+    lis_person_contact_email_primary = models.EmailField(
         verbose_name="User - Primary Email Address",
-        help_text="Example: rover_student@willolabs.com"
-    )
+        help_text="Example: rover_student@willolabs.com",
+        )
 
-	lis_person_name_family = models.CharField(
+    lis_person_name_family = models.CharField(
         verbose_name="User Family Name",
-        help_text="Example: Thornton"
+        help_text="Example: Thornton",
         max_length=50,
         default=None, 
         blank=True, 
         null=True
         )
 
-	lis_person_name_full = models.CharField(
+    lis_person_name_full = models.CharField(
         verbose_name="User Family Name",
-        help_text="Example: Billy Bob Thornton"
+        help_text="Example: Billy Bob Thornton",
         max_length=255,
         default=None, 
         blank=True, 
         null=True
         )
 
-	lis_person_name_given = models.CharField(
+    lis_person_name_given = models.CharField(
         verbose_name="User Given Name",
-        help_text="Example: Billy Bob"
+        help_text="Example: Billy Bob",
         max_length=255,
         default=None, 
         blank=True, 
@@ -226,7 +250,7 @@ class LTIWilloLabsExternalCourseEnrollmentGrades(TimeStampedModel):
     # First, insert the record. If we get a 200 response then update the record with the posting date.
     synched = models.DateTimeField(
         verbose_name="Willo Posting Date",
-        help_text="The timestamp when this grade record was successfully posted to Willo Grade Sync."
+        help_text="The timestamp when this grade record was successfully posted to Willo Grade Sync.",
         null=True, 
         blank=True
         )
@@ -240,7 +264,7 @@ class LTIWilloLabsExternalCourseEnrollmentGrades(TimeStampedModel):
     # adding it only to maintain continuity with the original model grades.models.PersistentSubsectionGrade(TimeStampedModel)
     course_id = CourseKeyField(
         verbose_name="Course ID",
-        help_text="Open edX Opaque Key course_id"
+        help_text="Open edX Opaque Key course_id",
         blank=False, 
         max_length=255
         )
@@ -250,13 +274,13 @@ class LTIWilloLabsExternalCourseEnrollmentGrades(TimeStampedModel):
     # instead when you want to use/compare the usage_key.
     usage_key = UsageKeyField(
         verbose_name="Usage Key",
-        help_text="Open edX Course subsection key. Points to this homework assignment"
+        help_text="Open edX Course subsection key. Points to this homework assignment",
         blank=False, 
         max_length=255
         )
 
     # Information relating to the state of content when grade was calculated
-     course_version = models.CharField(
+    course_version = models.CharField(
          help_text="Guid of latest course version", 
          blank=True, 
          max_length=255
@@ -277,13 +301,13 @@ class LTIWilloLabsExternalCourseEnrollmentGrades(TimeStampedModel):
         )
 
     # track which blocks were visible at the time of grade calculation
-    visible_blocks = models.ForeignKey(        
-        VisibleBlocks, 
-        help_text="track which blocks were visible at the time of grade calculation.",
-        db_column='visible_blocks_hash', 
-        to_field='hashed',
-        on_delete=models.CASCADE
-        )
+    #visible_blocks = models.ForeignKey(        
+    #    VisibleBlocks, 
+    #    help_text="track which blocks were visible at the time of grade calculation.",
+    #    db_column='visible_blocks_hash', 
+    #    to_field='hashed',
+    #    on_delete=models.CASCADE
+    #    )
 
 
 

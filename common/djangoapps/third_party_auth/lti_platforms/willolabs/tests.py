@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 """
 # mcdaniel dec-2019
 Unit tests for third_party_auth LTI - Willo Labs Grade Sync
 """
 
+from __future__ import absolute_import
 import unittest
 import json
 

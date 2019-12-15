@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Lawrence McDaniel
 lpm0073@gmail.com
@@ -8,16 +9,17 @@ Willo Labs LTI.
 This module manages cached course and enrollment relationship data between Rover 
 and External platforms like Canvas, Blackboard and Moodle.
 """
+from __future__ import absolute_import
 import logging
 import json
 
-from third_party_auth.models import (
+from .models import (
     LTIWilloLabsExternalCourse,
     LTIWilloLabsExternalCourseEnrollment,
     LTIWilloLabsExternalCourseEnrollmentGrades
     )
-from common.djangoapps.student.models import is_faculty, CourseEnrollment
-from third_party_auth.lti.willolabs.utils import is_willo_lti, is_valid_course_id
+from student.models import is_faculty, CourseEnrollment
+from third_party_auth.lti_platforms.willolabs.utils import is_willo_lti, is_valid_course_id
 
 log = logging.getLogger(__name__)
 
@@ -70,16 +72,17 @@ class LTIWilloSession:
         otherwise, create a new record for the cache.
         """
         log.info('LTIWilloSession - register_course()')
-        return None if self.context_id is None
+        if self.context_id is None:
+            return None
+
         course = LTIWilloLabsExternalCourse.objects.filter(context_id=self.context_id)
         if course is not None:
             # sneaky write to ensure integrity between context_id / course_id
             self._course_id = course.course_id
             return course 
 
-        return None if \
-            self.lti_params is None or \
-            self.course_id is None
+        if self.lti_params is None or self.course_id is None:
+            return None
 
         course.context_id = self.context_id
         course.course_id = self.course_id
@@ -108,9 +111,8 @@ class LTIWilloSession:
         otherwise, create a new record for the cache.
         """
         log.info('LTIWilloSession - register_enrollment()')
-        return None if \
-            self.user is None or \
-            self.context_id is None
+        if self.user is None or self.context_id is None:
+            return None
 
         # looked for a cached record for this user / context_id
         enrollment = LTIWilloLabsExternalCourseEnrollment.objects.filter(context_id=self.context_id, user=self.user)
@@ -121,12 +123,11 @@ class LTIWilloSession:
             self._course_id = self.course.course_id
             return enrollment
 
-        return None if \
-            self.lti_params is None or \
+        if self.lti_params is None or \
             self.course is None or \
             self.course_id is None or \
-            not CourseEnrollment.is_enrolled(self.user, self.course_id)
-
+            not CourseEnrollment.is_enrolled(self.user, self.course_id):
+            return None
 
         enrollment.context_id = self.context_id
         enrollment.user = self.user
@@ -152,7 +153,8 @@ class LTIWilloSession:
             grades_dict: contains all fields from grades.models.PersistentSubsectionGrade
         """
         log.info('LTIWilloSession - post_grades()')
-        return None if not self.course_enrollment
+        if not self.course_enrollment:
+            return None
         # null usage_key -- raiserror
         # null grades_dict -- raiserror
 
@@ -270,7 +272,8 @@ class LTIWilloSession:
         """
 
         # try to return an instance, if we have one.
-        return self._course if self._course is not None
+        if self._course is not None:
+            return self._course
 
         # otherwise, try to retreive an instance from the cache, if it exists
         self._course = self.register_course()
@@ -296,7 +299,8 @@ class LTIWilloSession:
         """
 
         # try to return an instance, if we have one.
-        return self._course_enrollment if self._course_enrollment is not None
+        if self._course_enrollment is not None:
+            return self._course_enrollment
 
         # otherwise, try to retreive an instance from the cache, if it exists
         self.course_enrollment = self.register_enrollment()

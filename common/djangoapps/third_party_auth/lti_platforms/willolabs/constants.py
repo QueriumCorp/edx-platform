@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Constants for LTI Willo Labs Grade Sync support in third_party_auth
+"""
+from __future__ import absolute_import
+
 # from the LTI role vocabulary
 # https://www.imsglobal.org/specs/ltiv1p1/implementation-guide#toc-8
 # you need to decide which roles you'll treat as instructor, but here is

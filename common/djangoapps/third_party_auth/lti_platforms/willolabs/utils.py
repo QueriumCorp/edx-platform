@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
   written by:   Matt Hangar, Willo Labs
                 matt.hanger@willolabs.com
@@ -6,6 +7,7 @@
 
   Usage:        determine whether an LTI-authenticated user is faculty.
 """
+from __future__ import absolute_import
 from third_party_auth.lti.willolabs.constants import (
     WILLO_INSTRUCTOR_ROLES, 
     WILLO_DOMAINS

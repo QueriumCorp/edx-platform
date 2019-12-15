@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 """
 mcdaniel dec-2019
 Willo LTI Grade Sync tables
 """
+from __future__ import absolute_import
 from django.contrib import admin
 
 from third_party_auth.lti.willolabs.models import (

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
     mcdaniel nov-2019
 
@@ -30,16 +31,18 @@
 
     example source: ./sample_data/tpa_lti_params.json
 """
+from __future__ import absolute_import
 #from django.contrib.auth.decorators import login_required
 #from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.management.base import CommandError
-from common.djangoapps.third_party_auth.lti.willolabs.models import LTIWilloLabsExternalCourse
-from common.djangoapps.third_party_auth.lti.willolabs.exceptions import LTIBusinessRuleError
-from common.djangoapps.student.models import is_faculty, CourseEnrollment
-from cms.djangoapps.contenstore.views.course import get_courses_accessible_to_user, _process_courses_list
+from student.models import is_faculty, CourseEnrollment
 
-from third_party_auth.lti.willolabs.coursecache import LTIWilloSession
-from third_party_auth.lti.willolabs.utils import is_willo_lti, is_valid_course_id
+from .models import LTIWilloLabsExternalCourse
+from .exceptions import LTIBusinessRuleError
+from .coursecache import LTIWilloSession
+from .utils import is_willo_lti, is_valid_course_id
+
+from cms.djangoapps.contenstore.views.course import get_courses_accessible_to_user, _process_courses_list
 
 import logging
 log = logging.getLogger(__name__)
@@ -92,17 +95,17 @@ class CourseProvisioner(Object):
 
         # if the user is not a student (ie is_faculty == True ) 
         # then we don't need to be here.
-        return if \
-            self.is_faculty or \
+        if self.is_faculty or \
             self.course_id is None or \
-            CourseEnrollment.is_enrolled(self.user, self.course_id)     # our expected case: the student is already enrolled
-                                                                        # so nothing more to do.
-            
+            CourseEnrollment.is_enrolled(self.user, self.course_id):
+            return False 
+
         # Student is not yet enrolled in the Rover course corresponding to the
         # context_id in their lti_params. So, lets get them enrolled!
         CourseEnrollment.enroll(self.user, self.course_id)
         self.willo_session.register_enrollment()
 
+        return True
 
     @property
     def lti_params(self):
@@ -150,7 +153,8 @@ class CourseProvisioner(Object):
         """
         a list of active Rover courses which the user is currently enrolled.
         """
-        return self._enrollments if self._enrollments is not None
+        if self._enrollments is not None:
+            return self._enrollments 
 
         self._enrollments = CourseEnrollment.enrollments_for_user(self.user)
         return self._enrollments
@@ -161,13 +165,15 @@ class CourseProvisioner(Object):
         We accumulate persisted intelligence about which course_id in Rover to map context_id
         values by looking for cases where students are enrolled in exactly course in Rover.
         """
-        return self._course_id if self._course_id is not None
+        if self._course_id is not None:
+            return self._course_id 
 
         # first we'll look in the persisted Willo Labs LTI course enrollments table to see if 
         # a record exists for this user.
         try:
             self.course_id = self.willo_session.course_enrollment.course_id
-            return self._course_id if self._course_id is not None
+            if self._course_id is not None:
+                return self._course_id
         except:
             pass
 
@@ -192,7 +198,7 @@ class CourseProvisioner(Object):
             self._willo_session = None
             return 
             
-        if not is_valid_course_id(value)
+        if not is_valid_course_id(value):
             raise InvalidKeyError("Invalid course_key: '%s'." % value)
 
         self._course_id = course_key
@@ -207,7 +213,8 @@ class CourseProvisioner(Object):
             grades      -> maps user assignment grades to be exported to external system
         """
         # Try to return a cached instance of a LTIWilloSession object
-        return self._willo_session if self._willo_session is not None
+        if self._willo_session is not None:
+            return self._willo_session
 
         # otherwise try to instantiate a new Willow Session
         self._willo_session = LTIWilloSession(
