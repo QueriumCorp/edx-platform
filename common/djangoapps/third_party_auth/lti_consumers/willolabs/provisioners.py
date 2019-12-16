@@ -37,7 +37,7 @@ from __future__ import absolute_import
 from django.core.management.base import CommandError
 from student.models import is_faculty, CourseEnrollment
 
-from .models import LTIWilloLabsExternalCourse
+from .models import LTIExternalCourse
 from .exceptions import LTIBusinessRuleError
 from .cache import LTISession
 from .utils import is_willo_lti, is_valid_course_id
