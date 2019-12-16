@@ -19,7 +19,7 @@ from .models import (
     LTIExternalCourseEnrollmentGrades
     )
 from student.models import is_faculty, CourseEnrollment
-from third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
 
 log = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class LTISession:
         self.course_id = course_id      # Rover (Open edX) course_id (aka Opaque Key)
                                         # this MUST be initialized after self.lti_params
 
-    def init():
+    def init(self):
         self._context_id = None
         self._course = None
         self._course_enrollment = None

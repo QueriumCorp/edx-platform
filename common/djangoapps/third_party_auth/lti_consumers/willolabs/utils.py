@@ -8,7 +8,7 @@
   Usage:        determine whether an LTI-authenticated user is faculty.
 """
 from __future__ import absolute_import
-from third_party_auth.lti_consumers.willolabs.constants import (
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.constants import (
     WILLO_INSTRUCTOR_ROLES, 
     WILLO_DOMAINS
     )

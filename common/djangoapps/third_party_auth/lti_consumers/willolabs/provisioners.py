@@ -36,6 +36,7 @@ from __future__ import absolute_import
 #from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.management.base import CommandError
 from student.models import is_faculty, CourseEnrollment
+from opaque_keys.edx.keys import CourseKey
 
 from .models import LTIExternalCourse
 from .exceptions import LTIBusinessRuleError
@@ -63,7 +64,7 @@ class CourseProvisioner():
         course_id       - Open edX Opaque key course key
         is_faculty      - True if user is faculty_confirmed at openstax.org
         enrollments     - list of active courses for this user
-        willo_session   - course / enrollments cache
+        session         - course / enrollments cache
 
     methods
     -----------
@@ -72,6 +73,15 @@ class CourseProvisioner():
     def __init__(self, user, lti_params, course_id=None):
         log.info('CourseProvisioner - __init__()')
 
+        self.init()
+
+        # constructor intializations ...
+        # ----------------------------------------------------
+        self.lti_params = lti_params        # originates from the http response body from LTI auth
+        self.user = user
+        self.course_id = course_id
+
+    def init(self):
         # local cached instance variables
         self._lti_params  = None
         self._course_id = None
@@ -79,13 +89,7 @@ class CourseProvisioner():
         self.is_faculty = False
 
         self._enrollments = None
-        self._willo_session = None
-
-        # constructor intializations ...
-        # ----------------------------------------------------
-        self.lti_params = lti_params        # originates from the http response body from LTI auth
-        self.user = user
-        self.course_id = course_id
+        self._session = None
 
     def check_enrollment(self):
         """
@@ -94,19 +98,19 @@ class CourseProvisioner():
         Verify that the student is enrolled in the Rover course corresponding to the context_id
         in lti_params. If not, then automatically enroll the student in the course.
         """
+        if self.course_id is None:
+            return False
+
         log.info('CourseProvisioner - check_enrollment()')
 
-        # if the user is not a student (ie is_faculty == True ) 
-        # then we don't need to be here.
-        if self.is_faculty or \
-            self.course_id is None or \
-            CourseEnrollment.is_enrolled(self.user, self.course_id):
-            return False 
+        # if we have a course_id for the user and 
+        if not CourseEnrollment.is_enrolled(self.user, self.course_id):
+            CourseEnrollment.enroll(self.user, self.course_id)
 
-        # Student is not yet enrolled in the Rover course corresponding to the
-        # context_id in their lti_params. So, lets get them enrolled!
-        CourseEnrollment.enroll(self.user, self.course_id)
-        self.willo_session.register_enrollment()
+        # cache our mappings between 
+        #   Rover course_id and the LTI context_id
+        #   Rover username and LTI user_id
+        self.session.register_enrollment()
 
         return True
 
@@ -127,9 +131,11 @@ class CourseProvisioner():
             raise LTIBusinessRuleError("Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
                 "that did not originate from Willo Labs: '%s'." % value)
 
+        self.init()
+
         self._lti_params = value
         self.context_id = lti_params.get('context_id')
-        self._willo_session = None
+        self._session = None
 
 
     @property
@@ -146,9 +152,9 @@ class CourseProvisioner():
         # initialize properties that depend on user
         self.is_faculty = is_faculty(self.user)
 
-        # clearn enrollments and the willo_session cache.
+        # clearn enrollments and the session cache.
         self._enrollments = None
-        self._willo_session = None
+        self._session = None
 
     
     @property
@@ -174,7 +180,7 @@ class CourseProvisioner():
         # first we'll look in the persisted Willo Labs LTI course enrollments table to see if 
         # a record exists for this user.
         try:
-            self.course_id = self.willo_session.course_enrollment.course_id
+            self.course_id = self.session.course_enrollment.course_id
             if self._course_id is not None:
                 return self._course_id
         except:
@@ -198,17 +204,17 @@ class CourseProvisioner():
         """
         if value is None:
             self._course_id = None 
-            self._willo_session = None
+            self._session = None
             return 
             
         if not is_valid_course_id(value):
             raise InvalidKeyError("Invalid course_key: '%s'." % value)
 
-        self._course_id = course_key
+        self._course_id = CourseKey.from_string(value)
         self.check_enrollment()
 
     @property
-    def willow_session(self):
+    def session(self):
         """
         Cache manager for Willo Lab external system cached objects: 
             course      -> maps context_id to course_id
@@ -216,14 +222,14 @@ class CourseProvisioner():
             grades      -> maps user assignment grades to be exported to external system
         """
         # Try to return a cached instance of a LTISession object
-        if self._willo_session is not None:
-            return self._willo_session
+        if self._session is not None:
+            return self._session
 
         # otherwise try to instantiate a new Willow Session
-        self._willo_session = LTISession(
+        self._session = LTISession(
             lti_params=self.lti_params, 
             user=self.user, 
             context_id=self.context_id, 
             course_id=self._course_id
             )
-        return self._willo_session
+        return self._session

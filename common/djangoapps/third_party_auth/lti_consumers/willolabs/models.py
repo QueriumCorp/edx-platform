@@ -2,7 +2,7 @@
 """
 mcdaniel dec-2019
 LTI Integration for Willo Labs Grade Sync.
-Models used to implement LTI Willo Labs Grade Sync support in third_party_auth
+Models used to implement LTI External support in third_party_auth
 """
 from __future__ import absolute_import
 
@@ -135,8 +135,8 @@ class LTIExternalCourse(TimeStampedModel):
 
 
     class Meta(object):
-        app_label = "willolabs_grade_sync_course"
-        verbose_name = "LTI Willo Labs Grade Sync - Course"
+        app_label = "lti_external_course"
+        verbose_name = "LTI External Course"
         verbose_name_plural = verbose_name
         unique_together = [['context_id', 'course_id']]
         #ordering = ('-fetched_at', )
@@ -236,8 +236,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     class Meta(object):
-        app_label = "willolabs_grade_sync_course_enrollment"
-        verbose_name = "LTI Willo Labs Grade Sync - Course Enrollment"
+        app_label = "lti_external_course_enrollment"
+        verbose_name = "LTI External Course Enrollment"
         verbose_name_plural = verbose_name
         unique_together = [['context_id', 'user']]
         #ordering = ('-fetched_at', )
@@ -319,8 +319,8 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
 
 
     class Meta(object):
-        app_label = "willolabs_grade_sync_course_enrollment_grades"
-        verbose_name = "LTI Willo Labs Grade Sync - Course Enrollment Grades"
+        app_label = "lti_external_course_enrollment_grades"
+        verbose_name = "LTI External Course Enrollment Grades"
         verbose_name_plural = verbose_name
         unique_together = [
             # * Specific grades can be pulled using all three columns,

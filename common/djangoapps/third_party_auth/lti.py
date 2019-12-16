@@ -20,8 +20,8 @@ from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
 
-from third_party_auth.lti_consumers.willolabs.utils import get_lti_faculty_status, is_willo_lti
-from third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import get_lti_faculty_status, is_willo_lti
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'
