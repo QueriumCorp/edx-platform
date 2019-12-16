@@ -7,32 +7,32 @@ from __future__ import absolute_import
 from django.contrib import admin
 
 from .models import (
-    LTIWilloLabsExternalCourse,
-    LTIWilloLabsExternalCourseEnrollment,
-    LTIWilloLabsExternalCourseEnrollmentGrades
+    LTIExternalCourse,
+    LTIExternalCourseEnrollment,
+    LTIExternalCourseEnrollmentGrades
     )
 
 
-class LTIWilloLabsExternalCourseAdmin(admin.ModelAdmin):
+class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course
     """
     readonly_fields=(u'created', u'updated', )
 
-admin.site.register(LTIWilloLabsExternalCourse, LTIWilloLabsExternalCourseAdmin)
+admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
 
-class LTIWilloLabsExternalCourseEnrollmentAdmin(admin.ModelAdmin):
+class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course Enrollment
     """
     readonly_fields=(u'created', u'updated', )
 
-admin.site.register(LTIWilloLabsExternalCourseEnrollment, LTIWilloLabsExternalCourseEnrollmentAdmin)
+admin.site.register(LTIExternalCourseEnrollment, LTIExternalCourseEnrollmentAdmin)
 
-class LTIWilloLabsExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
+class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course Enrollment, Grades
     """
     readonly_fields=(u'created', u'updated', )
 
-admin.site.register(LTIWilloLabsExternalCourseEnrollmentGrades, LTIWilloLabsExternalCourseEnrollmentGradesAdmin)
+admin.site.register(LTIExternalCourseEnrollmentGrades, LTIExternalCourseEnrollmentGradesAdmin)
