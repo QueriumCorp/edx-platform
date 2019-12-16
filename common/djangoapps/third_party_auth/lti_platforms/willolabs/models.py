@@ -142,7 +142,7 @@ class LTIWilloLabsExternalCourseEnrollment(TimeStampedModel):
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
     """
-    context_id = models.ForeignKey('LTIWilloLabsExternalCourse', on_delete=models.CASCADE)
+    context_id = models.ForeignKey(LTIWilloLabsExternalCourse, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     user_id = models.CharField(
@@ -255,7 +255,7 @@ class LTIWilloLabsExternalCourseEnrollmentGrades(TimeStampedModel):
         blank=True
         )
 
-    context_id = models.ForeignKey('LTIWilloLabsExternalCourse', on_delete=models.CASCADE)
+    context_id = models.ForeignKey(LTIWilloLabsExternalCourse, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
