@@ -1,27 +1,25 @@
 # -*- coding: utf-8 -*-
 """
+mcdaniel dec-2019
+LTI Integration for Willo Labs Grade Sync.
 Models used to implement LTI Willo Labs Grade Sync support in third_party_auth
 """
 from __future__ import absolute_import
+
 from django.contrib.auth.models import User
-from model_utils.models import TimeStampedModel
 from django.db import models
+from model_utils.models import TimeStampedModel
+from lms.djangoapps.coursewarehistoryextended.fields import UnsignedBigIntAutoField
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
-from .fields import UnsignedBigIntAutoField
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
 import logging
 log = logging.getLogger(__name__)
 
-
-# --------------------------------------------------------------------------------------------------
-# mcdaniel dec-2019
-# LTI Integration for Willo Labs Grade Sync
-# --------------------------------------------------------------------------------------------------
 
 class LTIWilloLabsExternalCourse(TimeStampedModel):
     """
