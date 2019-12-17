@@ -18,7 +18,7 @@ from third_party_auth.lti.willolabs.provisioners import CourseProvisioner
 from third_party_auth.lti.willolabs.utils import is_willo_lti
 
 LTI_PARAMS_KEY = 'tpa-lti-params'
-LTI_PARAMS_JSON_FILE = 'doc/tpa-lti-params-willo-canvas-learner.json'
+LTI_PARAMS_JSON_FILE = 'data/tpa-lti-params-willo-canvas-learner.json'
 USER_MODEL = get_user_model()
 
 class UnitTestLTIWilloLabGradeSync(unittest.TestCase, ThirdPartyAuthTestMixin):
