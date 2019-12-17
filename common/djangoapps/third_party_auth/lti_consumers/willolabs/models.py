@@ -6,7 +6,7 @@ Models used to implement LTI External support in third_party_auth
 """
 from __future__ import absolute_import
 
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.db import models
 from model_utils.models import TimeStampedModel
 from lms.djangoapps.coursewarehistoryextended.fields import UnsignedBigIntAutoField
@@ -135,7 +135,6 @@ class LTIExternalCourse(TimeStampedModel):
 
 
     class Meta(object):
-        app_label = "lti_external_course"
         verbose_name = "LTI External Course"
         verbose_name_plural = verbose_name
         unique_together = [['context_id', 'course_id']]
@@ -150,9 +149,9 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     """
     context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    user_id = models.CharField(
+    lti_user_id = models.CharField(
         verbose_name="User ID",
         help_text="User ID provided by . Example: ab3e190fae668d925d007d79219fbfce90afba6d",
         max_length=255
@@ -236,7 +235,6 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     class Meta(object):
-        app_label = "lti_external_course_enrollment"
         verbose_name = "LTI External Course Enrollment"
         verbose_name_plural = verbose_name
         unique_together = [['context_id', 'user']]
@@ -263,7 +261,8 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         )
 
     context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 
     #user_id = models.IntegerField(blank=False)
@@ -307,19 +306,7 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         help_text="timestamp for the learner's first attempt at content in this subsection. Should contain a value",
         )
 
-    # track which blocks were visible at the time of grade calculation
-    #visible_blocks = models.ForeignKey(        
-    #    VisibleBlocks, 
-    #    help_text="track which blocks were visible at the time of grade calculation.",
-    #    db_column='visible_blocks_hash', 
-    #    to_field='hashed',
-    #    on_delete=models.CASCADE
-    #    )
-
-
-
     class Meta(object):
-        app_label = "lti_external_course_enrollment_grades"
         verbose_name = "LTI External Course Enrollment Grades"
         verbose_name_plural = verbose_name
         unique_together = [
@@ -337,5 +324,5 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         # (first_attempted, course_id): find all attempted subsections in a course for all users
         index_together = [
             ('modified', 'course_id', 'usage_key'),
-            ('first_attempted', 'course_id', 'user_id')
+            ('first_attempted', 'course_id', 'user')
         ]

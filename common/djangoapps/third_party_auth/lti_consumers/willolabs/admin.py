@@ -17,7 +17,7 @@ class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course
     """
-    readonly_fields=(u'created', u'updated', )
+    #readonly_fields=(u'created', u'updated', )
 
 admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
 
@@ -25,7 +25,7 @@ class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course Enrollment
     """
-    readonly_fields=(u'created', u'updated', )
+    #readonly_fields=(u'created', u'updated', )
 
 admin.site.register(LTIExternalCourseEnrollment, LTIExternalCourseEnrollmentAdmin)
 
@@ -33,6 +33,6 @@ class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course Enrollment, Grades
     """
-    readonly_fields=(u'created', u'updated', )
+    #readonly_fields=(u'created', u'updated', )
 
 admin.site.register(LTIExternalCourseEnrollmentGrades, LTIExternalCourseEnrollmentGradesAdmin)
