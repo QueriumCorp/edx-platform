@@ -38,14 +38,6 @@ REGISTRATION_FORM_FIELD_BLACKLIST = [
     'username'
 ]
 
-# --------------------------------------------------------------------------------------------------
-# mcdaniel dec-2019
-# LTI Integration for Willo Labs Grade Sync
-# --------------------------------------------------------------------------------------------------
-from model_utils.models import TimeStampedModel
-from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
-from django.contrib.auth.models import User
-
 
 # A dictionary of {name: class} entries for each python-social-auth backend available.
 # Because this setting can specify arbitrary code to load and execute, it is set via
