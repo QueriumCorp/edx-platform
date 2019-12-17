@@ -33,7 +33,7 @@ class LTIAuthBackend(BaseAuth):
     """
 
     name = 'lti'
-    log.info('class LTIAuthBackend - instantiated.')
+    #log.info('class LTIAuthBackend - instantiated.')
 
 
     def start(self):
