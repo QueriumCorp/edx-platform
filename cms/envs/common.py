@@ -1122,7 +1122,7 @@ INSTALLED_APPS = [
 
     # mcdaniel dec-2019
     # add Willo Labs LTI Grade Sync module
-    'common.djangoapps.third_party_auth.lti_consumers.willolabs.apps.LTIWilloLabsConfig',
+    'common.djangoapps.third_party_auth.lti_consumers.willolabs',
 
     # These are apps that aren't strictly needed by Studio, but are imported by
     # other apps that are.  Django 1.8 wants to have imported models supported
