@@ -1,4 +1,4 @@
-"tpa-lti-params": {
+{"tpa-lti-params": {
     "context_id": "e14751571da04dd3a2c71a311dda2e1b",
     "context_label": "Rover",
     "context_title": "Rover by Openstax Gradesync Testing",
@@ -46,4 +46,5 @@
     "tool_consumer_instance_name": "Willo Labs",
     "user_id": "ab3e190fae668d925d007d79219fbfce90afba6d",
     "user_image": "https://canvas.instructure.com/images/messages/avatar-50.png"
+}
 }
