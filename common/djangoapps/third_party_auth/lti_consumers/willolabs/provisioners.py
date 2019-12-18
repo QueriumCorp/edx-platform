@@ -32,9 +32,9 @@
     example source: ./sample_data/tpa_lti_params.json
 """
 from __future__ import absolute_import
-#from django.contrib.auth.decorators import login_required
-#from django.views.decorators.csrf import ensure_csrf_cookie
 from django.core.management.base import CommandError
+from django.conf import settings
+
 from student.models import is_faculty, CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
 from opaque_keys import InvalidKeyError
@@ -51,8 +51,8 @@ from .utils import is_willo_lti, is_valid_course_id
 
 import logging
 log = logging.getLogger(__name__)
+DEBUG = settings.DEBUG
 
-DEBUG = True
 
 class CourseProvisioner():
     """
@@ -73,8 +73,6 @@ class CourseProvisioner():
         check_enrollment()
     """
     def __init__(self, user, lti_params, course_id=None):
-        log.info('CourseProvisioner - __init__()')
-
         self.init()
 
         # constructor intializations ...
@@ -82,9 +80,15 @@ class CourseProvisioner():
         self.set_lti_params(lti_params)         # originates from the http response body from LTI auth
         self.set_user(user)
         self.set_course_id(course_id)
+        log.info('CourseProvisioner.__init__() user: {user}, context_id: {context_id}, '\
+            ' course_id: {course_id}'.format(
+                user=self.get_user(),
+                context_id=self.get_context_id(),
+                course_id=self.get_course_id()
+            ))
 
     def init(self):
-        if DEBUG: log.info('CourseProvisioner - init()')
+        if DEBUG: log.info('CourseProvisioner.init()')
         # local cached instance variables
         self._lti_params  = None
         self._context_id = None
@@ -102,15 +106,22 @@ class CourseProvisioner():
         Verify that the student is enrolled in the Rover course corresponding to the context_id
         in lti_params. If not, then automatically enroll the student in the course.
         """
-        if DEBUG: log.info('CourseProvisioner - check_enrollment()')
+        if DEBUG: log.info('CourseProvisioner.check_enrollment()')
         if self.course_id is None:
             return False
 
-        if DEBUG: log.info('CourseProvisioner - check_enrollment() course_id is set. continuing.')
+        if DEBUG: log.info('CourseProvisioner.check_enrollment() course_id is set. continuing.')
 
         # if we have a course_id for the user and 
         if not CourseEnrollment.is_enrolled(self.user, self.course_id):
             CourseEnrollment.enroll(self.user, self.course_id)
+            log.info('CourseProvisioner.check_enrollment() automatically enrolled'\
+                ' user: {user}, context_id: {context_id}, '\
+                ' course_id: {course_id}'.format(
+                    user=self.get_user(),
+                    context_id=self.get_context_id(),
+                    course_id=self.get_course_id()
+                ))
 
         # cache our mappings between 
         #   Rover course_id and the LTI context_id

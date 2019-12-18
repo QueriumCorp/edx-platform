@@ -13,6 +13,7 @@ from __future__ import absolute_import
 import logging
 import json
 from django.utils.dateparse import parse_date
+from django.conf import settings
 
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourse,
@@ -26,7 +27,7 @@ from opaque_keys.edx.keys import CourseKey
 
 
 log = logging.getLogger(__name__)
-DEBUG = True
+DEBUG = settings.DEBUG
 
 class LTISession:
     """
@@ -86,6 +87,10 @@ class LTISession:
 
         # retrieve cache data from MySQL
         self.refresh()
+        log.info('LTISession.__init__() user: {user}, context_id: {context_id}'.format(
+            user=self.get_user(),
+            context_id=self.get_context_id()
+        ))
 
     def init(self):
         """ Initialize class variables """
@@ -102,7 +107,6 @@ class LTISession:
         """
         Retrieve cached content from MySQL for the current context_id, user
         """
-        if DEBUG: log.info('refresh()')
         self.register_course()
         self.register_enrollment()
 
@@ -203,7 +207,7 @@ class LTISession:
         )
         
         course.save()
-        if DEBUG: log.info('LTISession.register_course() - saved new cache record.')
+        log.info('LTISession.register_course() - saved new cache record.')
         return course
 
     def register_enrollment(self):
@@ -260,7 +264,7 @@ class LTISession:
         )
         enrollment.save()
 
-        if DEBUG: log.info('LTISession - register_enrollment() saved new cache record.')
+        log.info('LTISession - register_enrollment() saved new cache record.')
         return enrollment
 
     def post_grades(self, usage_key, grades_dict):
@@ -298,7 +302,7 @@ class LTISession:
         grades.visible_blocks = grades_dict.get('visible_blocks')
 
         grades.save()
-        if DEBUG: log.info('LTISession - post_grades() saved new cache record.')
+        log.info('LTISession - post_grades() saved new cache record.')
         return grades
 
     
