@@ -12,6 +12,7 @@ and External platforms like Canvas, Blackboard and Moodle.
 from __future__ import absolute_import
 import logging
 import json
+from django.utils.dateparse import parse_date
 
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourse,
@@ -129,23 +130,29 @@ class LTISession:
             return None
 
         log.info('LTISession.register_course() - creating a new course cache record.')
+        date_str = self._lti_params.get('custom_canvas_course_startat')
+        date_str = date_str[0:10]
+        custom_canvas_course_startat = parse_date(date_str)
+        log.info('LTISession.register_course() - custom_canvas_course_startat (string): {}'.format(date_str))
+        log.info('LTISession.register_course() - custom_canvas_course_startat (parsed): {}'.format(custom_canvas_course_startat))
+
         course = LTIExternalCourse(
-            context_id = self.get_context_id()
-            course_id = self.get_course_id()
-            context_title = self.get_lti_params.get('context_title')
-            context_label = self.get_lti_params.get('context_label')
-            ext_wl_launch_key = self.get_lti_params.get('ext_wl_launch_key')
-            ext_wl_launch_url = self.get_lti_params.get('ext_wl_launch_url')
-            ext_wl_version = self.get_lti_params.get('ext_wl_version')
-            ext_wl_outcome_service_url = self.get_lti_params.get('ext_wl_outcome_service_url')
-            custom_canvas_api_domain = self.get_lti_params.get('custom_canvas_api_domain')
-            custom_canvas_course_id = self.get_lti_params.get('custom_canvas_course_id')
-            custom_canvas_course_startat = self.get_lti_params.get('custom_canvas_course_startat')
-            tool_consumer_info_product_family_code = self.get_lti_params.get('tool_consumer_info_product_family_code')
-            tool_consumer_info_version = self.get_lti_params.get('tool_consumer_info_version')
-            tool_consumer_instance_contact_email = self.get_lti_params.get('tool_consumer_instance_contact_email')
-            tool_consumer_instance_guid = self.get_lti_params.get('tool_consumer_instance_guid')
-            tool_consumer_instance_name = self.get_lti_params.get('tool_consumer_instance_name')
+            context_id = self.get_context_id(),
+            course_id = self.get_course_id(),
+            context_title = self._lti_params.get('context_title'),
+            context_label = self._lti_params.get('context_label'),
+            ext_wl_launch_key = self._lti_params.get('ext_wl_launch_key'),
+            ext_wl_launch_url = self._lti_params.get('ext_wl_launch_url'),
+            ext_wl_version = self._lti_params.get('ext_wl_version'),
+            ext_wl_outcome_service_url = self._lti_params.get('ext_wl_outcome_service_url'),
+            custom_canvas_api_domain = self._lti_params.get('custom_canvas_api_domain'),
+            custom_canvas_course_id = self._lti_params.get('custom_canvas_course_id'),
+            custom_canvas_course_startat = custom_canvas_course_startat,
+            tool_consumer_info_product_family_code = self._lti_params.get('tool_consumer_info_product_family_code'),
+            tool_consumer_info_version = self._lti_params.get('tool_consumer_info_version'),
+            tool_consumer_instance_contact_email = self._lti_params.get('tool_consumer_instance_contact_email'),
+            tool_consumer_instance_guid = self._lti_params.get('tool_consumer_instance_guid'),
+            tool_consumer_instance_name = self._lti_params.get('tool_consumer_instance_name'),
         )
         
         course.save()
@@ -187,18 +194,18 @@ class LTISession:
             return None
 
         enrollment = LTIExternalCourseEnrollment(
-            context_id = self.get_context_id()
-            user = self.get_user()
-            user_id = self.user_id
-            custom_canvas_user_id = self.get_lti_params.get('custom_canvas_user_id')
-            custom_canvas_user_login_id = self.get_lti_params.get('custom_canvas_user_login_id')
-            custom_canvas_person_timezone = self.get_lti_params.get('custom_canvas_person_timezone')
-            ext_roles = self.get_lti_params.get('ext_roles')
-            ext_wl_privacy_mode = self.get_lti_params.get('ext_wl_privacy_mode')
-            lis_person_contact_email_primary = self.get_lti_params.get('lis_person_contact_email_primary')
-            lis_person_name_family = self.get_lti_params.get('lis_person_name_family')
-            lis_person_name_full = self.get_lti_params.get('lis_person_name_full')
-            lis_person_name_given = self.get_lti_params.get('lis_person_name_given')
+            context_id = self.get_context_id(),
+            user = self.get_user(),
+            user_id = self.user_id,
+            custom_canvas_user_id = self._lti_params.get('custom_canvas_user_id'),
+            custom_canvas_user_login_id = self._lti_params.get('custom_canvas_user_login_id'),
+            custom_canvas_person_timezone = self._lti_params.get('custom_canvas_person_timezone'),
+            ext_roles = self._lti_params.get('ext_roles'),
+            ext_wl_privacy_mode = self._lti_params.get('ext_wl_privacy_mode'),
+            lis_person_contact_email_primary = self._lti_params.get('lis_person_contact_email_primary'),
+            lis_person_name_family = self._lti_params.get('lis_person_name_family'),
+            lis_person_name_full = self._lti_params.get('lis_person_name_full'),
+            lis_person_name_given = self._lti_params.get('lis_person_name_given'),
         )
         enrollment.save()
 
@@ -225,10 +232,10 @@ class LTISession:
 
         if grades is None:
             grades = LTIExternalCourseEnrollmentGrades(
-                context_id = self.get_context_id()
-                user = self.get_user()
-                course_id = self.get_course_id()
-                usage_key = usage_key
+                context_id = self.get_context_id(),
+                user = self.get_user(),
+                course_id = self.get_course_id(),
+                usage_key = usage_key,
             )
 
         grades.course_version = grades_dict.get('course_version')
