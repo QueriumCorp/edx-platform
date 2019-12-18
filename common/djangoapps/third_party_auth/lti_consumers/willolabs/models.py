@@ -163,6 +163,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
     """
+    # FIX NOTE: CHANGE THIS NAME?
     context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
@@ -284,10 +285,13 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
+    user_id = models.CharField(
+        verbose_name="User ID",
+        help_text="Example: ab3e190fae668d925d007d79219fbfce90afba6d",
+        blank=False
+        null=True, 
+        )
 
-    #user_id = models.IntegerField(blank=False)
-    # mcdaniel: this is redundant. it's stored in the table def above at the corse level.
-    # adding it only to maintain continuity with the original model grades.models.PersistentSubsectionGrade(TimeStampedModel)
     course_id = CourseKeyField(
         verbose_name="Course ID",
         help_text="Open edX Opaque Key course_id",
