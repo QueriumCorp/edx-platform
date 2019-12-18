@@ -13,13 +13,16 @@ from __future__ import absolute_import
 import logging
 import json
 
-from .models import (
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
     LTIExternalCourseEnrollmentGrades
     )
 from student.models import is_faculty, CourseEnrollment
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
+from opaque_keys.edx.keys import CourseKey
+
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +54,7 @@ class LTISession:
         post_grades()
     """
     def __init__(self, lti_params, user=None, course_id=None):
-        log.info('LTISession - __init__()')
+        log.info('LTISession.__init__()')
         self.init()
 
         if lti_params is not None and course_id is not None:
@@ -60,15 +63,19 @@ class LTISession:
             self.COMPLETE_MAPPING = False
 
         # class initializations
-        self.lti_params = lti_params    # this needs to initialized first bc it resets all
-                                        # other class properties.
+        self.set_lti_params(lti_params)     # this needs to initialized first bc it resets all
+                                            # other class properties.
 
-        self.user = user                # Rover (django) user object
+        self.set_user(user)                 # Rover (django) user object
         
-        self.course_id = course_id      # Rover (Open edX) course_id (aka Opaque Key)
-                                        # this MUST be initialized after self.lti_params
+        self.set_course_id(course_id)       # Rover (Open edX) course_id (aka Opaque Key)
+                                            # this MUST be initialized after self.lti_params
+
+        self.register_course()
+        self.register_enrollment()
 
     def init(self):
+        log.info('LTISession.init()')
         self._context_id = None
         self._course = None
         self._course_enrollment = None
@@ -82,27 +89,30 @@ class LTISession:
         try to retrieve a cached course record for the context_id / course_id
         otherwise, create a new record for the cache.
         """
+        log.info('LTISession - register_course()')
 
         # if __init__() received both lti_params and a course_id then we should 
         # check to verify that we are fully initialized before attempting to 
         # register the course.
-        if self.COMPLETE_MAPPING and (self._course_id is None or self.lti_params is None):
+        if self.COMPLETE_MAPPING and (self.get_course_id() is None or self.get_lti_params() is None):
+            log.info('LTISession - register_course() - COMPLETE_MAPPING=True but we are not yet fully initialized. exiting.')
             return None
 
         # another check against partial initialization, or corruption of the property values.
         # self.context_id is automatically initialized from self.lti_params. however,
         # the property value is editable and can be set to None.
-        if self.context_id is None:
+        if self.get_context_id() is None:
+            log.info('LTISession - register_course() - context_id is not set. exiting.')
             return None
 
-        log.info('LTISession - register_course()')
-        course = LTIExternalCourse.objects.filter(context_id=self.context_id)
+        course = LTIExternalCourse.objects.filter(context_id=self.context_id).first()
         if course is not None:
+            log.info('LTISession.register_course() - found a cached course.')
             # we didn't necesarily know the course_id at the time the record was created.
             # the course_id could materialize at any time, and if so then we'll 
             # need to persist the value.
-            if course.course_id is None and self.course_id is not None:
-                course.course_id = self.course_id
+            if course.course_id is None and self.get_course_id() is not None:
+                course.course_id = self.get_course_id()
                 course.save()
             else:
                 # sneaky write to ensure integrity between context_id / course_id.
@@ -110,32 +120,36 @@ class LTISession:
                 # Note: if for any reason there were descrepancy between course.course_id
                 # and a not-null value of self.course_id, then we'll always assume
                 # that course.course_id is the correct value.
-                self._course_id = course.course_id
+                self._course_id = course.course_id()
 
             return course 
 
-        if self.lti_params is None or self.course_id is None:
+        if self.get_lti_params() is None or self.get_course_id() is None:
+            log.info('LTISession.register_course() - missing some required data. cannot cache. exiting.')
             return None
 
-        course.context_id = self.context_id
-        course.course_id = self.course_id
-        course.context_title = self.lti_params.get('context_title')
-        course.context_label = self.lti_params.get('context_label')
-        course.ext_wl_launch_key = self.lti_params.get('ext_wl_launch_key')
-        course.ext_wl_launch_url = self.lti_params.get('ext_wl_launch_url')
-        course.ext_wl_version = self.lti_params.get('ext_wl_version')
-        course.ext_wl_outcome_service_url = self.lti_params.get('ext_wl_outcome_service_url')
-        course.custom_canvas_api_domain = self.lti_params.get('custom_canvas_api_domain')
-        course.custom_canvas_course_id = self.lti_params.get('custom_canvas_course_id')
-        course.custom_canvas_course_startat = self.lti_params.get('custom_canvas_course_startat')
-        course.tool_consumer_info_product_family_code = self.lti_params.get('tool_consumer_info_product_family_code')
-        course.tool_consumer_info_version = self.lti_params.get('tool_consumer_info_version')
-        course.tool_consumer_instance_contact_email = self.lti_params.get('tool_consumer_instance_contact_email')
-        course.tool_consumer_instance_guid = self.lti_params.get('tool_consumer_instance_guid')
-        course.tool_consumer_instance_name = self.lti_params.get('tool_consumer_instance_name')
+        log.info('LTISession.register_course() - creating a new course cache record.')
+        course = LTIExternalCourse(
+            context_id = self.get_context_id()
+            course_id = self.get_course_id()
+            context_title = self.get_lti_params.get('context_title')
+            context_label = self.get_lti_params.get('context_label')
+            ext_wl_launch_key = self.get_lti_params.get('ext_wl_launch_key')
+            ext_wl_launch_url = self.get_lti_params.get('ext_wl_launch_url')
+            ext_wl_version = self.get_lti_params.get('ext_wl_version')
+            ext_wl_outcome_service_url = self.get_lti_params.get('ext_wl_outcome_service_url')
+            custom_canvas_api_domain = self.get_lti_params.get('custom_canvas_api_domain')
+            custom_canvas_course_id = self.get_lti_params.get('custom_canvas_course_id')
+            custom_canvas_course_startat = self.get_lti_params.get('custom_canvas_course_startat')
+            tool_consumer_info_product_family_code = self.get_lti_params.get('tool_consumer_info_product_family_code')
+            tool_consumer_info_version = self.get_lti_params.get('tool_consumer_info_version')
+            tool_consumer_instance_contact_email = self.get_lti_params.get('tool_consumer_instance_contact_email')
+            tool_consumer_instance_guid = self.get_lti_params.get('tool_consumer_instance_guid')
+            tool_consumer_instance_name = self.get_lti_params.get('tool_consumer_instance_name')
+        )
         
         course.save()
-        log.info('LTISession - register_course() saved new cache record.')
+        log.info('LTISession.register_course() - saved new cache record.')
         return course
 
     def register_enrollment(self):
@@ -143,40 +157,51 @@ class LTISession:
         try to retreive a cached enrollment record for the context_id / user
         otherwise, create a new record for the cache.
         """
-        log.info('LTISession - register_enrollment()')
-        if self.user is None or self.context_id is None:
+        log.info('LTISession.register_enrollment()')
+        if self.get_user() is None or self.get_context_id() is None:
+            # we need a user and a context_id. otherwise, there's nothing to do here.
             return None
 
-        # looked for a cached record for this user / context_id
-        enrollment = LTIExternalCourseEnrollment.objects.filter(context_id=self.context_id, user=self.user)
+        # look for a cached record for this user / context_id
+        context_id = self.get_context_id()
+        user = self.get_user()
+        enrollment = LTIExternalCourseEnrollment.objects.filter(
+            context_id = context_id, 
+            user = user
+            ).first()
         if enrollment is not None:
             # 1:1 relationship between context_id / course_id
             # if we have a cached enrollment record then we know that we also have the parent course
             # record, where the course_id is stored.
-            self._course_id = self.course.course_id
+
+            # set course enrollment
+            self._course_enrollment = enrollment
+            log.info('LTISession.register_enrollment() - returning a cached enrollment record.')
             return enrollment
 
-        if self.lti_params is None or \
-            self.course is None or \
-            self.course_id is None or \
-            not CourseEnrollment.is_enrolled(self.user, self.course_id):
+        if self.get_lti_params() is None or \
+            self.get_course() is None or \
+            self.get_course_id() is None or \
+            not CourseEnrollment.is_enrolled(self.get_user(), self.get_course_id()):
+            log.info('LTISession.register_enrollment() - user not enrolled, or missing some required information. exiting.')
             return None
 
-        enrollment.context_id = self.context_id
-        enrollment.user = self.user
-        enrollment.user_id = self.user_id
-
-        enrollment.custom_canvas_user_id = self.lti_params.get('custom_canvas_user_id')
-        enrollment.custom_canvas_user_login_id = self.lti_params.get('custom_canvas_user_login_id')
-        enrollment.custom_canvas_person_timezone = self.lti_params.get('custom_canvas_person_timezone')
-        enrollment.ext_roles = self.lti_params.get('ext_roles')
-        enrollment.ext_wl_privacy_mode = self.lti_params.get('ext_wl_privacy_mode')
-        enrollment.lis_person_contact_email_primary = self.lti_params.get('lis_person_contact_email_primary')
-        enrollment.lis_person_name_family = self.lti_params.get('lis_person_name_family')
-        enrollment.lis_person_name_full = self.lti_params.get('lis_person_name_full')
-        enrollment.lis_person_name_given = self.lti_params.get('lis_person_name_given')
-
+        enrollment = LTIExternalCourseEnrollment(
+            context_id = self.get_context_id()
+            user = self.get_user()
+            user_id = self.user_id
+            custom_canvas_user_id = self.get_lti_params.get('custom_canvas_user_id')
+            custom_canvas_user_login_id = self.get_lti_params.get('custom_canvas_user_login_id')
+            custom_canvas_person_timezone = self.get_lti_params.get('custom_canvas_person_timezone')
+            ext_roles = self.get_lti_params.get('ext_roles')
+            ext_wl_privacy_mode = self.get_lti_params.get('ext_wl_privacy_mode')
+            lis_person_contact_email_primary = self.get_lti_params.get('lis_person_contact_email_primary')
+            lis_person_name_family = self.get_lti_params.get('lis_person_name_family')
+            lis_person_name_full = self.get_lti_params.get('lis_person_name_full')
+            lis_person_name_given = self.get_lti_params.get('lis_person_name_given')
+        )
         enrollment.save()
+
         log.info('LTISession - register_enrollment() saved new cache record.')
         return enrollment
 
@@ -186,23 +211,25 @@ class LTISession:
             grades_dict: contains all fields from grades.models.PersistentSubsectionGrade
         """
         log.info('LTISession - post_grades()')
-        if not self.course_enrollment:
+        if not self.get_course_enrollment():
             return None
         # null usage_key -- raiserror
         # null grades_dict -- raiserror
 
         # 'context_id', 'user', 'usage_key'
         grades = LTIExternalCourseEnrollmentGrades.objects.filter(
-            context_id=self.context_id, 
-            user=self.user,
+            context_id=self.get_context_id(), 
+            user=self.get_user(),
             usage_key=usage_key
-            )
+            ).first()
 
-        if not grades:
-            grades.context_id = self.context_id
-            grades.user = self.user
-            grades.course_id = self.course_id
-            grades.usage_key = usage_key
+        if grades is None:
+            grades = LTIExternalCourseEnrollmentGrades(
+                context_id = self.get_context_id()
+                user = self.get_user()
+                course_id = self.get_course_id()
+                usage_key = usage_key
+            )
 
         grades.course_version = grades_dict.get('course_version')
         grades.earned_all = grades_dict.get('earned_all')
@@ -216,24 +243,25 @@ class LTISession:
         log.info('LTISession - post_grades() saved new cache record.')
         return grades
 
-    @property
-    def context_id(self):
+    
+    def get_context_id(self):
+        log.info('get_context_id()')
         return self._context_id
 
-    @context_id.setter
-    def context_id(self, value):
+    
+    def set_context_id(self, value):
         """
         the context_id changed, so try
         reinitializing the course and course_enrollment cache objects.
         """
-
+        log.info('set_context_id()')
         # check for integrity between context_id and the current contents of lti_params
-        if self.lti_params.get['context_id'] is not None:
-            if value != self.lti_params.get['context_id']:
+        if self.get_lti_params().get('context_id') is not None:
+            if value != self.get_lti_params().get('context_id'):
                 raise LTIBusinessRuleError("Tried to set context_id to {value}, which is inconsistent with the " \
                     "current value of lti_params['context_id']: {lti_params}.".format(
                         value=value,
-                        lti_params=self.lti_params.get['context_id']
+                        lti_params=self.get_lti_params().get('context_id')
                     ))
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
@@ -241,20 +269,18 @@ class LTISession:
         self.init()
 
         self._context_id = value
-
-        self.register_course()
-        self.register_enrollment()
-
-    @property
-    def lti_params(self):
+    
+    def get_lti_params(self):
+        log.info('get_lti_params()')
         return self._lti_params
 
-    @lti_params.setter
-    def lti_params(self, value):
+    
+    def set_lti_params(self, value):
         """
         lti_params json object changed, so clear course and course_enrollment
         also need to initialize any property values that are sourced from lti_params
         """
+        log.info('set_lti_params()')
         # ensure that this object is being instantiated with data that originated
         # from an LTI authentication from Willo Labs.
         if not is_willo_lti(value):
@@ -268,21 +294,20 @@ class LTISession:
         self._lti_params = value
 
         # property initializations from lti_params
-        self.context_id = value.get['context_id']      # uniquely identifies course in Willo
-        self.user_id = value.get['user_id']            # uniquely identifies user in Willo
+        self._context_id = value.get('context_id')          # uniquely identifies course in Willo
+        self.user_id = value.get('user_id')                 # uniquely identifies user in Willo
 
 
-
-    @property
-    def user(self):
+    def get_user(self):
+        log.info('get_user()')
         return self._user
 
-    @user.setter
-    def user(self, value):
+    def set_user(self, value):
         """
         the user object changed, so reinitialize any properties that are functions of user.
         also need to try to reinitialize course_enrollment.
         """
+        log.info('set_user()')
         self._user = value
 
         # initialize properties that depend on user
@@ -290,16 +315,21 @@ class LTISession:
 
         # clear, and attempt to reinitialize the enrollment cache.
         self._course_enrollment = None
-        self.register_enrollment()
 
-    @property
-    def course_id(self):
+    def get_course_id(self):
+        log.info('get_course_id()')
         return self._course_id
 
-    @course_id.setter
-    def course_id(self, value):
-        if not is_valid_course_id(value):
-            raise LTIBusinessRuleError("Invalid course_id: '%s'." % value)
+    def set_course_id(self, value):
+        log.info('set_course_id()')
+
+        if isinstance(value, CourseKey):
+            self._course_id = value
+        else:
+            if isinstance(value, str):
+                self._course_id = CourseKey.from_string(value)
+            else:
+                raise LTIBusinessRuleError("Course_key provided is not a valid object type. Must be either CourseKey or String.")
 
         self._course_id = value
         self._course = None
@@ -308,13 +338,12 @@ class LTISession:
         self.register_course()
         self.register_enrollment()
 
-
-    @property
-    def course(self):
+    def get_course(self):
         """
         return a cached instance of the LTIExternalCourse record, if it exists.
         otherwise tries to register a new context_id/course_id course record
         """
+        log.info('get_course()')
 
         # try to return an instance, if we have one.
         if self._course is not None:
@@ -325,8 +354,8 @@ class LTISession:
 
         return self._course
 
-    @course.setter
-    def course(self, value):
+    def set_course(self, value):
+        log.info('set_course())')
         if not isinstance(value, LTIExternalCourse):
             raise LTIBusinessRuleError("Tried to assign an object to course property that is not" \
                 "an instance of third_party_auth.models.LTIExternalCourse.")
@@ -334,29 +363,35 @@ class LTISession:
         self._course = value
         self._course_enrollment = None
 
-
-
-    @property
-    def course_enrollment(self):
+    def get_course_enrollment(self):
         """
         returns a cached instance of LTIExternalCourseEnrollment, if it exists.
         otherwise tries to register a new user / course record
         """
+        log.info('get_course_enrollment()')
 
         # try to return an instance, if we have one.
         if self._course_enrollment is not None:
             return self._course_enrollment
 
         # otherwise, try to retreive an instance from the cache, if it exists
-        self.course_enrollment = self.register_enrollment()
+        self._course_enrollment = self.register_enrollment()
 
         return self._course_enrollment
 
-    @course_enrollment.setter
-    def course_enrollment(self, value):
+    def set_course_enrollment(self, value):
+        log.info('set_course_enrollment()')
         
         if not isinstance(value, LTIExternalCourseEnrollment):
             raise LTIBusinessRuleError("Tried to assign an object to course_enrollment property that is not" \
                 "an instance of third_party_auth.models.LTIExternalCourseEnrollment.")
 
         self._course_enrollment = value
+
+
+    context_id = property(get_context_id, set_context_id)
+    lti_params = property(get_lti_params, set_lti_params)
+    user = property(get_user, set_user)
+    course_id = property(get_course_id, set_course_id)
+    course = property(get_course_id, set_course)
+    course_enrollment = property(get_course_enrollment, set_course_enrollment)

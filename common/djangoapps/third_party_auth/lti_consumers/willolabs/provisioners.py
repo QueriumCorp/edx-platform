@@ -74,7 +74,6 @@ class CourseProvisioner():
     """
     def __init__(self, user, lti_params, course_id=None):
         log.info('CourseProvisioner - __init__()')
-        if DEBUG: print('CourseProvisioner - __init__()')
 
         self.init()
 
@@ -85,7 +84,7 @@ class CourseProvisioner():
         self.set_course_id(course_id)
 
     def init(self):
-        if DEBUG: print('CourseProvisioner - init()')
+        if DEBUG: log.info('CourseProvisioner - init()')
         # local cached instance variables
         self._lti_params  = None
         self._context_id = None
@@ -103,11 +102,11 @@ class CourseProvisioner():
         Verify that the student is enrolled in the Rover course corresponding to the context_id
         in lti_params. If not, then automatically enroll the student in the course.
         """
-        if DEBUG: print('CourseProvisioner - check_enrollment()')
+        if DEBUG: log.info('CourseProvisioner - check_enrollment()')
         if self.course_id is None:
             return False
 
-        log.info('CourseProvisioner - check_enrollment()')
+        if DEBUG: log.info('CourseProvisioner - check_enrollment() course_id is set. continuing.')
 
         # if we have a course_id for the user and 
         if not CourseEnrollment.is_enrolled(self.user, self.course_id):
@@ -116,7 +115,7 @@ class CourseProvisioner():
         # cache our mappings between 
         #   Rover course_id and the LTI context_id
         #   Rover username and LTI user_id
-        self.session.register_enrollment()
+        self.get_session().register_enrollment()
 
         return True
 
@@ -142,6 +141,9 @@ class CourseProvisioner():
     def get_context_id(self):
         return self._context_id
 
+    def set_context_id(self, value):
+        raise LTIBusinessRuleError("context_id is a read-only field.")
+
     def get_user(self):
         """
         Rover django user object
@@ -149,6 +151,7 @@ class CourseProvisioner():
         return self._user
 
     def set_user(self, value):
+        if DEBUG: log.info('set_user()')
         self._user = value
 
         # initialize properties that depend on user
@@ -167,10 +170,12 @@ class CourseProvisioner():
         if self._course_id is not None:
             return self._course_id 
 
+        if DEBUG: log.info('get_course_id() -- looking for a course_id')
+
         # first we'll look in the persisted Willo Labs LTI course enrollments table to see if 
         # a record exists for this user.
         try:
-            self.course_id = self.get_session().course_enrollment.course_id
+            self._course_id = self.get_session().course_enrollment.course_id
             if self._course_id is not None:
                 return self._course_id
         except:
@@ -181,7 +186,7 @@ class CourseProvisioner():
         # student.
         enrollments = self.get_enrollments()
         if len(enrollments) == 1:
-            self.course_id = enrollments[0].course_id
+            self._course_id = enrollments[0].course_id
             return self._course_id
 
         # we struck out. didn't find a course_id from any of our possible sources
@@ -192,6 +197,7 @@ class CourseProvisioner():
         Alternatively, we could simply set the course_id corresponding to this instances
         context_id, and in this case we only need to validate the course_id passed.
         """
+        if DEBUG: log.info('set_course_id()')
         if value is None:
             self._course_id = None 
             self._session = None
@@ -214,8 +220,13 @@ class CourseProvisioner():
         if self._enrollments is not None:
             return self._enrollments 
 
+        if DEBUG: log.info('get_enrollments() -- looking for a new value')
+
         self._enrollments = CourseEnrollment.enrollments_for_user(self.user)
         return self._enrollments
+
+    def set_enrollments(self, value):
+        raise LTIBusinessRuleError("enrollments is a read-only property.")
 
     def get_session(self):
         """
@@ -228,19 +239,22 @@ class CourseProvisioner():
         if self._session is not None:
             return self._session
 
+        if DEBUG: log.info('get_session() -- creating a new session')
         # otherwise try to instantiate a new Willow Session
         self._session = LTISession(
-            lti_params=self.get_lti_params(), 
-            user=self.get_user(), 
-            course_id=self._course_id
+            lti_params = self.get_lti_params(), 
+            user = self.get_user(), 
+            course_id = self._course_id
             )
         return self._session
 
+    def set_session(self, value):
+        raise LTIBusinessRuleError("session is a read-only property.")
 
     lti_params = property(get_lti_params, set_lti_params)
-    context_id = property(get_context_id)
+    context_id = property(get_context_id, set_context_id)
     user = property(get_user, set_user)
     course_id = property(get_course_id, set_course_id)
-    enrollments = property(get_enrollments)
-    session = property(get_session)
+    enrollments = property(get_enrollments, set_enrollments)
+    session = property(get_session, set_session)
 
