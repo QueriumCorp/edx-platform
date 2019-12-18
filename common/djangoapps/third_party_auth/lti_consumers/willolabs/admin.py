@@ -45,7 +45,7 @@ class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course Enrollment
     """
-    list_display = {
+    list_display = (
         'context_id',
         'user',
         'created',
@@ -60,7 +60,7 @@ class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
         'lis_person_name_family',
         'lis_person_name_full',
         'lis_person_name_given',
-    }    
+    )      
     readonly_fields=(u'created', u'modified', )
 
 admin.site.register(LTIExternalCourseEnrollment, LTIExternalCourseEnrollmentAdmin)

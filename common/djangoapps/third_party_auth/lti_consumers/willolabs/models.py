@@ -58,15 +58,15 @@ class LTIExternalCourse(TimeStampedModel):
     context_label = models.CharField(
         verbose_name="Context Label",
         help_text="Example: Rover",
-        max_length=50
-        null=True
+        max_length=50,
+        null=True,
         )
 
     ext_wl_launch_key = models.CharField(
         verbose_name="External WilloLab Launch Key",
         help_text="Example: QcTz6q",
-        max_length=50
-        null=True
+        max_length=50,
+        null=True,
         )
         
     ext_wl_launch_url = models.URLField(
@@ -78,69 +78,69 @@ class LTIExternalCourse(TimeStampedModel):
     ext_wl_version = models.CharField(
         verbose_name="External WilloLab Version",
         help_text="Example: 1.0",
-        max_length=25
-        null=True
+        max_length=25,
+        null=True,
         )
 
     ext_wl_outcome_service_url = models.URLField(
         verbose_name="External  Outcome Service URL",
         help_text="Example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/",
-        null=True
+        null=True,
         )
 
     custom_canvas_api_domain = models.CharField(
         verbose_name="Custom Canvas API Domain",
         help_text="Example: willowlabs.instructure.com",
-        max_length=255
-        null=True
+        max_length=255,
+        null=True,
         )
 
     custom_canvas_course_id = models.CharField(
         verbose_name="Custom Canvas Course ID",
         help_text="Example: 421",
-        max_length=50
-        null=True
+        max_length=50,
+        null=True,
         )
 
     custom_canvas_course_startat = models.DateTimeField(
         verbose_name="Custom Canvas Course Start At",
         help_text="Example: 2019-12-11 16:18:01 -0500",
         db_index=False,
-        null=True
+        null=True,
         )
 
     tool_consumer_info_product_family_code = models.CharField(
         verbose_name="Tool Consumer - Product Family Code",
         help_text="Example: canvas",
-        max_length=50
-        null=True
+        max_length=50,
+        null=True,
         )
 
     tool_consumer_info_version = models.CharField(
         verbose_name="Tool Consumer - Version",
         help_text="Example: cloud",
-        max_length=50
-        null=True
+        max_length=50,
+        null=True,
         )
 
     tool_consumer_instance_contact_email = models.EmailField(
         verbose_name="Tool Consumer - Contact Email Address",
-        help_text="Example: notifications@instructure.com"
-        null=True
+        help_text="Example: notifications@instructure.com",
+        null=True,
     )
 
     tool_consumer_instance_guid = models.CharField(
         verbose_name="Tool Consumer - Instance GUID",
         help_text="Example: 7M58pE4F4Y56gZHUe6jaxhQ1csaktjA00ZiVNQb7:canvas-lms",
-        max_length=100
-        null=True
+        max_length=100,
+        null=True,
         )
 
     tool_consumer_instance_name = models.CharField(
         verbose_name="Tool Consumer - Instance Name",
         help_text="Example: Willo Labs",
-        max_length=50
-        null=True
+        max_length=50,
+        null=True,
         )
 
     def __str__(self):
@@ -170,7 +170,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
     lti_user_id = models.CharField(
         verbose_name="User ID",
         help_text="User ID provided by . Example: ab3e190fae668d925d007d79219fbfce90afba6d",
-        max_length=255
+        max_length=255,
         )
 
     custom_canvas_user_id = models.CharField(
@@ -179,7 +179,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=25,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     custom_canvas_user_login_id = models.CharField(
@@ -188,7 +188,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=50,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     custom_canvas_person_timezone = models.CharField(
@@ -197,7 +197,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=50,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     ext_roles = models.CharField(
@@ -206,7 +206,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=255,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     ext_wl_privacy_mode = models.CharField(
@@ -215,13 +215,13 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=50,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     lis_person_contact_email_primary = models.EmailField(
         verbose_name="User - Primary Email Address",
         help_text="Example: rover_student@willolabs.com",
-        null=True
+        null=True,
         )
 
     lis_person_name_family = models.CharField(
@@ -230,7 +230,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=50,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     lis_person_name_full = models.CharField(
@@ -239,7 +239,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=255,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     lis_person_name_given = models.CharField(
@@ -248,7 +248,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=255,
         default=None, 
         blank=True, 
-        null=True
+        null=True,
         )
 
     class Meta(object):
@@ -278,25 +278,26 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         verbose_name="Willo Posting Date",
         help_text="The timestamp when this grade record was successfully posted to Willo Grade Sync.",
         null=True, 
-        blank=True
+        blank=True,
         )
 
     context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
     
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    user_id = models.CharField(
+    lti_user_id = models.CharField(
         verbose_name="User ID",
         help_text="Example: ab3e190fae668d925d007d79219fbfce90afba6d",
-        blank=False
+        blank=False,
         null=True, 
+        max_length=255,
         )
 
     course_id = CourseKeyField(
         verbose_name="Course ID",
         help_text="Open edX Opaque Key course_id",
         blank=False, 
-        max_length=255
+        max_length=255,
         )
 
     # note: the usage_key may not have the run filled in for
@@ -306,15 +307,15 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         verbose_name="Usage Key",
         help_text="Open edX Course subsection key. Points to this homework assignment",
         blank=False, 
-        max_length=255
+        max_length=255,
         )
 
     # Information relating to the state of content when grade was calculated
     course_version = models.CharField(
         help_text="Guid of latest course version", 
         blank=True, 
-        max_length=255
-        null=True
+        max_length=255,
+        null=True,
          )
 
     # earned/possible refers to the number of points achieved and available to achieve.
