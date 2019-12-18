@@ -258,7 +258,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #ordering = ('-fetched_at', )
 
     def __str__(self):
-        return self.id
+        return str(self.id)
 
 
 
@@ -354,4 +354,4 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         ]
 
     def __str__(self):
-        return self.id
+        return str(self.id)

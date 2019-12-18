@@ -51,20 +51,27 @@ class LTISession:
 
     methods:
     -----------
+        refresh()
+        clear_cache()
         register_course()
         register_enrollment()
         post_grades()
     """
-    def __init__(self, lti_params, user=None, course_id=None):
+    def __init__(self, lti_params, user=None, course_id=None, clear_cache=False):
         if DEBUG: log.info('LTISession.__init__()')
+
+        # initialize all class variables
         self.init()
 
+        # optimization: this prevents register_course from being called multiple times
+        # while property values are initializing.
         if lti_params is not None and course_id is not None:
             self.COMPLETE_MAPPING = True
         else:
             self.COMPLETE_MAPPING = False
 
         # class initializations
+        #----------------------------------------------------------------------
         self.set_lti_params(lti_params)     # this needs to initialized first bc it resets all
                                             # other class properties.
 
@@ -73,14 +80,15 @@ class LTISession:
         self.set_course_id(course_id)       # Rover (Open edX) course_id (aka Opaque Key)
                                             # this MUST be initialized after self.lti_params
 
+        # removes any cache data that is persisted to MySQL
+        if clear_cache:
+            self.clear_cache()
+
+        # retrieve cache data from MySQL
         self.refresh()
 
-    def refresh(self):
-        if DEBUG: log.info('refresh()')
-        self.register_course()
-        self.register_enrollment()
-
     def init(self):
+        """ Initialize class variables """
         if DEBUG: log.info('LTISession.init()')
         self._context_id = None
         self._course = None
@@ -89,6 +97,34 @@ class LTISession:
         self._lti_params = None
         self._user = None
         self._course_id = None
+
+    def refresh(self):
+        """
+        Retrieve cached content from MySQL for the current context_id, user
+        """
+        if DEBUG: log.info('refresh()')
+        self.register_course()
+        self.register_enrollment()
+
+    def clear_cache(self):
+        """
+        Remove cached content from MySQL for the current context_id, user
+        """
+        if DEBUG: log.info('clear_cache()')
+
+        context_id = self.get_context_id()
+        user = self.get_user()
+
+        course = LTIExternalCourse.objects.filter(
+            context_id=context_id
+            )
+        course.delete()
+
+        enrollment = LTIExternalCourseEnrollment.objects.filter(
+            context_id = context_id, 
+            user = user
+            )
+        enrollment.delete()
 
     def register_course(self):
         """
@@ -208,11 +244,10 @@ class LTISession:
             return None
 
         enrollment = LTIExternalCourseEnrollment(
-            # FIX NOTE: change this field name!
+            # FIX NOTE: change this field name?
             context_id = self.get_course(),
             user = self.get_user(),
-            # FIX NOTE: UNCOMMENT ME
-            #user_id = self.user_id,
+            lti_user_id = self.user_id,
             custom_canvas_user_id = self._lti_params.get('custom_canvas_user_id'),
             custom_canvas_user_login_id = self._lti_params.get('custom_canvas_user_login_id'),
             custom_canvas_person_timezone = self._lti_params.get('custom_canvas_person_timezone'),
