@@ -7,6 +7,7 @@ Unit tests for third_party_auth LTI - Willo Labs Grade Sync
 from __future__ import absolute_import
 import os
 import json
+from collections import OrderedDict
 
 #import requests
 #from oauthlib.common import Request
@@ -16,6 +17,7 @@ from django.test import TestCase
 from third_party_auth.tests.testutil import ThirdPartyAuthTestMixin
 from django.contrib.auth import get_user_model
 from third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
+from third_party_auth.lti_consumers.willolabs.tasks import post_grades
 from third_party_auth.lti_consumers.willolabs.utils import is_willo_lti
 from opaque_keys.edx.keys import CourseKey
 
@@ -58,6 +60,42 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
             course_id=course_id
             )
         self.provisioner.check_enrollment()
+
+    def test_post_grades(self):
+        user = USER_MODEL.objects.get(username="mcdaniel")
+        lti_params = self.lti_params
+
+        course_id = 'course-v1:ABC+OS9471721_9626+01'
+        course_key = CourseKey.from_string(course_id)
+        username = user.username
+        subsection_usage_key = "SHOOBY DOOBY DO WAH"
+        subsection_grade={
+            'this': '0',            
+            'that': '1',            
+            'the_other_thing': '2',            
+        }
+
+        """
+        recalculate_subsection_grade_kwargs = OrderedDict([
+            ('user_id', user.id),
+            ('course_id', unicode('course-v1:ABC+OS9471721_9626+01')),
+            ('usage_id', unicode(self.problem.location)),
+            ('anonymous_user_id', 5),
+            ('only_if_higher', None),
+            ('expected_modified_time', self.frozen_now_timestamp),
+            ('score_deleted', False),
+            ('event_transaction_id', unicode(get_event_transaction_id())),
+            ('event_transaction_type', u'willolabs.post_grades'),
+            ('score_db_table', ScoreDatabaseTableEnum.courseware_student_module),
+        ])
+        """
+
+        post_grades(
+            username=username,
+            course_id=course_id,
+            subsection_usage_key=subsection_usage_key,
+            subsection_grade=subsection_grade,
+        )
 
     def test_lti_params(self):
         self.assertEquals(self.provisioner.lti_params['context_id'], u'e14751571da04dd3a2c71a311dda2e1b')

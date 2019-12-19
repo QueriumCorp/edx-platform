@@ -280,6 +280,11 @@ def _update_subsection_grades(course_key, scored_block_usage_key, only_if_higher
     A helper function to update subsection grades in the database
     for each subsection containing the given block, and to signal
     that those subsection grades were updated.
+
+    mcdaniel dec-2019:
+        added a hook to common.third_party_auth.willolabls.tasks.post_grades()
+        to facilitate real-time grade sync to remote systems connecting to Rover
+        via Willo Labs LTI.
     """
     student = User.objects.get(id=user_id)
     store = modulestore()
@@ -309,7 +314,14 @@ def _update_subsection_grades(course_key, scored_block_usage_key, only_if_higher
                     user=student,
                     subsection_grade=subsection_grade,
                 )
-
+                # mcdaniel dec-2019 
+                # Willo Labs LTI Grade Sync
+                post_grades(
+                    course_key=course_key,
+                    subsection_usage_key=subsection_usage_key,
+                    user_id=user_id,
+                    subsection_grade=subsection_grade
+                )
 
 def _course_task_args(course_key, **kwargs):
     """
