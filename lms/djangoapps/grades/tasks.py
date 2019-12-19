@@ -316,11 +316,14 @@ def _update_subsection_grades(course_key, scored_block_usage_key, only_if_higher
                 )
                 # mcdaniel dec-2019 
                 # Willo Labs LTI Grade Sync
+                #
+                # convert each object into its PK id value to avoid serializing the contents in
+                # RabbitMQ. We'll re-instantiate each object from inside the Celery task.
                 post_grades(
-                    course_key=course_key,
-                    subsection_usage_key=subsection_usage_key,
-                    user_id=user_id,
-                    subsection_grade=subsection_grade
+                    username=student.username
+                    course_id=course_key.html_id(),
+                    usage_id=subsection_usage_key.html_id(),
+                    subsection_grade=subsection_grade           # we want the serialized grade data.
                 )
 
 def _course_task_args(course_key, **kwargs):

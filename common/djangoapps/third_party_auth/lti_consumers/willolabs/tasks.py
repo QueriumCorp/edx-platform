@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import DatabaseNotReadyError
 
-from opaque_keys.edx.keys import CourseKey
+from opaque_keys.edx.keys import CourseKey, UsageKey
 
 import logging
 app_log = logging.getLogger(__name__)
@@ -57,18 +57,18 @@ MAX_RETRIES = 5
     task_time_limit=TASK_TIME_LIMIT, 
     task_soft_time_limit=TASK_SOFT_TIME_LIMIT,
     )
-def post_grades(self, username, course_id, subsection_usage_key, subsection_grade):
+def post_grades(self, username, course_id, usage_id, subsection_grade):
     """ see docstring for _post_grades() """
 
     _post_grades(
         self, 
         username=username,
         course_id=course_id,
-        subsection_usage_key=subsection_usage_key,
+        usage_id=usage_id,
         subsection_grade=subsection_grade
     )
 
-def _post_grades(self, username, course_id, subsection_usage_key, subsection_grade):
+def _post_grades(self, username, course_id, usage_id, subsection_grade):
     """
     Post Rover grade data to a Willo Labs external platform via LTI integration.
     This task is called from lms/djangoapps/grades/tasks.py
@@ -87,7 +87,7 @@ def _post_grades(self, username, course_id, subsection_usage_key, subsection_gra
     """
     self.user = get_user_model().objects.get(username=username)
     self.course_key = CourseKey.from_string(course_id)
-    self.subsection_usage_key = subsection_usage_key
+    self.subsection_usage_key = UsageKey.from_string(usage_id)
     self.subsection_grade = subsection_grade
 
     # create a few local class variables
@@ -134,8 +134,8 @@ def log(self, msg, exc=None):
         "".format(
         id = self.request.id,
         username = self.user.username,
-        course_key = self.course_key,
-        subsection_usage_key = self.subsection_usage_key,
+        course_key = self.course_key.html_id(),
+        subsection_usage_key = self.subsection_usage_key.html_id(),
         subsection_grade = self.subsection_grade,
     )
 
@@ -144,10 +144,10 @@ def log(self, msg, exc=None):
             err = repr(exc)
         )
 
-        #app_log.error(msg)
-        celery_log.error(msg)
+        app_log.error(msg)
+        #celery_log.error(msg)
     else:
-        #app_log.info(msg)
-        celery_log.info(msg)
+        app_log.info(msg)
+        #celery_log.info(msg)
 
     return None

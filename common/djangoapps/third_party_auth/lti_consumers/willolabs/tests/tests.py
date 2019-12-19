@@ -68,7 +68,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         course_id = 'course-v1:ABC+OS9471721_9626+01'
         course_key = CourseKey.from_string(course_id)
         username = user.username
-        subsection_usage_key = "SHOOBY DOOBY DO WAH"
+        subsection_usage_key = UsageKey.from_string('course-v1:ABC+OS9471721_9626+01')
         subsection_grade={
             'this': '0',            
             'that': '1',            
@@ -92,7 +92,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
 
         post_grades(
             username=username,
-            course_id=course_id,
+            course_id=course_key.html_id(),
             subsection_usage_key=subsection_usage_key,
             subsection_grade=subsection_grade,
         )
