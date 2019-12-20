@@ -19,7 +19,7 @@ from django.contrib.auth import get_user_model
 from third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
 from third_party_auth.lti_consumers.willolabs.tasks import post_grades
 from third_party_auth.lti_consumers.willolabs.utils import is_willo_lti
-from opaque_keys.edx.keys import CourseKey
+from opaque_keys.edx.keys import CourseKey, UsageKey
 
 LTI_PARAMS_KEY = 'tpa-lti-params'
 LTI_PARAMS_JSON_FILE = 'data/tpa-lti-params-willo-canvas-learner.json'
@@ -68,7 +68,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         course_id = 'course-v1:ABC+OS9471721_9626+01'
         course_key = CourseKey.from_string(course_id)
         username = user.username
-        subsection_usage_key = UsageKey.from_string('course-v1:ABC+OS9471721_9626+01')
+        subsection_usage_key = UsageKey.from_string('block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163')
         subsection_grade={
             'this': '0',            
             'that': '1',            
@@ -89,7 +89,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
             ('score_db_table', ScoreDatabaseTableEnum.courseware_student_module),
         ])
         """
-
+        
         post_grades(
             username=username,
             course_id=course_key.html_id(),

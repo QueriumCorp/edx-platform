@@ -281,42 +281,15 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         blank=True,
         )
 
-    context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
-    
+    course_enrollment = models.ForeignKey(LTIExternalCourseEnrollment, on_delete=models.CASCADE)
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    lti_user_id = models.CharField(
-        verbose_name="User ID",
-        help_text="Example: ab3e190fae668d925d007d79219fbfce90afba6d",
-        blank=False,
-        null=True, 
-        max_length=255,
-        )
-
-    course_id = CourseKeyField(
-        verbose_name="Course ID",
-        help_text="Open edX Opaque Key course_id",
-        blank=False, 
-        max_length=255,
-        )
-
-    # note: the usage_key may not have the run filled in for
-    # old mongo courses.  Use the full_usage_key property
-    # instead when you want to use/compare the usage_key.
     usage_key = UsageKeyField(
         verbose_name="Usage Key",
         help_text="Open edX Course subsection key. Points to this homework assignment",
         blank=False, 
         max_length=255,
         )
-
-    # Information relating to the state of content when grade was calculated
-    course_version = models.CharField(
-        help_text="Guid of latest course version", 
-        blank=True, 
-        max_length=255,
-        null=True,
-         )
 
     # earned/possible refers to the number of points achieved and available to achieve.
     # graded refers to the subset of all problems that are marked as being graded.
@@ -325,12 +298,6 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     earned_graded = models.FloatField(blank=False)
     possible_graded = models.FloatField(blank=False)
 
-    # timestamp for the learner's first attempt at content in
-    # this subsection. If null, indicates no attempt
-    # has yet been made.
-    first_attempted = models.DateTimeField(
-        help_text="timestamp for the learner's first attempt at content in this subsection. Should contain a value",
-        )
 
     class Meta(object):
         verbose_name = "LTI External Course Enrollment Grades"

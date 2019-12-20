@@ -13,12 +13,14 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import DatabaseNotReadyError
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.cache import LTISession
+from lms.djangoapps.grades.api.v2.utils import parent_usagekey
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
 import logging
-app_log = logging.getLogger(__name__)
-celery_log = get_task_logger(__name__)
+#app_log = logging.getLogger(__name__)
+app_log = get_task_logger(__name__)
 
 
 """
@@ -51,29 +53,33 @@ MAX_RETRIES = 5
     time_limit=TIMEOUT_SECONDS,
     max_retries = MAX_RETRIES,
     default_retry_delay=RETRY_DELAY_SECONDS,
-    routing_key=settings.RECALCULATE_GRADES_ROUTING_KEY,
+    routing_key=settings.RECALCULATE_GRADES_ROUTING_KEY,        # edx.lms.core.default
 
     acks_late=True,
     task_time_limit=TASK_TIME_LIMIT, 
     task_soft_time_limit=TASK_SOFT_TIME_LIMIT,
     )
-def post_grades(self, username, course_id, usage_id, subsection_grade):
+def post_grades(self, username, course_id, usage_id):
     """ see docstring for _post_grades() """
 
     _post_grades(
         self, 
         username=username,
         course_id=course_id,
-        usage_id=usage_id,
-        subsection_grade=subsection_grade
+        usage_id=usage_id
     )
 
-def _post_grades(self, username, course_id, usage_id, subsection_grade):
+def _post_grades(self, username, course_id, usage_id):
     """
     Post Rover grade data to a Willo Labs external platform via LTI integration.
     This task is called from lms/djangoapps/grades/tasks.py
 	    recalculate_subsection_grade_v3()
     The grading process is executed real-time, each time a learner submits a problem.
+
+    Note: the grader program sends us a usage_id corresponding to the problem that was just graded.
+    But we need to use this usage_id to locate the UsageKey corresponding to the homework exercise in 
+    which this problem is contained. 
+
 
     @task:
     ------
@@ -85,31 +91,27 @@ def _post_grades(self, username, course_id, usage_id, subsection_grade):
     Return value:
         failure_messages: List of error messages for the providers that could not be updated
     """
-    self.user = get_user_model().objects.get(username=username)
-    self.course_key = CourseKey.from_string(course_id)
-    self.subsection_usage_key = UsageKey.from_string(usage_id)
-    self.subsection_grade = subsection_grade
-
     # create a few local class variables
     try:
-        """
-        perform our tasks ...
-        """
 
-        log(self, 'willolabs.tasks.post_grades() - starting')
-
-        x = 1 + 1
-
-        log(self, 'willolabs.tasks.post_grades() - finished')
+        user = get_user_model().objects.get(username=username)
+        problem_usage_key = UsageKey.from_string('block-v1:' + usage_id)._to_string(),
+        homework_usage_key = parent_usagekey(
+            user,
+            course_id = course_id
+            usage_key_string = problem_usage_key
+            )
+        session = LTISession(user = user, course_id = course_id)
+        session.post_grades(usage_key=homework_usage_key)
 
     except Exception as exc:
         if not isinstance(exc, KNOWN_RETRY_ERRORS):
-            log(self, "willolabs.tasks.post_grades() unexpected failure: {exc}. task id: {req}.".format(
+            app_log.error("willolabs.tasks.post_grades() unexpected failure: {exc}. task id: {req}.".format(
                 exc=repr(exc),
                 req=self.request.id,
             ))
         else:
-            log(self, 'willolabs.tasks.post_grades() - retrying')
+            app_log.info('willolabs.tasks.post_grades() - retrying')
         raise self.retry(exc=exc)
 
     except SoftTimeLimitExceeded:
@@ -121,33 +123,5 @@ def recover_from_exceeded_time_limit(self):
     Scaffold, to take care of anything that needs cleaning up 
     after the task timed-out.
     """
-    log(self, 'willolabs.tasks.recover_from_exceeded_time_limit()')
-    return None
-
-def log(self, msg, exc=None):
-
-    msg += ". task id: {id}, "\
-        "user: {username}, "\
-        "course_key: {course_key}, "\
-        "subsection_usage_key: {subsection_usage_key}, "\
-        "subsection_grade: {subsection_grade}, "\
-        "".format(
-        id = self.request.id,
-        username = self.user.username,
-        course_key = self.course_key.html_id(),
-        subsection_usage_key = self.subsection_usage_key.html_id(),
-        subsection_grade = self.subsection_grade,
-    )
-
-    if exc is not None:
-        msg += " error: {err}".format(
-            err = repr(exc)
-        )
-
-        app_log.error(msg)
-        #celery_log.error(msg)
-    else:
-        app_log.info(msg)
-        #celery_log.info(msg)
-
+    app_log.info('willolabs.tasks.recover_from_exceeded_time_limit()')
     return None

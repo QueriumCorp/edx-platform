@@ -23,7 +23,7 @@ from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
 from student.models import is_faculty, CourseEnrollment
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
-from opaque_keys.edx.keys import CourseKey
+from opaque_keys.edx.keys import CourseKey, UsageKey
 
 
 log = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class LTISession:
         register_enrollment()
         post_grades()
     """
-    def __init__(self, lti_params, user=None, course_id=None, clear_cache=False):
+    def __init__(self, lti_params=None, user=None, course_id=None, clear_cache=False):
         if DEBUG: log.info('LTISession.__init__()')
 
         # initialize all class variables
@@ -137,6 +137,9 @@ class LTISession:
         """
         if DEBUG: log.info('LTISession - register_course()')
 
+        if self.lti_params is None:
+            return None
+
         self._course = None
         self._course_enrollment = None
 
@@ -184,7 +187,13 @@ class LTISession:
             return None
 
         date_str = self._lti_params.get('custom_canvas_course_startat')
-        date_str = date_str[0:10]
+        # FIX NOTE: this is a complete kluge. need to learn more about custom_canvas_course_startat
+        # and then change this logic accordingly.
+        if date_str is not None:
+            date_str = date_str[0:10]
+        else:
+            date_str = "2019/01/01"
+
         custom_canvas_course_startat = parse_date(date_str)
 
         course = LTIExternalCourse(
@@ -217,6 +226,9 @@ class LTISession:
         """
         if DEBUG: log.info('LTISession.register_enrollment()')
 
+        if self.lti_params is None:
+            return None
+
         self._course_enrollment = None
 
         if self.get_user() is None or self.get_context_id() is None:
@@ -248,7 +260,6 @@ class LTISession:
             return None
 
         enrollment = LTIExternalCourseEnrollment(
-            # FIX NOTE: change this field name?
             context_id = self.get_course(),
             user = self.get_user(),
             lti_user_id = self.user_id,
@@ -267,43 +278,36 @@ class LTISession:
         log.info('LTISession - register_enrollment() saved new cache record.')
         return enrollment
 
-    def post_grades(self, usage_key, grades_dict):
+    def post_grades(self, usage_key):
         """
             usage_key: a subsection of a Rover course. corresponds to a homework assignment
             grades_dict: contains all fields from grades.models.PersistentSubsectionGrade
         """
         if DEBUG: log.info('LTISession - post_grades()')
-        if not self.get_course_enrollment():
-            return None
-        # null usage_key -- raiserror
-        # null grades_dict -- raiserror
+        if not self.get_course_enrollment() or not self.self.get_user():
+            return False
 
-        # 'context_id', 'user', 'usage_key'
-        grades = LTIExternalCourseEnrollmentGrades.objects.filter(
-            context_id=self.get_context_id(), 
-            user=self.get_user(),
-            usage_key=usage_key
-            ).first()
+        try:
+            # validate the usage_key to verify that it at least
+            # points to SOMETHING in Rover.
+            key = UsageKey.from_string(usage_key)
+        except:
+            raise LTIBusinessRuleError("Tried to pass an invalid usage_key: {usage_key} ".format(
+                    usage_key=usage_key
+                ))
 
-        if grades is None:
-            grades = LTIExternalCourseEnrollmentGrades(
-                context_id = self.get_context_id(),
-                user = self.get_user(),
-                course_id = self.get_course_id(),
-                usage_key = usage_key,
-            )
-
-        grades.course_version = grades_dict.get('course_version')
-        grades.earned_all = grades_dict.get('earned_all')
-        grades.possible_all = grades_dict.get('possible_all')
-        grades.earned_graded = grades_dict.get('earned_graded')
-        grades.possible_graded = grades_dict.get('possible_graded')
-        grades.first_attempted = grades_dict.get('first_attempted')
-        grades.visible_blocks = grades_dict.get('visible_blocks')
-
+        grades = LTIExternalCourseEnrollmentGrades(
+            course_enrollment = self.get_course_enrollment(),
+            user = self.get_user(),
+            usage_key = usage_key,
+            earned_all = 10,
+            possible_all = 10,
+            earned_graded = 10,
+            possible_graded = 10,
+        )
         grades.save()
         log.info('LTISession - post_grades() saved new cache record.')
-        return grades
+        return True
 
     
     def get_context_id(self):
@@ -343,9 +347,10 @@ class LTISession:
         also need to initialize any property values that are sourced from lti_params
         """
         if DEBUG: log.info('set_lti_params()')
+            
         # ensure that this object is being instantiated with data that originated
         # from an LTI authentication from Willo Labs.
-        if not is_willo_lti(value):
+        if value is not None and not is_willo_lti(value):
             raise LTIBusinessRuleError("Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
                 "that did not originate from Willo Labs: '%s'." % value)
 
@@ -356,8 +361,9 @@ class LTISession:
         self._lti_params = value
 
         # property initializations from lti_params
-        self._context_id = value.get('context_id')          # uniquely identifies course in Willo
-        self.user_id = value.get('user_id')                 # uniquely identifies user in Willo
+        if self._lti_params is not None:
+            self._context_id = value.get('context_id')          # uniquely identifies course in Willo
+            self.user_id = value.get('user_id')                 # uniquely identifies user in Willo
 
 
     def get_user(self):

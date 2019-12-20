@@ -32,6 +32,10 @@ from .signals.signals import SUBSECTION_SCORE_CHANGED
 from .subsection_grade_factory import SubsectionGradeFactory
 from .transformer import GradesTransformer
 
+# mcdaniel dec-2019
+# Willo Labs Grade Sync
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.tasks import post_grades
+
 log = getLogger(__name__)
 
 COURSE_GRADE_TIMEOUT_SECONDS = 1200
@@ -319,11 +323,18 @@ def _update_subsection_grades(course_key, scored_block_usage_key, only_if_higher
                 #
                 # convert each object into its PK id value to avoid serializing the contents in
                 # RabbitMQ. We'll re-instantiate each object from inside the Celery task.
+                log_dict = {
+                    'username': student.username,
+                    'course_id': course_key.html_id(),
+                    'usage_id': subsection_usage_key._to_string()
+                }
+                log.info('_update_subsection_grades() - calling post_grades() with: {log_dict}'.format(
+                    log_dict=log_dict
+                ))
                 post_grades(
                     username=student.username,
                     course_id=course_key.html_id(),
-                    usage_id=subsection_usage_key.html_id(),
-                    subsection_grade=subsection_grade,           # we want the serialized grade data.
+                    usage_id=subsection_usage_key._to_string()
                 )
 
 def _course_task_args(course_key, **kwargs):
