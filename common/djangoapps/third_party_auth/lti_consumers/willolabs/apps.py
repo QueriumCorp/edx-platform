@@ -8,4 +8,5 @@ class LTIWilloLabsConfig(AppConfig):
     verbose_name = "LTI Willo Labs"
 
     def ready(self):
-        log.info("LTIWilloLabsConfig - initialized.")
+        #log.info("LTIWilloLabsConfig - initialized.")
+        return None
