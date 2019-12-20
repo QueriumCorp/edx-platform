@@ -137,8 +137,8 @@ class LTISession:
         """
         if DEBUG: log.info('LTISession - register_course()')
 
-        if self.lti_params is None:
-            return None
+        if self.get_lti_params() is None:
+            raise LTIBusinessRuleError("lti_params is required.")
 
         self._course = None
         self._course_enrollment = None
@@ -226,8 +226,8 @@ class LTISession:
         """
         if DEBUG: log.info('LTISession.register_enrollment()')
 
-        if self.lti_params is None:
-            return None
+        if self.get_lti_params() is None:
+            raise LTIBusinessRuleError("lti_params is required.")
 
         self._course_enrollment = None
 
@@ -284,8 +284,8 @@ class LTISession:
             grades_dict: contains all fields from grades.models.PersistentSubsectionGrade
         """
         if DEBUG: log.info('LTISession - post_grades()')
-        if not self.get_course_enrollment() or not self.self.get_user():
-            return False
+        if self.get_course_enrollment() is None or self.get_user() is None or self.get_course() is None:
+            raise LTIBusinessRuleError("course, course_enrollment and user are required.")
 
         try:
             # validate the usage_key to verify that it at least
@@ -306,7 +306,13 @@ class LTISession:
             possible_graded = 10,
         )
         grades.save()
-        log.info('LTISession - post_grades() saved new cache record.')
+        log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
+            'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}'.format(
+            username = user.username,
+            usage_key = usage_key,
+            course_id = self.get_course().course_id,
+            context_id = self.get_course().context_id
+        ))
         return True
 
     

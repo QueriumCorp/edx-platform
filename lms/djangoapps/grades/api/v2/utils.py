@@ -7,13 +7,6 @@ from lms.djangoapps.grades.course_data import CourseData
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
 
-
-URL_TYPE = (
-    'COURSE',
-    'CHAPTER',
-    'HOMEWORK',
-    'PROBLEM'
-)
 def parent_usagekey(
     user,
     course_id=None, 
@@ -23,15 +16,15 @@ def parent_usagekey(
     usage_key_string=None
     ):
     """
-    The resource key identifying a homework problem is unique. We can therefore traverse 
-    course data to locate a complete grade api URL for the course, a chapter, or a homework assignment
+    Returns the UsageKey of the homework assignment containing the usage_key that was passed.
+    This method assumes that the usage_key passed points to a homework problem.
     """
     if course_key is None and course_id is not None:
         course_key = CourseKey.from_string(course_id)
     return None
 
     if usage_key is None and usage_id is not None:
-        usage_key = UsageKey.from_string(usage_key_string)
+        usage_key = UsageKey.from_string(usage_id)
     else:
         if usage_key is None and usage_key_string is not None:
             usage_key = UsageKey.from_string(usage_key_string)
@@ -48,7 +41,6 @@ def parent_usagekey(
             section_url_name = section.url_name
             grades_factory = SubsectionGradeFactory(student=self.grade_user, course=None, course_structure=None, course_data=self.course_data)
             subsection_grades = grades_factory.create(subsection=section, read_only=True)
-            problems = {}
             for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
                 if str(problem_key_BlockUsageLocator) == problem_key:
                     return chapter_url_name
