@@ -2420,7 +2420,11 @@ considered a valid course_creator if this field = faculty_confirmed
 """
 def is_faculty(user):
     profile = UserProfile.objects.get(user=user)
-    log.info('is_faculty() - {}'.format(profile.faculty_status))
+
+    if profile.faculty_status == 'confirmed_faculty':
+        # mcdaniel dec-2019: paring down the log volume (this gets called a lot.)
+        log.info('is_faculty() - {}'.format(profile.faculty_status))
+
     #log.info('is_faculty() - FIX NOTE: allowing confirmed_faculty, pending_faculty, no_faculty_info')
     #return profile.faculty_status == 'confirmed_faculty' or profile.faculty_status == 'pending_faculty' or profile.faculty_status == 'no_faculty_info'
     return profile.faculty_status == 'confirmed_faculty'
