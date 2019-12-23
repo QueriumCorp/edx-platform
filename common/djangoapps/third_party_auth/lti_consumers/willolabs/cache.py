@@ -280,15 +280,30 @@ class LTISession:
         log.info('LTISession - register_enrollment() saved new cache record.')
         return enrollment
 
-    def post_grades(self, usage_key):
+    def post_grades(self, usage_key, grades_dict):
         """
             usage_key: a subsection of a Rover course. corresponds to a homework assignment
             grades_dict: contains all fields from grades.models.PersistentSubsectionGrade
+                    {
+                        'grades': {
+                            'section_attempted_graded': True, 
+                            'section_possible_graded': 17.0, 
+                            'section_earned_graded': 0.0, 
+                            'section_possible_all': 17.0, 
+                            'section_earned_all': 0.0}
+                            'section_grade_percent': 0.0
+                            }, 
+                        'url': u'https://dev.roverbyopenstax.org/courses/course-v1:ABC+OS9471721_9626+01/courseware/c0a9afb73af311e98367b7d76f928163/c8bc91313af211e98026b7d76f928163'
+                    }
+
         """
         if DEBUG: log.info('LTISession - post_grades()')
         if self.get_course_enrollment() is None or self.get_user() is None or self.get_course() is None:
             raise LTIBusinessRuleError("course, course_enrollment and user are required.")
 
+        if not grades_dict['grades']['section_attempted_graded']:
+            # no grade data to report
+            return False
         try:
             # validate the usage_key to verify that it at least
             # points to SOMETHING in Rover.
@@ -308,24 +323,41 @@ class LTISession:
                     usage_key=usage_key
                 ))
 
-        grades = LTIExternalCourseEnrollmentGrades(
+        curr = LTIExternalCourseEnrollmentGrades.objects.filter(
             course_enrollment = self.get_course_enrollment(),
             user = self.get_user(),
-            usage_key = usage_key,
-            earned_all = 10,
-            possible_all = 10,
-            earned_graded = 10,
-            possible_graded = 10,
-        )
-        grades.save()
-        log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
-            'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}'.format(
-            username = self.get_user().username,
-            usage_key = usage_key,
-            course_id = self.get_course().course_id,
-            context_id = self.get_course().context_id
-        ))
-        return True
+            section_url = grades_dict['url']
+        ).order_by('-created').first()
+
+        if curr is None or\
+            curr.earned_all != grades_dict['grades']['section_earned_all'] or\
+            curr.possible_all != grades_dict['grades']['section_possible_all'] or\
+            curr.earned_graded != grades_dict['grades']['section_earned_graded'] or\
+            curr.possible_graded != grades_dict['grades']['section_possible_graded']:
+
+            grades = LTIExternalCourseEnrollmentGrades(
+                course_enrollment = self.get_course_enrollment(),
+                user = self.get_user(),
+                usage_key = usage_key,
+                section_url = grades_dict['url'],
+                earned_all = grades_dict['grades']['section_earned_all'],
+                possible_all = grades_dict['grades']['section_possible_all'],
+                earned_graded = grades_dict['grades']['section_earned_graded'],
+                possible_graded = grades_dict['grades']['section_possible_graded']
+            )
+            grades.save()
+            log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
+                'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}, grades: {grades}'.format(
+                username = self.get_user().username,
+                usage_key = usage_key,
+                course_id = self.get_course().course_id,
+                context_id = self.get_course().context_id,
+                grades = grades_dict
+            ))
+            return True
+        else:
+            log.info('LTISession - post_grades() nothing new to record. exiting')
+            return False
 
     
     def get_context_id(self):

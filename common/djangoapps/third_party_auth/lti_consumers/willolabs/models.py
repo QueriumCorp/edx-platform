@@ -1,10 +1,10 @@
+from __future__ import absolute_import
 # -*- coding: utf-8 -*-
 """
 mcdaniel dec-2019
 LTI Integration for Willo Labs Grade Sync.
 Models used to implement LTI External support in third_party_auth
 """
-from __future__ import absolute_import
 
 from django.conf import settings
 from django.db import models
@@ -284,9 +284,15 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     course_enrollment = models.ForeignKey(LTIExternalCourseEnrollment, on_delete=models.CASCADE)
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
+    section_url = models.URLField(
+        verbose_name="Homework Section URL",
+        help_text="Open edX Course Assignment",
+        max_length=255
+    )
+
     usage_key = UsageKeyField(
         verbose_name="Usage Key",
-        help_text="Open edX Course subsection key. Points to this homework assignment",
+        help_text="Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api.",
         blank=False, 
         max_length=255,
         )

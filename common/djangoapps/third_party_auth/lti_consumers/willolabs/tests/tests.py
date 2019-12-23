@@ -68,27 +68,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         course_id = 'course-v1:ABC+OS9471721_9626+01'
         username = user.username
         subsection_usage_key = 'block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163'
-        subsection_grade={
-            'this': '0',            
-            'that': '1',            
-            'the_other_thing': '2',            
-        }
 
-        """
-        recalculate_subsection_grade_kwargs = OrderedDict([
-            ('user_id', user.id),
-            ('course_id', unicode('course-v1:ABC+OS9471721_9626+01')),
-            ('usage_id', unicode(self.problem.location)),
-            ('anonymous_user_id', 5),
-            ('only_if_higher', None),
-            ('expected_modified_time', self.frozen_now_timestamp),
-            ('score_deleted', False),
-            ('event_transaction_id', unicode(get_event_transaction_id())),
-            ('event_transaction_type', u'willolabs.post_grades'),
-            ('score_db_table', ScoreDatabaseTableEnum.courseware_student_module),
-        ])
-        """
-        
         post_grades(
             username=username,
             course_id=course_id,

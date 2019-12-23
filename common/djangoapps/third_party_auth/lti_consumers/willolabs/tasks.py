@@ -106,7 +106,7 @@ def _post_grades(self, username, course_id, usage_id):
         course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
 
-        homework_usage_key = parent_usagekey(
+        homework_assignment_dict = parent_usagekey(
             user,
             course_key = course_key,
             usage_key = problem_usage_key
@@ -121,7 +121,10 @@ def _post_grades(self, username, course_id, usage_id):
             ).first()
         session.set_course_enrollment(course_enrollment)
 
-        session.post_grades(usage_key=problem_usage_key)
+        session.post_grades(
+            usage_key=problem_usage_key, 
+            grades_dict=homework_assignment_dict
+            )
 
     except Exception as exc:
         if not isinstance(exc, KNOWN_RETRY_ERRORS):

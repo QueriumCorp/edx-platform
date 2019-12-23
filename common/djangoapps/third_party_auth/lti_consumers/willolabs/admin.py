@@ -77,6 +77,7 @@ class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
         'course_enrollment',
         'user',
         'usage_key',
+        'section_url',
         'earned_all',
         'possible_all',
         'earned_graded',
