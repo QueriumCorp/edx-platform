@@ -66,9 +66,8 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         lti_params = self.lti_params
 
         course_id = 'course-v1:ABC+OS9471721_9626+01'
-        course_key = CourseKey.from_string(course_id)
         username = user.username
-        subsection_usage_key = UsageKey.from_string('block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163')
+        subsection_usage_key = 'block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163'
         subsection_grade={
             'this': '0',            
             'that': '1',            
@@ -92,9 +91,8 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         
         post_grades(
             username=username,
-            course_id=course_key.html_id(),
-            subsection_usage_key=subsection_usage_key,
-            subsection_grade=subsection_grade,
+            course_id=course_id,
+            usage_id=subsection_usage_key
         )
 
     def test_lti_params(self):

@@ -24,6 +24,8 @@ from student.models import is_faculty, CourseEnrollment
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
 from opaque_keys.edx.keys import CourseKey, UsageKey
+from opaque_keys.edx.locator import BlockUsageLocator
+
 
 
 log = logging.getLogger(__name__)
@@ -138,7 +140,7 @@ class LTISession:
         if DEBUG: log.info('LTISession - register_course()')
 
         if self.get_lti_params() is None:
-            raise LTIBusinessRuleError("lti_params is required.")
+            return None
 
         self._course = None
         self._course_enrollment = None
@@ -227,7 +229,7 @@ class LTISession:
         if DEBUG: log.info('LTISession.register_enrollment()')
 
         if self.get_lti_params() is None:
-            raise LTIBusinessRuleError("lti_params is required.")
+            return None
 
         self._course_enrollment = None
 
@@ -290,9 +292,19 @@ class LTISession:
         try:
             # validate the usage_key to verify that it at least
             # points to SOMETHING in Rover.
-            key = UsageKey.from_string(usage_key)
+            if isinstance(usage_key, str) or isinstance(usage_key, unicode):
+                key = UsageKey.from_string(usage_key)
+            else:
+                if isinstance(usage_key, UsageKey) or isinstance(usage_key, BlockUsageLocator):
+                    pass
+                else:
+                    raise LTIBusinessRuleError("Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+                            key_type=type(usage_key),
+                            usage_key=usage_key
+                        ))
         except:
-            raise LTIBusinessRuleError("Tried to pass an invalid usage_key: {usage_key} ".format(
+            raise LTIBusinessRuleError("Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+                    key_type=type(usage_key),
                     usage_key=usage_key
                 ))
 
@@ -308,7 +320,7 @@ class LTISession:
         grades.save()
         log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
             'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}'.format(
-            username = user.username,
+            username = self.get_user().username,
             usage_key = usage_key,
             course_id = self.get_course().course_id,
             context_id = self.get_course().context_id
@@ -401,10 +413,13 @@ class LTISession:
         if isinstance(value, CourseKey):
             self._course_id = value
         else:
-            if isinstance(value, str):
+            if isinstance(value, str) or isinstance(value, unicode):
                 self._course_id = CourseKey.from_string(value)
             else:
-                raise LTIBusinessRuleError("Course_key provided is not a valid object type. Must be either CourseKey or String.")
+                raise LTIBusinessRuleError("Course_key provided is not a valid object type"\
+                    " ({}). Must be either CourseKey or String.".format(
+                    type(value)
+            ))
 
         if previous_value != value:
             self._course_id = value
@@ -430,8 +445,11 @@ class LTISession:
     def set_course(self, value):
         if DEBUG: log.info('set_course())')
         if not isinstance(value, LTIExternalCourse):
-            raise LTIBusinessRuleError("Tried to assign an object to course property that is not" \
-                "an instance of third_party_auth.models.LTIExternalCourse.")
+            raise LTIBusinessRuleError("Tried to assign object {dtype} {obj} to course property that is not" \
+                " an instance of third_party_auth.models.LTIExternalCourse.".format(
+                    dtype=type(value),
+                    obj=value
+                ))
 
         self._course = value
         self._course_enrollment = None

@@ -30,7 +30,7 @@ def parent_usagekey(
             usage_key = UsageKey.from_string(usage_key_string)
 
     if course_key is None or usage_key is None:
-        raise LTIBusinessRuleError("Invalid Course identifier or Usage identifier."
+        raise LTIBusinessRuleError("Invalid Course identifier or Usage identifier.")
 
     problem_key = UsageKey._to_string()
 

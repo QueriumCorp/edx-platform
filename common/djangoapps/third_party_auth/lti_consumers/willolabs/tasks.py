@@ -13,6 +13,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import DatabaseNotReadyError
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
+    LTIExternalCourse, 
+    LTIExternalCourseEnrollment    
+)
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.cache import LTISession
 from lms.djangoapps.grades.api.v2.utils import parent_usagekey
 
@@ -71,6 +75,10 @@ def post_grades(self, username, course_id, usage_id):
 
 def _post_grades(self, username, course_id, usage_id):
     """
+        username: a string
+        course_id: a string identifier for a CourseKey
+        usage_id: a string identifier for a UsageKey
+
     Post Rover grade data to a Willo Labs external platform via LTI integration.
     This task is called from lms/djangoapps/grades/tasks.py
 	    recalculate_subsection_grade_v3()
@@ -95,14 +103,24 @@ def _post_grades(self, username, course_id, usage_id):
     try:
 
         user = get_user_model().objects.get(username=username)
-        problem_usage_key = UsageKey.from_string('block-v1:' + usage_id)._to_string(),
+        problem_usage_key = UsageKey.from_string(usage_id),
+
         homework_usage_key = parent_usagekey(
             user,
-            course_id = course_id
+            course_id = course_id,
             usage_key_string = problem_usage_key
             )
         session = LTISession(user = user, course_id = course_id)
-        session.post_grades(usage_key=homework_usage_key)
+        course = LTIExternalCourse.objects.filter(course_id=CourseKey.from_string(course_id)).first()
+        session.set_course(course)
+
+        course_enrollment = LTIExternalCourseEnrollment.objects.filter(
+            context_id = course.context_id, 
+            user = user
+            ).first()
+        session.set_course_enrollment(course_enrollment)
+
+        session.post_grades(usage_key=problem_usage_key)
 
     except Exception as exc:
         if not isinstance(exc, KNOWN_RETRY_ERRORS):

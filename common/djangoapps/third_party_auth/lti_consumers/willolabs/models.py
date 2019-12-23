@@ -302,23 +302,6 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI External Course Enrollment Grades"
         verbose_name_plural = verbose_name
-        unique_together = [
-            # * Specific grades can be pulled using all three columns,
-            # * Progress page can pull all grades for a given (course_id, user_id)
-            # * Course staff can see all grades for a course using (course_id,)
-            ('context_id', 'user', 'usage_key'),
-        ]
-        # Allows querying in the following ways:
-        # (modified): find all the grades updated within a certain timespan
-        # (modified, course_id): find all the grades updated within a timespan for a certain course
-        # (modified, course_id, usage_key): find all the grades updated within a timespan for a subsection
-        #   in a course
-        # (first_attempted, course_id, user_id): find all attempted subsections in a course for a user
-        # (first_attempted, course_id): find all attempted subsections in a course for all users
-        index_together = [
-            ('modified', 'course_id', 'usage_key'),
-            ('first_attempted', 'course_id', 'user')
-        ]
 
     def __str__(self):
         return str(self.id)
