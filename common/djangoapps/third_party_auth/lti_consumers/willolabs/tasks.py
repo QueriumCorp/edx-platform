@@ -103,12 +103,13 @@ def _post_grades(self, username, course_id, usage_id):
     try:
 
         user = get_user_model().objects.get(username=username)
+        course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
 
         homework_usage_key = parent_usagekey(
             user,
-            course_id = course_id,
-            usage_key_string = problem_usage_key
+            course_key = course_key,
+            usage_key = problem_usage_key
             )
         session = LTISession(user = user, course_id = course_id)
         course = LTIExternalCourse.objects.filter(course_id=CourseKey.from_string(course_id)).first()
