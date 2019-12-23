@@ -103,7 +103,7 @@ def _post_grades(self, username, course_id, usage_id):
     try:
 
         user = get_user_model().objects.get(username=username)
-        problem_usage_key = UsageKey.from_string(usage_id),
+        problem_usage_key = UsageKey.from_string(usage_id)
 
         homework_usage_key = parent_usagekey(
             user,
