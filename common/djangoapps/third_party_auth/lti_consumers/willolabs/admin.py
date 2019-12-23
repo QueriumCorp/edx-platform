@@ -69,6 +69,19 @@ class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
     """
     LTI Willo Labs - Course Enrollment, Grades
     """
-    #readonly_fields=(u'created', u'updated', )
+    list_display = (
+        'id',
+        'created',
+        'modified',
+        'synched',
+        'course_enrollment',
+        'user',
+        'usage_key',
+        'earned_all',
+        'possible_all',
+        'earned_graded',
+        'possible_graded'
+    )
+    readonly_fields=(u'created', u'modified', )
 
 admin.site.register(LTIExternalCourseEnrollmentGrades, LTIExternalCourseEnrollmentGradesAdmin)

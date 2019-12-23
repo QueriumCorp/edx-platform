@@ -304,4 +304,4 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return str(self.id)
+        return str(self.id) + '- ' + self.course_enrollment.user.username + ' - ' + self.course_enrollment.context_id.course_id.html_id()
