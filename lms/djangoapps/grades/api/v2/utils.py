@@ -84,6 +84,10 @@ def parent_usagekey(
                 )
 
             for problem_key_BlockUsageLocator, problem_ProblemScore in subsection_grades.problem_scores.items():
+                #log.info('parent_usagekey() problem_key_string: {pks}, problem_key_BlockUsageLocator: {block}'.format(
+                #    pks=problem_key_string,
+                #    block=str(problem_key_BlockUsageLocator)
+                #))
                 if str(problem_key_BlockUsageLocator) == problem_key_string:
                     grades = {
                         'section_attempted_graded': section.attempted_graded,

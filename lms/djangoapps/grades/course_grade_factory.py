@@ -207,9 +207,9 @@ class CourseGradeFactory(object):
                 course_id=course_data.course_key,
             )
 
-        log.info(
-            u'Grades: Update, %s, User: %s, %s, persisted: %s',
-            course_data.full_string(), user.id, course_grade, should_persist,
-        )
+        #log.info(
+        #    u'Grades: Update, %s, User: %s, %s, persisted: %s',
+        #    course_data.full_string(), user.id, course_grade, should_persist,
+        #)
 
         return course_grade

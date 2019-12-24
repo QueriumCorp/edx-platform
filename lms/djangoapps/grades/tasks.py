@@ -323,18 +323,24 @@ def _update_subsection_grades(course_key, scored_block_usage_key, only_if_higher
                 #
                 # convert each object into its PK id value to avoid serializing the contents in
                 # RabbitMQ. We'll re-instantiate each object from inside the Celery task.
-                log_dict = {
-                    'username': student.username,
-                    'course_id': course_key.html_id(),
-                    'usage_id': subsection_usage_key._to_string()
-                }
+                #
+                # example inputs:
+                # username - __123456__
+                # course_id_string - course-v1:ABC+OS9471721_9626+01
+                # usage_id_string - block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163
+                course_id_string = course_key.html_id()
+                usage_id_string = 'block-v1:'+scored_block_usage_key._to_string()
                 log.info('_update_subsection_grades() - calling post_grades() with: {log_dict}'.format(
-                    log_dict=log_dict
+                    log_dict={
+                        'username': student.username,
+                        'course_id': course_id_string,
+                        'usage_id': usage_id_string
+                        }
                 ))
                 post_grades(
                     username=student.username,
-                    course_id=course_key.html_id(),
-                    usage_id=subsection_usage_key._to_string()
+                    course_id=course_id_string,
+                    usage_id=usage_id_string
                 )
 
 def _course_task_args(course_key, **kwargs):

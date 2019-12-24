@@ -171,10 +171,10 @@ class BlockStructureStore(object):
         serialized_data = self._cache.get(cache_key)
 
         if not serialized_data:
-            logger.info("BlockStructure: Not found in cache; %s.", bs_model)
+            #logger.info("BlockStructure: Not found in cache; %s.", bs_model)
             raise BlockStructureNotFound(bs_model.data_usage_key)
         else:
-            logger.info("BlockStructure: Read from cache; %s, size: %d", bs_model, len(serialized_data))
+            #logger.info("BlockStructure: Read from cache; %s, size: %d", bs_model, len(serialized_data))
         return serialized_data
 
     def _get_from_store(self, bs_model):
