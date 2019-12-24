@@ -48,7 +48,7 @@ class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
     LTI Willo Labs - Course Enrollment
     """
     list_display = (
-        'context_id',
+        'course',
         'user',
         'created',
         'modified',
@@ -108,7 +108,7 @@ class LTIExternalCourseAssignmentsAdmin(admin.ModelAdmin):
     LTI Willo Labs - Course Assignments
     """
     list_display = (
-        'context_id',
+        'course',
         'url',
         'display_name',
         'created',

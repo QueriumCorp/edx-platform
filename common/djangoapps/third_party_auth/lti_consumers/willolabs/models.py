@@ -144,7 +144,7 @@ class LTIExternalCourse(TimeStampedModel):
         )
 
     def __str__(self):
-        return self.context_id
+        return self.course_id.html_id()
 
     #public_key = models.TextField()
 
@@ -157,7 +157,7 @@ class LTIExternalCourse(TimeStampedModel):
 
 
 class LTIExternalCourseAssignments(TimeStampedModel):
-    context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
+    course = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
     url = models.URLField(
         verbose_name="Homework Section URL",
         help_text="Open edX Course Assignment",
@@ -172,7 +172,7 @@ class LTIExternalCourseAssignments(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI External Course Assignments"
         verbose_name_plural = verbose_name
-        unique_together = [['context_id', 'url']]
+        unique_together = [['course', 'url']]
         #ordering = ('-fetched_at', )
 
     def __str__(self):
@@ -205,8 +205,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
     """
-    # FIX NOTE: CHANGE THIS NAME?
-    context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
+    course = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     lti_user_id = models.CharField(
@@ -296,11 +295,11 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI External Course Enrollment"
         verbose_name_plural = verbose_name
-        unique_together = [['context_id', 'user']]
+        unique_together = [['course', 'user']]
         #ordering = ('-fetched_at', )
 
     def __str__(self):
-        return str(self.id)
+        return self.course.course_id.html_id() + ' - ' + self.user.username
 
 
 
@@ -353,4 +352,4 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return str(self.id) + '- ' + self.course_enrollment.user.username + ' - ' + self.course_enrollment.context_id.course_id.html_id()
+        return self.course_enrollment.course.course_id.html_id() + ' - ' + self.course_assignment.display_name

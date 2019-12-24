@@ -136,7 +136,7 @@ class LTISession:
                 self.set_course(course)
                 self._context_id = course.context_id
                 course_enrollment = LTIExternalCourseEnrollment.objects.filter(
-                    context_id = course.context_id, 
+                    course = course, 
                     user = self._user
                     ).first()
                 self.set_course_enrollment(course_enrollment)
@@ -158,7 +158,7 @@ class LTISession:
         course.delete()
 
         enrollment = LTIExternalCourseEnrollment.objects.filter(
-            context_id = context_id, 
+            course = course, 
             user = user
             )
         enrollment.delete()
@@ -269,14 +269,11 @@ class LTISession:
             return None
 
         # look for a cached record for this user / context_id
-        context_id = self.get_context_id()
-        user = self.get_user()
         enrollment = LTIExternalCourseEnrollment.objects.filter(
-            context_id = context_id, 
-            user = user
+            course = self.get_course(), 
+            user = self.get_user()
             ).first()
         if enrollment:
-            # 1:1 relationship between context_id / course_id
             # if we have a cached enrollment record then we know that we also have the parent course
             # record, where the course_id is stored.
 
@@ -293,7 +290,7 @@ class LTISession:
             return None
 
         enrollment = LTIExternalCourseEnrollment(
-            context_id = self.get_course(),
+            course = self.get_course(),
             user = self.get_user(),
             lti_user_id = self.user_id,
             custom_canvas_user_id = self._lti_params.get('custom_canvas_user_id'),
@@ -437,7 +434,7 @@ class LTISession:
         ))
 
         assignment = LTIExternalCourseAssignments.objects.filter(
-            context_id = self.get_context_id(),
+            course = self.get_course(),
             url = url
         ).first()
 
@@ -450,7 +447,7 @@ class LTISession:
             return None
 
         assignment = LTIExternalCourseAssignments(
-            context_id = self.get_course(),
+            course = self.get_course(),
             url = url,
             display_name = display_name
         )
