@@ -106,20 +106,39 @@ def _post_grades(self, username, course_id, usage_id):
         course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
 
-        homework_assignment_dict = parent_usagekey(
-            user,
-            course_key = course_key,
-            usage_key = problem_usage_key
-            )
         session = LTISession(user = user, course_id = course_id)
-        course = LTIExternalCourse.objects.filter(course_id=CourseKey.from_string(course_id)).first()
-        session.set_course(course)
+        
+        # move this to cache.py refresh()
+        #course = LTIExternalCourse.objects.filter(course_id=CourseKey.from_string(course_id)).first()
+        #session.set_course(course)
 
-        course_enrollment = LTIExternalCourseEnrollment.objects.filter(
-            context_id = course.context_id, 
-            user = user
-            ).first()
-        session.set_course_enrollment(course_enrollment)
+        #course_enrollment = LTIExternalCourseEnrollment.objects.filter(
+        #    context_id = course.context_id, 
+        #    user = user
+        #    ).first()
+        #session.set_course_enrollment(course_enrollment)
+        assignment = session.get_course_assignment(problem_usage_key)
+        # Note: this is scaffolding that will
+        # faciliate a faster, cached grade post operation
+        # once we learn more about how to pull cached
+        # grade data from Block Store structures.
+        if assignment is not None:
+            # do something fast (someday).
+            homework_assignment_dict = parent_usagekey(
+                user,
+                course_key = course_key,
+                usage_key = problem_usage_key
+                )
+            
+        else:
+            # do something slow.
+            # Note: very slow, high-overhead function call. 
+            # this data might be (probably is) cached, so look there first.
+            homework_assignment_dict = parent_usagekey(
+                user,
+                course_key = course_key,
+                usage_key = problem_usage_key
+                )
 
         session.post_grades(
             usage_key=problem_usage_key, 

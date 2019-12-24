@@ -156,6 +156,48 @@ class LTIExternalCourse(TimeStampedModel):
         #ordering = ('-fetched_at', )
 
 
+class LTIExternalCourseAssignments(TimeStampedModel):
+    context_id = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
+    url = models.URLField(
+        verbose_name="Homework Section URL",
+        help_text="Open edX Course Assignment",
+        max_length=255
+    )
+    display_name = models.CharField(
+        verbose_name="Display Name",
+        help_text="Title text of the Rover assignment. Example: Chapter 5 Section 1 Quadratic Functions Sample Homework",
+        max_length=255,
+        )
+
+    class Meta(object):
+        verbose_name = "LTI External Course Assignments"
+        verbose_name_plural = verbose_name
+        unique_together = [['context_id', 'url']]
+        #ordering = ('-fetched_at', )
+
+    def __str__(self):
+        return self.display_name
+
+
+class LTIExternalCourseAssignmentProblems(TimeStampedModel):
+    course_assignment = models.ForeignKey(LTIExternalCourseAssignments, on_delete=models.CASCADE)
+    usage_key = UsageKeyField(
+        verbose_name="Usage Key",
+        help_text="Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api. Example: block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163",
+        blank=False, 
+        max_length=255,
+        )
+
+
+    class Meta(object):
+        verbose_name = "LTI External Course Assignment Problems"
+        verbose_name_plural = verbose_name
+        unique_together = [['usage_key']]
+        #ordering = ('-fetched_at', )
+
+    def __str__(self):
+        return 'block-v1:'+self.usage_key._to_string()
+
 
 class LTIExternalCourseEnrollment(TimeStampedModel):
     """
@@ -282,7 +324,8 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
         )
 
     course_enrollment = models.ForeignKey(LTIExternalCourseEnrollment, on_delete=models.CASCADE)
-    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    course_assignment = models.ForeignKey(LTIExternalCourseAssignments, on_delete=models.CASCADE)
+    #user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     section_url = models.URLField(
         verbose_name="Homework Section URL",

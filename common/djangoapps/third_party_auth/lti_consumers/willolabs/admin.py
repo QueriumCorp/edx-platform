@@ -9,7 +9,9 @@ from django.contrib import admin
 from .models import (
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
-    LTIExternalCourseEnrollmentGrades
+    LTIExternalCourseEnrollmentGrades,
+    LTIExternalCourseAssignments,
+    LTIExternalCourseAssignmentProblems,
     )
 
 
@@ -75,7 +77,6 @@ class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
         'modified',
         'synched',
         'course_enrollment',
-        'user',
         'usage_key',
         'section_url',
         'earned_all',
@@ -86,3 +87,33 @@ class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
     readonly_fields=(u'created', u'modified', )
 
 admin.site.register(LTIExternalCourseEnrollmentGrades, LTIExternalCourseEnrollmentGradesAdmin)
+
+
+class LTIExternalCourseAssignmentProblemsAdmin(admin.ModelAdmin):
+    """
+    LTI Willo Labs - Course Assignment Problems
+    """
+    list_display = (
+        'course_assignment',
+        'usage_key',
+        'created',
+        'modified'
+    )
+    readonly_fields=(u'created', u'modified')
+
+admin.site.register(LTIExternalCourseAssignmentProblems, LTIExternalCourseAssignmentProblemsAdmin)
+
+class LTIExternalCourseAssignmentsAdmin(admin.ModelAdmin):
+    """
+    LTI Willo Labs - Course Assignments
+    """
+    list_display = (
+        'context_id',
+        'url',
+        'display_name',
+        'created',
+        'modified'
+    )
+    readonly_fields=(u'created', u'modified')
+
+admin.site.register(LTIExternalCourseAssignments, LTIExternalCourseAssignmentsAdmin)

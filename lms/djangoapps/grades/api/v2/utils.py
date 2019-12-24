@@ -90,6 +90,7 @@ def parent_usagekey(
                 #))
                 if str(problem_key_BlockUsageLocator) == problem_key_string:
                     grades = {
+                        'section_display_name': section.display_name,
                         'section_attempted_graded': section.attempted_graded,
                         'section_earned_all': section.all_total.earned,
                         'section_possible_all': section.all_total.possible,
