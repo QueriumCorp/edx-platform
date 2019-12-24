@@ -173,7 +173,7 @@ class BlockStructureStore(object):
         if not serialized_data:
             #logger.info("BlockStructure: Not found in cache; %s.", bs_model)
             raise BlockStructureNotFound(bs_model.data_usage_key)
-        else:
+        #else:
             #logger.info("BlockStructure: Read from cache; %s, size: %d", bs_model, len(serialized_data))
         return serialized_data
 
