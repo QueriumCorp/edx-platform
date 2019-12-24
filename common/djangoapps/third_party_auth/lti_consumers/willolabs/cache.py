@@ -29,8 +29,7 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
 
 log = logging.getLogger(__name__)
-#DEBUG = settings.DEBUG
-DEBUG = True
+DEBUG = settings.DEBUG
 
 class LTISession:
     """
