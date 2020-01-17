@@ -1,13 +1,6 @@
 Querium  Open edX Platform Fork
 This is the main edX platform which consists of LMS and Studio.
 
-Summary of Customizations
-------------
-
-.. _Grades API: lms/djangoapps/grades/api/v2/
-.. _Willo Labs Grade Synch: common/djangoapps/third_party_auth/willolabs
-
-
 
 Installation / Updates (as per Lawrence McDaniel)
 ------------
@@ -27,6 +20,11 @@ Installation / Updates (as per Lawrence McDaniel)
 
 Custom Modules (as per Lawrence McDaniel)
 ------------
+`LTI Willo Labs Integration`_: Automated course enrollment (aka "provisioning") during LTI authentication. Real-time asynchronous grade sync to Willo Labs "Grade Sych" api. Rover grades REST api for course, chapter, lesson, problems.
+
+.. _LTI Grade Synch module: common/djangoapps/third_party_auth/lti_consumers/willolabs/
+
+.. _Rover Grades api: lms/djangoapps/grades/api/v2/
 
 `Salesforce Integration Module`_: Rest api, django admin console, and manage.py command line tools to capture and upload salesforce tracking data for Open Stax marketing team.
 

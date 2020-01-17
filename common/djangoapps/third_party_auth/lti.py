@@ -20,8 +20,7 @@ from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
 
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import get_lti_faculty_status, is_willo_lti
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import get_lti_faculty_status
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -152,17 +151,6 @@ class LTIAuthBackend(BaseAuth):
                     default=default
                     )
         ))
-
-        if is_willo_lti(lti_params):
-            #----------------------------------------------------------------------
-            # mcdaniel nov-2019
-            # add auto-provisioning logic to
-            #   a) for instructors: map LTI context_id to Rover course_id
-            #   b) for students: auto enroll students in Rover course corresponding to context_id
-            #----------------------------------------------------------------------
-            course_provisioner = CourseProvisioner(self.strategy.request.user, lti_params)
-            course_provisioner.check_enrollment()
-
 
         return details
 

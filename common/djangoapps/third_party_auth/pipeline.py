@@ -85,6 +85,13 @@ from . import provider
 import os
 SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
 
+"""
+ mcdaniel jan-2020
+ LTI consumer provisioner
+"""
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import get_lti_faculty_status, is_willo_lti
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
+
 
 # These are the query string params you can pass
 # to the URL that starts the authentication process.
@@ -806,3 +813,23 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     profile = student.models.UserProfile.objects.get(user=user)
     profile.faculty_status = faculty_status
     profile.save()
+
+def lti_consumer_provisioner(auth_entry, strategy, details, user=None, *args, **kwargs):
+    """
+    Auto-enroll LTI students using information provided in tpa_params.
+    * currently only used with Willo Labs integrations.
+    """
+    backend_name = strategy.request.backend.name
+    if backend_name == "lti":
+        lti_params = strategy.session_get('tpa-lti-params')
+        if is_willo_lti(lti_params):
+            #----------------------------------------------------------------------
+            # mcdaniel nov-2019
+            # add auto-provisioning logic to
+            #   a) for instructors: map LTI context_id to Rover course_id
+            #   b) for students: auto enroll students in Rover course corresponding to context_id
+            #----------------------------------------------------------------------
+            course_provisioner = CourseProvisioner(strategy.request.user, lti_params)
+            course_provisioner.check_enrollment()
+
+    return None

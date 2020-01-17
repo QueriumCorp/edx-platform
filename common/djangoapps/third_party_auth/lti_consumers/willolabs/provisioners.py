@@ -196,9 +196,10 @@ class CourseProvisioner():
         # and we'll potentially pull a course_id if there's exactly one active course for the
         # student.
         enrollments = self.get_enrollments()
-        if len(enrollments) == 1:
-            self._course_id = enrollments[0].course_id
-            return self._course_id
+        if enrollments is not None:
+            if len(enrollments) == 1:
+                self._course_id = enrollments[0].course_id
+                return self._course_id
 
         # we struck out. didn't find a course_id from any of our possible sources
         return None
@@ -233,8 +234,21 @@ class CourseProvisioner():
 
         if DEBUG: log.info('get_enrollments() -- looking for a new value')
 
-        self._enrollments = CourseEnrollment.enrollments_for_user(self.user)
-        return self._enrollments
+        # if user is not yet logged in then we'll receive an Anonymous user object type
+        # that is not iterable and has no enrollments.
+        if self.user.is_anonymous:
+            return None
+
+        try:
+            self._enrollments = CourseEnrollment.enrollments_for_user(self.user)
+            return self._enrollments
+        except Exception as e:
+            log.error('get_enrollments() -- could not get enrolled. Encountered the following error: {err}'.format(
+                err=e.description
+            ))
+            pass
+        
+        return None
 
     def set_enrollments(self, value):
         raise LTIBusinessRuleError("enrollments is a read-only property.")
