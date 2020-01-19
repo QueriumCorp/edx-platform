@@ -28,6 +28,8 @@ from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions impor
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
 
+#from django.db.models import Sum
+
 log = logging.getLogger(__name__)
 DEBUG = settings.DEBUG
 
@@ -405,6 +407,36 @@ class LTISession:
     #=========================================================================================================
     #                                       PROPERTIES SETTERS & GETTERS
     #=========================================================================================================
+    """
+    def get_course_assignment_grades(self, usage_key):
+
+        grades = LTIExternalCourseEnrollmentGrades.objects.filter(
+            course_enrollment = self.get_course_enrollment(),
+            course_assignment = self.get_course_assignment(usage_key)
+        ).aggregate(
+            Sum('earned_all'),
+            Sum('possible_all'),
+            Sum('earned_graded'),
+            Sum('possible_graded'),
+        )
+
+        return grades
+    """
+
+    def get_course_assignment_grade(self, usage_key):
+        """
+        Try to retrieve a cached course assignment grade object for the given usage_key (Opaque Key).
+        """
+        if DEBUG: log.info('LTISession.get_course_assignment_grade() - usage_key: {usage_key} {key_type}'.format(
+            usage_key=usage_key,
+            key_type=type(usage_key)
+        ))
+        grade = LTIExternalCourseEnrollmentGrades.objects.filter(
+            course_enrollment = self.get_course_enrollment(),
+            course_assignment = self.get_course_assignment(usage_key)
+        ).order_by('-created').first()
+        return grade
+
     def get_course_assignment(self, usage_key):
         """
         Try to retrieve a cached course assignment for the given usage_key (Opaque Key).
@@ -667,5 +699,5 @@ class LTISession:
     lti_params = property(get_lti_params, set_lti_params)
     user = property(get_user, set_user)
     course_id = property(get_course_id, set_course_id)
-    course = property(get_course_id, set_course)
+    course = property(get_course, set_course)
     course_enrollment = property(get_course_enrollment, set_course_enrollment)

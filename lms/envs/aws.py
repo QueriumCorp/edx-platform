@@ -1149,6 +1149,9 @@ ROVERBYOPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://roverbyopenstax.org/o/token'
 ROVERBYOPENSTAX_BACKEND_USER_QUERY = 'https://roverbyopenstax.org/o/api/users?'
 ROVERBYOPENSTAX_BACKEND_USERS_QUERY = 'https://roverbyopenstax.org/o/api/users?'
 
+# mcdaniel jan-2020: Fixed Willo api token assigned by Willo Labs staff.
+WILLO_API_AUTHORIZATION_TOKEN = 'qHT28EAgrxag3AjyM3ZQmUYemBQeTy82eRC8hdua'
+
 """
 mcdaniel aug-2019
 On projects behind a reverse proxy that uses HTTPS, the redirect URIs can have the wrong schema (http:// instead of https://) if the request lacks the appropriate headers, which might cause errors during the auth process. To force HTTPS in the final URIs set this setting to True

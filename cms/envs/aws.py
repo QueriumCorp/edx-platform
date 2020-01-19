@@ -694,6 +694,9 @@ OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 ROVERBYOPENSTAX_BACKEND_CLIENT_ID = ''
 ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET = ''
 
+# mcdaniel jan-2020: Fixed Willo api token assigned by Willo Labs staff.
+WILLO_API_AUTHORIZATION_TOKEN = 'qHT28EAgrxag3AjyM3ZQmUYemBQeTy82eRC8hdua'
+
 
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
 REDIRECT_AM_REGISTRATION = rover_env_token('REDIRECT_AM_REGISTRATION', '')

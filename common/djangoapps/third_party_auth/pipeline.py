@@ -829,6 +829,7 @@ def lti_consumer_provisioner(auth_entry, strategy, details, user=None, *args, **
             #   a) for instructors: map LTI context_id to Rover course_id
             #   b) for students: auto enroll students in Rover course corresponding to context_id
             #----------------------------------------------------------------------
+            logger.info('lti_consumer_provisioner() - Willo LTI authentication detected. Initializing ...')
             course_provisioner = CourseProvisioner(strategy.request.user, lti_params)
             course_provisioner.check_enrollment()
 
