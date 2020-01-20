@@ -75,12 +75,12 @@ def get_lti_faculty_status(lti_params):
         'urn:lti:instrole:ims/lis/Administrator'
     )
     """
-    log.info('get_lti_faculty_status() - start')
+    #log.info('get_lti_faculty_status() - start')
 
 
     roles_param = lti_params.get("roles_param", ())
     if roles_param != ():
-        log.info('get_lti_faculty_status() - found roles_param: {}'.format(roles_param))
+        #log.info('get_lti_faculty_status() - found roles_param: {}'.format(roles_param))
         for role_param in roles_param:
             # build the lti_params dict similar to what exists in openedx third_party_auth LTIAuthBackend
             lti_params = {

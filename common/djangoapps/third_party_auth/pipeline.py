@@ -89,7 +89,7 @@ SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
  mcdaniel jan-2020
  LTI consumer provisioner
 """
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import get_lti_faculty_status, is_willo_lti
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
 
 
