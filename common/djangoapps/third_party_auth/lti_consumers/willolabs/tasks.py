@@ -106,26 +106,13 @@ def _post_grades(self, username, course_id, usage_id):
         user = get_user_model().objects.get(username=username)
         course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
-
         session = LTISession(user = user, course_id = course_id)
-        
+
         lti_cached_course = session.get_course()
         if lti_cached_course is None:
             raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. course property is not set.')
 
         lti_cached_assignment = session.get_course_assignment(problem_usage_key)
-        if lti_cached_assignment is None:
-            raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
-
-        lti_cached_enrollment = session.get_course_enrollment()
-        if lti_cached_enrollment is None:
-            raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
-
-        lti_cached_grade = session.get_course_assignment_grade(problem_usage_key)
-        if lti_cached_grade is None:
-            raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}.'.format(
-                usage_key=problem_usage_key
-            ))
 
         # Note: this is scaffolding that will
         # faciliate a faster, cached grade post operation
@@ -148,6 +135,20 @@ def _post_grades(self, username, course_id, usage_id):
                 course_key = course_key,
                 usage_key = problem_usage_key
                 )
+
+        if lti_cached_assignment is None:
+            raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
+
+        lti_cached_enrollment = session.get_course_enrollment()
+        if lti_cached_enrollment is None:
+            raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
+
+        lti_cached_grade = session.get_course_assignment_grade(problem_usage_key)
+        if lti_cached_grade is None:
+            raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}.'.format(
+                usage_key=problem_usage_key
+            ))
+
 
         session.post_grades(
             usage_key=problem_usage_key, 

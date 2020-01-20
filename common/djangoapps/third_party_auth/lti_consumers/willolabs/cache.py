@@ -361,23 +361,23 @@ class LTISession:
             section_url = grades_dict['url']
         ).order_by('-created').first()
 
+        # cache the relationship between this assignment URL and the course to which it belongs.
+        assignment = self.set_course_assignment(
+            url=grades_dict['url'], 
+            display_name=grades_dict['grades']['section_display_name']
+            )
+
+        # cache the relationship between the homework problem that was just graded and the assignment to which it belongs.
+        problem = self.set_course_assignment_problem(
+            course_assignment=assignment, 
+            usage_key=usage_key
+            )
+
         if not curr or\
             curr.earned_all != grades_dict['grades']['section_earned_all'] or\
             curr.possible_all != grades_dict['grades']['section_possible_all'] or\
             curr.earned_graded != grades_dict['grades']['section_earned_graded'] or\
             curr.possible_graded != grades_dict['grades']['section_possible_graded']:
-
-            # cache the relationship between this assignment URL and the course to which it belongs.
-            assignment = self.set_course_assignment(
-                url=grades_dict['url'], 
-                display_name=grades_dict['grades']['section_display_name']
-                )
-
-            # cache the relationship between the homework problem that was just graded and the assignment to which it belongs.
-            problem = self.set_course_assignment_problem(
-                course_assignment=assignment, 
-                usage_key=usage_key
-                )
 
             # cache the grade data
             grades = LTIExternalCourseEnrollmentGrades(
@@ -446,12 +446,25 @@ class LTISession:
             usage_key=usage_key,
             key_type=type(usage_key)
         ))
+
+        # try to find a cached problem record, then return its parent.
         problem = LTIExternalCourseAssignmentProblems.objects.filter(
-            usage_key = usage_key
+            usage_key=usage_key
         ).first()
         if problem:
-            if DEBUG: log.info('LTISession.get_course_assignment() - returning a cached record.')
+            if DEBUG: log.info('LTISession.get_course_assignment() - returning the cached parent assignment object.')
             return problem.course_assignment
+
+        # no problem record found, so look for the most recently-added assignment and
+        # assume that this is where the student is currently working.
+        #
+        # FIX NOTE: there could be holes in this logic.
+        assignment = LTIExternalCourseAssignments.objects.filter(
+            course=self.get_course()
+        ).order_by('-created').first()
+        if assignment:
+            if DEBUG: log.info('LTISession.get_course_assignment() - returning most recently created cached assignment record.')
+            return assignment
 
         if DEBUG: log.info('LTISession.get_course_assignment() - no record found.')
         return None
