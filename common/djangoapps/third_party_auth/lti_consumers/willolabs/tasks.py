@@ -158,8 +158,8 @@ def _post_grades(self, username, course_id, usage_id):
         willo_api_create_column(
             self, 
             lti_cached_course, 
-            lti_cached_assignment
-            
+            lti_cached_assignment,
+            lti_cached_grade
             )
 
         willo_api_post_grade(
@@ -184,7 +184,7 @@ def _post_grades(self, username, course_id, usage_id):
                 req=self.request.id,
             ))
         else:
-            log.info('willolabs.tasks.post_grades() - retrying')
+            log.error('willolabs.tasks.post_grades() - retrying')
         raise self.retry(exc=exc)
 
     except SoftTimeLimitExceeded:
@@ -196,7 +196,7 @@ def recover_from_exceeded_time_limit(self):
     Scaffold, to take care of anything that needs cleaning up 
     after the task timed-out.
     """
-    log.info('willolabs.tasks.recover_from_exceeded_time_limit()')
+    log.error('willolabs.tasks.recover_from_exceeded_time_limit()')
     return None
 
 """
@@ -253,7 +253,7 @@ def recover_from_exceeded_time_limit(self):
         -H "Authorization: Token qHT28EAgrxag3AjyM3ZQmUYemBQeTy82eRC8hdua"
 
 """
-def willo_api_create_column(self, lti_cached_course, lti_cached_assignment):
+def willo_api_create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_grade):
     """
      Willo Grade Sync api.
      Add a new grade column to the LMS grade book. 
@@ -268,7 +268,8 @@ def willo_api_create_column(self, lti_cached_course, lti_cached_assignment):
     url = lti_cached_course.ext_wl_outcome_service_url
 
     # FIX ME!!!!
-    due_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")   # https://docs.python.org/3/library/datetime.html
+    due_date = datetime.now(tz=pytz.utc).isoformat()
+    #due_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")   # https://docs.python.org/3/library/datetime.html
     
     headers = willo_api_headers(
         self,
@@ -281,16 +282,17 @@ def willo_api_create_column(self, lti_cached_course, lti_cached_assignment):
         "title": lti_cached_assignment.display_name,	        ## example: Getting to Know Rover Review Assignment
         "description": lti_cached_assignment.display_name,	    ## example: Getting to Know Rover Review Assignment
         "due_date": due_date,                                   ## FIX ME!!!!!
-        "points_possible": 100			                        ## FIX ME: get this from the assignment grade object
+        "points_possible": lti_cached_grade.possible_graded     ## int. example: 11
     }
     data_json = json.dumps(data)
 
-    response = requests.post(url, data=data, headers=headers)
+    response = requests.post(url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
         if response.status_code == 200:
-            log.info('willo_api_create_column() - successfully created grade column: {grade_column_data}'.format(
-                grade_column_data = data_json
-            ))
+            if settings.DEBUG:
+                log.info('willo_api_create_column() - successfully created grade column: {grade_column_data}'.format(
+                    grade_column_data = data_json
+                ))
         return True
     else:
         log.error('willo_api_create_column() - encountered an error while attempting to create a new grade column: {grade_column_data}, which generated the following response: {response}'.format(
@@ -309,8 +311,7 @@ def willo_api_post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cac
      Willo api returns 200 if the grade was posted.
      returns True if the return code is 200, False otherwise.
     """
-    if settings.DEBUG:
-        log.info('willo_api_post_grade()')
+    if settings.DEBUG: log.info('willo_api_post_grade()')
 
     # Example: 'https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/'
     url = lti_cached_course.ext_wl_outcome_service_url
@@ -330,11 +331,12 @@ def willo_api_post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cac
     }
     data_json = json.dumps(data)
 
-    response = requests.post(url, data=data, headers=headers)
+    response = requests.post(url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
-        log.info('willo_api_post_grade() - successfully posted grade data: {grade_data}'.format(
-            grade_data = data_json
-        ))
+        if settings.DEBUG:
+            log.info('willo_api_post_grade() - successfully posted grade data: {grade_data}'.format(
+                grade_data = data_json
+            ))
         return True
     else:
         log.error('willo_api_post_grade() - encountered an error while attempting to post the following grade: {grade_data} which generated the following response: {response}'.format(
@@ -353,8 +355,7 @@ def willo_api_get(self, url, assignment_id, user_id):
      Retrieve a grade record (list) for one student for one assignment
      returns http response as a json dict
     """
-    if settings.DEBUG:
-        log.info('willo_api_get()')
+    if settings.DEBUG: log.info('willo_api_get()')
 
     params = {
         'id' : assignment_id,
@@ -368,11 +369,12 @@ def willo_api_get(self, url, assignment_id, user_id):
 
     response = requests.get(url=url, params=params, headers=headers)
     if response.status_code == 200:
-        log.info('willo_api_get() - successfully retrieved grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}'.format(
-            assignment_id = assignment_id,
-            user_id = user_id,
-            response = response.json()
-        ))
+        if settings.DEBUG:
+            log.info('willo_api_get() - successfully retrieved grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}'.format(
+                assignment_id = assignment_id,
+                user_id = user_id,
+                response = response.json()
+            ))
         return response.json()
     else:
         log.error('willo_api_get() - encountered an error while attempting to retrieve grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}'.format(
@@ -389,8 +391,7 @@ def willo_api_authorization_token(self):
      Returns a Willo Labs api authentication token
      example: qHT28EAgrxa1234567890abcdefghij2eRC8hdua
     """
-    if settings.DEBUG:
-        log.info('willo_api_authorization_token()')
+    if settings.DEBUG: log.info('willo_api_authorization_token()')
 
     token = settings.WILLO_API_AUTHORIZATION_TOKEN
     return token

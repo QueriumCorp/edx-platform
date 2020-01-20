@@ -134,7 +134,7 @@ class LTIAuthBackend(BaseAuth):
             """
             Adds LTI parameter to user details dict if it exists
             """
-            log.info('lti.py - add_if_exists()')
+            #log.info('lti.py - add_if_exists()')
             if lti_key in lti_params and lti_params[lti_key]:
                 details[details_key] = lti_params[lti_key]
 
@@ -144,13 +144,13 @@ class LTIAuthBackend(BaseAuth):
         add_if_exists('lis_person_name_given', 'first_name')
         add_if_exists('lis_person_name_family', 'last_name')
         details['faculty_status'] = get_lti_faculty_status(lti_params)
-        log.info('lti.py - get_user_details() - {details}'.format(
-            details=json.dumps(details,
-                    indent=4,
-                    sort_keys=True,
-                    default=default
-                    )
-        ))
+        #log.info('lti.py - get_user_details() - {details}'.format(
+        #    details=json.dumps(details,
+        #            indent=4,
+        #            sort_keys=True,
+        #            default=default
+        #            )
+        #))
 
         return details
 
@@ -182,9 +182,9 @@ class LTIAuthBackend(BaseAuth):
     @classmethod
     def _get_validated_lti_params_from_values(cls, request, current_time,
                                               lti_consumer_valid, lti_consumer_secret, lti_max_timestamp_age):
-        log.info('lti.py - _get_validated_lti_params_from_values() - request.body: {request}'.format(
-            request=str(request.body).replace('&', ' \n\r')
-        ))
+        #log.info('lti.py - _get_validated_lti_params_from_values() - request.body: {request}'.format(
+        #    request=str(request.body).replace('&', ' \n\r')
+        #))
         """
         Validates LTI signature and returns LTI parameters
         """

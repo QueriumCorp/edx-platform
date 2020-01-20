@@ -103,10 +103,11 @@ class LTISession:
 
         # retrieve cache data from MySQL
         self.refresh()
-        log.info('LTISession.__init__() user: {user}, context_id: {context_id}'.format(
-            user=self.get_user(),
-            context_id=self.get_context_id()
-        ))
+        if DEBUG:
+            log.info('LTISession.__init__() user: {user}, context_id: {context_id}'.format(
+                user=self.get_user(),
+                context_id=self.get_context_id()
+            ))
 
     def init(self):
         """ Initialize class variables """
@@ -250,7 +251,7 @@ class LTISession:
         )
         
         course.save()
-        log.info('LTISession.register_course() - saved new cache record.')
+        if DEBUG: log.info('LTISession.register_course() - saved new cache record.')
         return course
 
     def register_enrollment(self):
@@ -306,7 +307,7 @@ class LTISession:
         )
         enrollment.save()
 
-        log.info('LTISession - register_enrollment() saved new cache record.')
+        if DEBUG: log.info('LTISession - register_enrollment() saved new cache record.')
         return enrollment
 
     def post_grades(self, usage_key, grades_dict):
@@ -391,7 +392,7 @@ class LTISession:
             )
             grades.save()
 
-            log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
+            if DEBUG: log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
                 'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}, grades: {grades}'.format(
                 username = self.get_user().username,
                 usage_key = usage_key,
@@ -401,7 +402,7 @@ class LTISession:
             ))
             return True
         else:
-            log.info('LTISession - post_grades() nothing new to record. exiting')
+            if DEBUG: log.info('LTISession - post_grades() nothing new to record. exiting')
             return False
 
     #=========================================================================================================
