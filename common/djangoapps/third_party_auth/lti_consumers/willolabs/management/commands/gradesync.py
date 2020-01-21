@@ -1,5 +1,3 @@
-from __future__ import with_statement
-from __future__ import absolute_import
 from django.core.management.base import BaseCommand
 
 u"""
@@ -12,14 +10,13 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('course_id', 
             type=str,
-            action=u'store_true',
-            required=True,
-            dest=u'course_id'
-            help=u'Course_id (a string representation of a CourseKey) of Rover course to Gradesync with Willo Labs.'
+            help=u'A string representation of a CourseKey. Example: course-v1:ABC+OS9471721_9626+01'
             )
 
     def handle(self, *args, **kwargs):
-        results = parser.parse_args()
-        log.info(u'gradesync.py - {course_id}'.format(
-            course_id=results.course_id
-        ))
+        course_id = kwargs['course_id']
+
+        self.stdout.write(self.style.NOTICE(u"gradesync.py ..."))
+        self.stdout.write(self.style.SUCCESS(u'gradesync.py - {course_id}'.format(
+            course_id=course_id
+        )))
