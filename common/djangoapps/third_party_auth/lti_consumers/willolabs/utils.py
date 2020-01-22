@@ -243,7 +243,7 @@ def willo_api_get(url, assignment_id, user_id):
     -------------------------
     curl -v -X GET "https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/?id=tutorial-avoiding-plagiarism&user_id=523bd4baaf772a615a478397d560a1591c7e3347" \
         -H "Accept: application/vnd.willolabs.outcome.result+json" \
-        -H "Authorization: Token qHT28EAgrxag3AjyM3ZQmUYemBQeTy82eRC8hdua"
+        -H "Authorization: Token YOURSUPERDUPERENCRYPTEDTOKEN"
 
     """
     log.debug('willo_api_get()')
