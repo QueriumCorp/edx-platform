@@ -18,6 +18,18 @@ from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import (
 
 utc=pytz.UTC
 
+class color:
+   PURPLE = '\033[95m'
+   CYAN = '\033[96m'
+   DARKCYAN = '\033[36m'
+   BLUE = '\033[94m'
+   GREEN = '\033[92m'
+   YELLOW = '\033[93m'
+   RED = '\033[91m'
+   BOLD = '\033[1m'
+   UNDERLINE = '\033[4m'
+   END = '\033[0m'
+
 u"""
   Willo Labs Grade Sync.
   Process all assignment grades from all students enrolled in course_id
@@ -60,6 +72,11 @@ class Command(BaseCommand):
         """
         students = CourseEnrollment.objects.users_enrolled_in(self.course_key)
         for student in students:
+            msg = u'iterate_students() - retrieving username: {username}.'.format(
+                username=student.username
+            )
+            msg = color.BOLD + color.PURPLE + msg + color.END + color.END
+            self.stdout.write(msg)
             self.post_student_grades(student)
 
         return None
@@ -70,10 +87,6 @@ class Command(BaseCommand):
          Iterate through chapters / assignments for the course.
          Post each assignment grade to Willo Labs api.
         """
-
-        self.stdout.write(u'post_student_grades() - retrieving username: {username}.'.format(
-            username=student.username
-        ))
 
         results = InternalCourseGradeView().get(course_id=self.course_id, username=student.username)
         self.stdout.write(u'post_student_grades() - retrieved grades for {username} / {course_id}'.format(
@@ -121,13 +134,13 @@ class Command(BaseCommand):
         }
         retval = willo_api_post_grade(ext_wl_outcome_service_url=url, data=data)
         if 200 <= retval <= 299:
-            result_string = u'prepare_and_post_grade() - SUCCESS! syncd grade for {user} / {assignment}'.format(
+            result_string = u'  prepare_and_post_grade() - SUCCESS! syncd grade for {user} / {assignment}'.format(
                 user=student.username,
                 assignment=section.get('section_display_name')
             )
             self.stdout.write(self.style.SUCCESS(result_string))
         else:
-            result_string = u'prepare_and_post_grade() - HTTP Error {http_response} returned. did not sync grade for {user} / {assignment}'.format(
+            result_string = u'  prepare_and_post_grade() - HTTP Error {http_response} returned. did not sync grade for {user} / {assignment}'.format(
                 user=student.username,
                 assignment=section.get('section_display_name'),
                 http_response=retval
@@ -153,12 +166,12 @@ class Command(BaseCommand):
         }
         retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data)
         if 200 <= retval <= 299:
-            result_string = u'prepare_and_post_column() - SUCCESS! syncd column for {assignment}'.format(
+            result_string = u'  prepare_and_post_column() - SUCCESS! syncd column for {assignment}'.format(
                 assignment=section.get('section_display_name')
             )
             self.stdout.write(self.style.SUCCESS(result_string))
         else:
-            result_string = u'prepare_and_post_column() - HTTP Error {http_response} returned. did not sync column {assignment}'.format(
+            result_string = u'  prepare_and_post_column() - HTTP Error {http_response} returned. did not sync column {assignment}'.format(
                 assignment=section.get('section_display_name'),
                 http_response=retval
             )
@@ -174,7 +187,7 @@ class Command(BaseCommand):
           - student has attempted at least one problem in the assignment.
         """
         section_display_name = section.get('section_display_name')
-        self.stdout.write(u'  should_gradesync_assignment() - Assignment: {section_display_name}.'.format(
+        self.stdout.write(u'\n\r  should_gradesync_assignment() - Assignment: {section_display_name}.'.format(
             section_display_name=section_display_name,
         ))
 
@@ -201,8 +214,8 @@ class Command(BaseCommand):
                 if section_graded: 
                     self.stdout.write(u'    - Yes. Section has been graded.')
                     return True
-            else:
-                self.stdout.write(u'    - Section has not yet been graded. Moving to next test...')
+                else:
+                    self.stdout.write(u'    - Section has not yet been graded. Moving to next test...')
         except Exception as err:
             self.stdout.write(self.style.ERROR(u'    - Exception with section_graded value: {section_graded}. {err}'.format(
                 section_graded=section_graded,
