@@ -1,16 +1,17 @@
+import datetime
+import pytz
 from django.core.management.base import BaseCommand
-
 from student.models import CourseEnrollment
-
 from opaque_keys.edx.keys import CourseKey
-#from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
-#from opaque_keys.edx.locator import BlockUsageLocator
-
 from lms.djangoapps.grades.api.v2.views import InternalCourseGradeView
+
+utc=pytz.UTC
 
 u"""
   Willo Labs Grade Sync.
   Process all assignment grades from all students enrolled in course_id
+
+  https://dev.roverbyopenstax.org/grades_api/v2/courses/course-v1:ABC+OS9471721_9626+01/
 
   Run from the command line like this:
   cd /edx/app/edxapp/edx-platform
@@ -30,16 +31,13 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.course_id = kwargs['course_id']
-
-        self.stdout.write(self.style.NOTICE(u"gradesync.py ..."))
-
         self.course_key = self.set_course()
         if not self.course_key: 
             return None
 
         self.iterate_students()
 
-        self.stdout.write(self.style.SUCCESS(u'gradesync.py - {course_id}'.format(
+        self.stdout.write(self.style.SUCCESS(u'gradesync.py - Done! {course_id}.'.format(
             course_id=self.course_id
         )))
 
@@ -60,21 +58,37 @@ class Command(BaseCommand):
          Retrieve a json object of grade data for student.
          Iterate through chapters / assignments for the course.
          Post each assignment grade to Willo Labs api.
-
-         https://dev.roverbyopenstax.org/grades_api/v2/courses/course-v1:ABC+OS9471721_9626+01/
         """
 
         self.stdout.write(u'post_student_grades() - retrieving username: {username}.'.format(
             username=student.username
         ))
 
-        course_grades = InternalCourseGradeView()
-        grades = course_grades.get(course_id=self.course_id, username=student.username)
-
-        self.stdout.write(u'post_student_grades() - username: {username}. grades: {grades}'.format(
+        results = InternalCourseGradeView().get(course_id=self.course_id, username=student.username)
+        self.stdout.write(u'post_student_grades() - retrieved grades for {username} / {course_id}'.format(
             username=student.username,
-            grades=grades
+            course_id=self.course_id
         ))
+
+        # only process the course if courses have actually begun.
+        enrollment_start = results.get('course_enrollment_start')
+        if not enrollment_start < utc.localize(datetime.datetime.now()):
+            self.stdout.write(
+                self.style.NOTICE(u'post_student_grades() - Skipping {course_id}. Course has not begun.'.format(
+                course_id=self.course_id,
+                )))
+            return None
+
+        for key, chapter in results['course_chapters'].items():
+            self.stdout.write('chapter: {}'.format(chapter['chapter_display_name']))
+            self.stdout.write('---------------------------------------')
+            for key, section in chapter['chapter_sections'].items():
+                self.stdout.write('  Description: {description}, Due date: {due_date}, Graded: {graded}, Grade received: {grade}'.format(
+                    description=section['section_display_name'],
+                    due_date=section['section_due_date'],
+                    graded=section['section_graded'],
+                    grade=section['section_grade']
+                    ))
 
     
     def set_course(self):
