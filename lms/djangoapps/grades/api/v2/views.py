@@ -83,14 +83,47 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     course_url = None
 
 
-    def get(self, request, course_id=None, chapter_id=None, section_id=None):
+    def get(self, request=None, course_id=None, chapter_id=None, section_id=None, username=None):
+        """
+         Abstract getter.
+         Mostly deals with initializations needed by child objects.
+
+         Default usage as part of a REST api, but can also be called internally 
+         for reports, large grade dumps, manage.py utility apps, etcetera.
+
+         Notes:
+         - For REST api: request is required, and username (if provided) is ignored.
+         - For internal use: request is ignored, and username is required.
+        """
+        # business rule enforcement
+        #---------------------------------------------------------
+        if request is None:
+            if username is None:
+                raise Exception('Username is required if a request object is not provided.')
+
+            if course_id is None:
+                raise Exception('course_id is required if a request object is not provided.')
+
+            # FIX NOTE: do we actually need this validation????
+            #if chapter_id is None:
+            #    raise Exception('chapter_id is required if a request object is not provided.')
+
+            # FIX NOTE: do we actually need this validation????
+            #if section_id is None:
+            #    raise Exception('section_id is required if a request object is not provided.')
+
+        if request is not None and username is not None:
+            raise Exception('AbstractGradesView requires either a request object or a username, but not both.')
 
         # set and validate username
         #---------------------------------------------------------
-        if 'username' in request.GET:
-            self.username = request.GET.get('username')
+        if username is not None:
+            self.username = username
         else:
-            self.username = request.user.username
+            if 'username' in request.GET:
+                self.username = request.GET.get('username')
+            else:
+                self.username = request.user.username
 
         if not self.username:
             raise self.api_error(
@@ -109,7 +142,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 error_code='user_does_not_exist'
             )
 
-        # set and validate course_id
+        # set course_id
         #---------------------------------------------------------
         if course_id:
             self.course_id = course_id
@@ -117,19 +150,19 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             self.course_id = request.GET.get('course_id')
 
 
-        # set and validate chapter_id
+        # set chapter_id
         #---------------------------------------------------------
         if chapter_id:
             self.chapter_id = chapter_id
         else:
-            self.chapter_id = request.GET.get('chapter_id')
+            if request is not None: self.chapter_id = request.GET.get('chapter_id')
 
-        # set and validate section_id
+        # set section_id
         #---------------------------------------------------------
         if section_id:
             self.section_id = section_id
         else:
-            self.section_id = request.GET.get('section_id')
+            if request is not None: self.section_id = request.GET.get('section_id')
 
 
         # ID validations
@@ -177,7 +210,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
 
         # use our validated user and course_key to create a CourseData object.
         # then use the CourseData object to create a CourseGrade object, which
-        # in turn contain several prebuilt methods to return grade data at
+        # in turn contains several prebuilt methods to return grade data at
         # varying levels of detail.
         self.course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
         self.course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
@@ -304,12 +337,28 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                                         problem_ProblemScore.possible
                                         )
                 }
+class InternalCourseGradeView(AbstractGradesView):
+    """
+     Used for requests from manage.py 
+     Returns a json dict
+    """
+    def get(self, course_id, username):
+        super(InternalCourseGradeView, self).get(course_id=course_id, username=username)
 
+        chapters = {}
+        for chapter in self.course_grade.chapter_grades.itervalues():
+            chapters[chapter['url_name']] = self.get_chapter_dict(chapter)
 
+        course_dict = self.get_course_dict()
+        course_dict['course_chapters'] = chapters
+
+        return course_dict
 
 class CourseGradeView(AbstractGradesView):
-
-    def get(self, request, course_id=None):
+    """
+     api view - entire course
+    """
+    def get(self, request=None, course_id=None):
         super(CourseGradeView, self).get(request, course_id, chapter_id=None, section_id=None)
 
         chapters = {}
@@ -322,7 +371,10 @@ class CourseGradeView(AbstractGradesView):
         return Response(course_dict)
 
 class ChapterGradeView(AbstractGradesView):
-    def get(self, request, course_id=None, chapter_id=None):
+    """
+     api view - course chapter
+    """
+    def get(self, request=None, course_id=None, chapter_id=None):
         log.info('ChapterGradeView: course_id={course_id}, chapter_id={chapter_id}'.format(
             course_id=course_id,
             chapter_id=chapter_id
@@ -336,9 +388,11 @@ class ChapterGradeView(AbstractGradesView):
             chapter_id=self.chapter_id
             ))
 
-
 class SectionGradeView(AbstractGradesView):
-    def get(self, request, course_id=None, chapter_id=None, section_id=None):
+    """
+     api view - section of a chapter
+    """
+    def get(self, request=None, course_id=None, chapter_id=None, section_id=None):
         log.info('ChapterGradeView: course_id={course_id}, chapter_id={chapter_id}, section_id={section_id}'.format(
             course_id=course_id,
             chapter_id=chapter_id,
