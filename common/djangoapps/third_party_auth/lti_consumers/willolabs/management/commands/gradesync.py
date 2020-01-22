@@ -1,5 +1,6 @@
 import datetime
 import pytz
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from student.models import CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
@@ -58,11 +59,13 @@ class Command(BaseCommand):
         if not self.course_key: 
             return None
 
+        self.write_console_banner()
         self.iterate_students()
 
-        self.stdout.write(self.style.SUCCESS(u'gradesync.py - Done! {course_id}.'.format(
+        self.stdout.write(self.style.SUCCESS(u'gradesync.py - Done! course_id: {course_id}.'.format(
             course_id=self.course_id
         )))
+        self.write_console_banner()
 
 
     def iterate_students(self):
@@ -253,6 +256,36 @@ class Command(BaseCommand):
             )))
             return False
     
+    def write_console_banner(self):
+
+        msg = u'\r\n============================================================================\r\n'
+        msg += color.BOLD
+        msg += u'     Willo Labs Grade Sync API.\r\n'
+        msg += color.END
+        msg += u'\r\n'
+        msg += color.RED + color.BOLD
+        msg += u'     BE AWARE:\r\n'
+        msg += u'     YOU ARE TRANSMITTING LIVE GRADE DATA FROM ROVER TO WILLO LABS.\r\n'
+        msg += u'     THIS OPERATION WILL POTENTIALLY MODIFY STUDENT GRADES IN A REMOTE LMS.\r\n'
+        msg += u'     MODIFICATIONS TO STUDENT DATA TAKE EFFECT IMMEDIATELY AND CAN BE VIEWED AT\r\n'
+        msg += u'     https://willowlabs.instructure.com/.\r\n'
+        msg += color.END + color.END
+        msg += u'\r\n'
+        msg += u'\r\n'
+        msg += color.BOLD
+        msg += u'     Using Willo Labs api token: ' + color.DARKCYAN + settings.WILLO_API_AUTHORIZATION_TOKEN + color.END
+        msg += color.END
+        msg += u'\r\n'
+        msg += u'\r\n'
+        msg += u'     Willo Labs technical contact:       Rover technical contact:\r\n'
+        msg += u'     ----------------------------        ------------------------\r\n'
+        msg += u'     Matt Hanger                         Kent Fuka\r\n'
+        msg += u'     matt.hanger@willolabs.com           kent@querium.com\r\n'
+        msg += u'\r\n'
+        msg += u'============================================================================\r\n'
+        msg += u'\r\n'
+
+        self.stdout.write(msg)
 
 """
     self.stdout.write(self.style.ERROR('error - A major error.'))
