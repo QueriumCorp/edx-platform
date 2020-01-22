@@ -359,7 +359,7 @@ class CourseGradeView(AbstractGradesView):
      api view - entire course
     """
     def get(self, request=None, course_id=None):
-        super(CourseGradeView, self).get(request, course_id, chapter_id=None, section_id=None)
+        super(CourseGradeView, self).get(request=request, course_id=course_id, chapter_id=None, section_id=None)
 
         chapters = {}
         for chapter in self.course_grade.chapter_grades.itervalues():
@@ -379,7 +379,7 @@ class ChapterGradeView(AbstractGradesView):
             course_id=course_id,
             chapter_id=chapter_id
         ))
-        super(ChapterGradeView, self).get(request, course_id, chapter_id, section_id=None)
+        super(ChapterGradeView, self).get(request=request, course_id=course_id, chapter_id=chapter_id, section_id=None)
         for chapter in self.course_grade.chapter_grades.itervalues():
             if chapter['url_name'] == chapter_id:
                 return Response(self.get_chapter_dict(chapter))
@@ -398,7 +398,7 @@ class SectionGradeView(AbstractGradesView):
             chapter_id=chapter_id,
             section_id=section_id
         ))
-        super(SectionGradeView, self).get(request, course_id, chapter_id, section_id)
+        super(SectionGradeView, self).get(request=request, course_id=course_id, chapter_id=chapter_id, section_id=section_id)
         for chapter in self.course_grade.chapter_grades.itervalues():
             if chapter['url_name'] == chapter_id:
                 for section in chapter['sections']:
