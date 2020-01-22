@@ -274,6 +274,14 @@ class Command(BaseCommand):
         msg += u'\r\n'
         msg += color.BOLD
         msg += u'     Using Willo Labs api token: ' + color.DARKCYAN + settings.WILLO_API_AUTHORIZATION_TOKEN + color.END
+        msg += u'\r\n'
+        msg += u'\r\n'
+        msg += u'     This api token is provided directly by Willo Labs staff. It is\n\r'
+        msg += u'     referenced in the source code as\n\r'
+        msg += u'              WILLO_API_AUTHORIZATION_TOKEN\n\r'
+        msg += u'     and is stored in the following two Python settings files:\n\r'
+        msg += u'     /edx/app/edxapp/edx-platform/lms/envs/aws.py\n\r'
+        msg += u'     /edx/app/edxapp/edx-platform/cms/envs/aws.py\n\r'
         msg += color.END
         msg += u'\r\n'
         msg += u'\r\n'
