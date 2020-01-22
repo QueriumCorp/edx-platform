@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 """
-  written by:   Matt Hangar, Willo Labs
+  written by:   Lawrence McDaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com 
+
+                Matt Hangar, Willo Labs
                 matt.hanger@willolabs.com
 
   Date:         June-2019
+                Jan-2020
 
   Usage:        determine whether an LTI-authenticated user is faculty.
 

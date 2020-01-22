@@ -1,3 +1,20 @@
+u"""
+  Written by:   mcdaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com
+
+  Date:         Jan-2020
+
+  Willo Labs Grade Sync.
+  Process all assignment grades from all students enrolled in course_id
+
+  https://dev.roverbyopenstax.org/grades_api/v2/courses/course-v1:ABC+OS9471721_9626+01/
+
+  Run from the command line like this:
+  cd /edx/app/edxapp/edx-platform
+  sudo -u www-data /edx/bin/python.edxapp ./manage.py lms --settings aws gradesync course-v1:ABC+OS9471721_9626+01
+
+"""
 import datetime
 import pytz
 from django.conf import settings
@@ -31,17 +48,6 @@ class color:
    UNDERLINE = '\033[4m'
    END = '\033[0m'
 
-u"""
-  Willo Labs Grade Sync.
-  Process all assignment grades from all students enrolled in course_id
-
-  https://dev.roverbyopenstax.org/grades_api/v2/courses/course-v1:ABC+OS9471721_9626+01/
-
-  Run from the command line like this:
-  cd /edx/app/edxapp/edx-platform
-  sudo -u www-data /edx/bin/python.edxapp ./manage.py lms --settings aws gradesync course-v1:ABC+OS9471721_9626+01
-
-"""
 class Command(BaseCommand):
     help = u"Willo Labs Grade Sync. Post all assignment grades from all students enrolled in course_id."
     course_key = None

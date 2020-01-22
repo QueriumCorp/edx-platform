@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Constants for LTI Willo Labs Grade Sync support in third_party_auth
+  Constants for LTI Willo Labs Grade Sync support in third_party_auth
+
+  Written by:   mcdaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com
+
+  Date:         Jan-2020
+
 """
 from __future__ import absolute_import
 

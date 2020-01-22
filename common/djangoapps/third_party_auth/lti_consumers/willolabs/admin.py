@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-mcdaniel dec-2019
-Willo LTI Grade Sync tables
+  Willo LTI Grade Sync tables
+
+  Written by:   mcdaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com
+
+  Date:         Jan-2020
 """
 from __future__ import absolute_import
 from django.contrib import admin

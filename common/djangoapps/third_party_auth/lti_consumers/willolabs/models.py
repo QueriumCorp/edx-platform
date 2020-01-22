@@ -1,9 +1,14 @@
 from __future__ import absolute_import
 # -*- coding: utf-8 -*-
 """
-mcdaniel dec-2019
-LTI Integration for Willo Labs Grade Sync.
-Models used to implement LTI External support in third_party_auth
+  LTI Integration for Willo Labs Grade Sync.
+  Models used to implement LTI External support in third_party_auth
+
+  Written by:   mcdaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com
+
+  Date:         Jan-2020
 """
 
 from django.conf import settings

@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-    mcdaniel nov-2019
+    Written by:   mcdaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com
+
+    Date:         Jan-2020
 
     Description:
     =============

@@ -1,3 +1,12 @@
+"""
+  Willo Labs Grade Sync.
+
+  Written by:   mcdaniel
+                lpm0073@gmail.com
+                https://lawrencemcdaniel.com
+
+  Date:         Jan-2020
+"""
 from django.apps import AppConfig
 import logging
 log = logging.getLogger(__name__)
