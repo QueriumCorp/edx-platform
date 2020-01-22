@@ -5,6 +5,17 @@ from student.models import CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
 from lms.djangoapps.grades.api.v2.views import InternalCourseGradeView
 
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import (
+    get_ext_wl_outcome_service_url,
+    get_lti_user_id,
+    get_lti_cached_result_date,
+    willo_activity_id_from_string,
+    willo_id_from_url,
+    willo_date,
+    willo_api_post_grade,
+    willo_api_create_column
+    )
+
 utc=pytz.UTC
 
 u"""
@@ -31,7 +42,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         self.course_id = kwargs['course_id']
-        self.course_key = self.set_course()
+        self.course_key = self.set_coursekey()
         if not self.course_key: 
             return None
 
@@ -79,30 +90,156 @@ class Command(BaseCommand):
                 )))
             return None
 
+        # iterate the chapters and sections of the course, post
+        # assignments to Willo Labs Grade sync if the assignment meets all criteria.
+        #
+        # chapters and chapter sections are both stored as dictionaries of key/value pairs,
+        # with the "value" itself being a dictionary.
         for key, chapter in results['course_chapters'].items():
-            self.stdout.write('chapter: {}'.format(chapter['chapter_display_name']))
-            self.stdout.write('---------------------------------------')
             for key, section in chapter['chapter_sections'].items():
-                self.stdout.write('  Description: {description}, Due date: {due_date}, Graded: {graded}, Grade received: {grade}'.format(
-                    description=section['section_display_name'],
-                    due_date=section['section_due_date'],
-                    graded=section['section_graded'],
-                    grade=section['section_grade']
-                    ))
-
+                if self.should_gradesync_assignment(section):
+                    self.prepare_and_post_column(section)
+                    self.prepare_and_post_grade(student, section)
     
-    def set_course(self):
+    def prepare_and_post_grade(self, student, section):
+        """
+         Transform the section grade data into a Willo Labs grade sync payload dictionary, then post the grade.
+        """
+        section_grade = section.get('section_grade')
+        section_completed_date = section.get('section_completed_date')
+        if section_completed_date is None: section_completed_date = section.get('section_due_date')
+            
+        url = get_ext_wl_outcome_service_url(self.course_id)
+        data = {
+            "type": "result",
+            "id": willo_id_from_url(section.get('section_url')),
+            "activity_id": willo_activity_id_from_string(section.get('section_display_name')),
+            "user_id": get_lti_user_id(self.course_id, student.username),
+            "result_date": willo_date(section_completed_date),
+            "score": section_grade.get('section_grade_earned'),
+            "points_possible": section_grade.get('section_grade_possible')
+        }
+        retval = willo_api_post_grade(ext_wl_outcome_service_url=url, data=data)
+        if 200 <= retval <= 299:
+            result_string = u'prepare_and_post_grade() - SUCCESS! syncd grade for {user} / {assignment}'.format(
+                user=student.username,
+                assignment=section.get('section_display_name')
+            )
+            self.stdout.write(self.style.SUCCESS(result_string))
+        else:
+            result_string = u'prepare_and_post_grade() - HTTP Error {http_response} returned. did not sync grade for {user} / {assignment}'.format(
+                user=student.username,
+                assignment=section.get('section_display_name'),
+                http_response=retval
+            )
+            self.stdout.write(self.style.SUCCESS(result_string))
+
+        return (200 <= retval <= 299)
+
+    def prepare_and_post_column(self, section):
+        """
+         Transform the section grade data into a Willo Labs Column payload dictionary, then post the column.
+        """
+        section_grade = section.get('section_grade')
+
+        url = get_ext_wl_outcome_service_url(self.course_id)
+        data = {
+            "type": "activity",
+            "id": willo_activity_id_from_string(section.get('section_display_name')),
+            "title": section.get('section_display_name'),
+            "description": section.get('section_display_name'),
+            "due_date": willo_date(section.get('section_due_date')),
+            "points_possible": section_grade.get('section_grade_possible')
+        }
+        retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data)
+        if 200 <= retval <= 299:
+            result_string = u'prepare_and_post_column() - SUCCESS! syncd column for {assignment}'.format(
+                assignment=section.get('section_display_name')
+            )
+            self.stdout.write(self.style.SUCCESS(result_string))
+        else:
+            result_string = u'prepare_and_post_column() - HTTP Error {http_response} returned. did not sync column {assignment}'.format(
+                assignment=section.get('section_display_name'),
+                http_response=retval
+            )
+            self.stdout.write(self.style.SUCCESS(result_string))
+
+        return (200 <= retval <= 299)
+
+    def should_gradesync_assignment(self, section):
+        """
+         Rover homework assignments that should be sync'd should meet any of the following
+         criteria:
+          - assignments due date has passed.
+          - student has attempted at least one problem in the assignment.
+        """
+        section_display_name = section.get('section_display_name')
+        self.stdout.write(u'  should_gradesync_assignment() - Assignment: {section_display_name}.'.format(
+            section_display_name=section_display_name,
+        ))
+
+        # evaluate section due date
+        try:
+            due_date = section.get('section_due_date')
+            if due_date is not None:
+                if due_date < utc.localize(datetime.datetime.now()): 
+                    self.stdout.write(u'    - Yes. Section Due date has passed.')
+                    return True
+            else:
+                self.stdout.write(u'    - Due date not set! Moving to next test...')
+        except Exception as err:
+            self.stdout.write(self.style.ERROR(u'    - Exception with Section Due date value: {due_date}. {err}'.format(
+                due_date=due_date,
+                err=err
+            )))
+            pass
+
+        # evaluate whether the assignment has been graded yet.
+        try:
+            section_graded = section.get('section_graded')
+            if type(section_graded) == bool: 
+                if section_graded: 
+                    self.stdout.write(u'    - Yes. Section has been graded.')
+                    return True
+            else:
+                self.stdout.write(u'    - Section has not yet been graded. Moving to next test...')
+        except Exception as err:
+            self.stdout.write(self.style.ERROR(u'    - Exception with section_graded value: {section_graded}. {err}'.format(
+                section_graded=section_graded,
+                err=err
+            )))
+            pass
+
+        # evaluate whether the student has attempted any graded problems in this assignment.
+        try:
+            section_grade = section.get('section_grade')
+            section_attempted_graded = section_grade.get('section_attempted_graded')
+            if section_attempted_graded:
+                self.stdout.write(u'    - Yes. Found at least one graded problem in this assignment.')
+                return True
+            else:
+                self.stdout.write(u'    - Student has not yet attempted any problems in this assignment.')
+        except Exception as err:
+            self.stdout.write(self.style.ERROR(u'    - Exception with section grade earned: {section_attempted_graded}. {err}'.format(
+                section_attempted_graded=section_attempted_graded,
+                err=err
+            )))
+            pass
+
+        self.stdout.write(self.style.NOTICE(u'    - NO. No criteria was met. Skipping this assignment.'))
+        return False
+
+    def set_coursekey(self):
         try:
             key = CourseKey.from_string(self.course_id)
             return key
         except Exception as err:
-            self.stdout.write(self.style.ERROR(u'set_course() - Not a valid course_id: {course_id}. {err}'.format(
+            self.stdout.write(self.style.ERROR(u'set_coursekey() - Not a valid course_id: {course_id}. {err}'.format(
                 course_id=self.course_id,
                 err=err
             )))
             return False
-        
-
+    
 
 """
     self.stdout.write(self.style.ERROR('error - A major error.'))
