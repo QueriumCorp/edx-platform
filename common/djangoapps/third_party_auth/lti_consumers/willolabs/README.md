@@ -2,6 +2,8 @@
 
 Provides enhanced integration capabilities to WilloLab-connected external systems like Canvas, Blackboard, Moodle. Facilitates grade exports to the external system by building a map between LTI tpa_lti_params data passed to Rover during LTI authentication. This module infers and caches relationships between the tpa_lti_params data and Rover course_id, username, subsection.
 
+Makes copious use of Opaque keys. Read more here: https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
+
 **Provides efficient bidirectional integration capability between Rover and the external system for real-time student grade syncronization.**
 
 ## cache.py

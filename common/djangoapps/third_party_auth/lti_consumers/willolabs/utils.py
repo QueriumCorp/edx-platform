@@ -36,7 +36,9 @@ from common.djangoapps.third_party_auth.lti_consumers.willolabs.constants import
     )
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourse,
-    LTIExternalCourseEnrollment
+    LTIExternalCourseEnrollment,
+    LTIExternalCourseAssignments,
+    LTIExternalCourseEnrollmentGrades,
     )
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -49,8 +51,18 @@ try:
 except ImportError:
     from urlparse import urlparse
 
+
 import logging
 log = logging.getLogger(__name__)
+
+def is_lti_cached_user(user):
+    """
+     Test to see if there is cached LTI data for this user.
+    """
+    ret = LTIExternalCourseEnrollment.objects.filter(
+        user=user
+    ).first()
+    return ret is not None
 
 def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
     """
@@ -58,14 +70,66 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
 
      dte: either a datetime or a string representation of datetime in this format: %Y-%m-%d %H:%M:%S.%f
     """
-    if type(dte) == datetime:
-        return dte.isoformat()
 
-    if type(dte) == str:
-        return datetime.datetime.strptime(date_string=dte, format=format).isoformat()
+    if dte is None: return None
 
-def get_lti_cached_result_date():
+    if type(dte) == datetime.datetime: return dte.isoformat()
+
+    if type(dte) == str: return datetime.datetime.strptime(date_string=dte, format=format).isoformat()
+        
+    log.error('willo_date() - received an expected data type: {type}, value: {value}'.format(
+        type=type(dte),
+        value=dte
+    ))
     return None
+
+
+def get_lti_cached_result_date(
+            course_id,
+            username, 
+            section_url,
+            section_completed_date=None, 
+            section_due_date=None
+            ):
+    """
+      Try to retrieve an assignment completion date from the LTI cache.
+
+      course_id: course key that contains the assignment
+      username: Rover user who completed the assignment
+      lti_id: the LTI unique identifier for the assignment, created from the Rover resource key (right-most segment of URL path)
+      section_completed_date: an alternative date that is potentially supplied by the Rover grades api.
+      section_due_date: ditto.
+    """
+
+    # need to consider that there might be more than one course with this course_id 
+    user = USER_MODEL.objects.get(username=username)
+    course_key = CourseKey.from_string(course_id)
+
+    # must take into consideration that course_id is not unique
+    # for LTIExternalCourse given that multiple external LMS'
+    # could potentially share a common Rover course.
+    courses = LTIExternalCourse.objects.filter(course_id = course_key)
+    for course in courses:
+        try:
+            course_assignment=LTIExternalCourseAssignments.objects.get(
+                course=course,
+                url=section_url
+            )
+            course_enrollment=LTIExternalCourseEnrollment.objects.get(
+                course=course,
+                user=user
+            )
+            res = LTIExternalCourseEnrollmentGrades.objects.filter(
+                course_assignment=course_assignment,
+                course_enrollment=course_enrollment
+            ).order_by('-created').first()
+            if res is not None: return res.created
+        except:
+            pass
+
+    if section_completed_date is not None: return section_completed_date
+    if section_due_date is not None:  return section_due_date
+    return datetime.datetime.now()
 
 def willo_id_from_url(url):
     """
@@ -85,32 +149,64 @@ def willo_activity_id_from_string(activity_string):
      Strip activity_string to alphanumeric characters.
      return value is used as the activity_id and id values for Willo Labs grade and column post api.
     """
-    return re.sub(r'\W+', '', activity_string)
+    return re.sub(r'\W+', '', activity_string).lower()     # alphanumeric
+    #return re.sub(r'/^[a-zA-Z0-9-_]+$/', '', activity_string).lower()
 
-def get_lti_user_id(course_id, username):
+def get_lti_user_id(course_id, username, context_id=None):
     """
      Retrieve the Willo Labs user_id assigned to Rover username for course_id.
      This is passed in tpa_params during LTI authentication and cached.
     """
+
+    msg='get_lti_user_id() - course_id: {course_id}, username: {username}'.format(
+        course_id=course_id,
+        username=username
+    )
+    print(msg)
+
     user = USER_MODEL.objects.get(username=username)
     course_key = CourseKey.from_string(course_id)
-    course = LTIExternalCourse.objects.filter(
-        course_id = course_key
-    )
-    course_enrollment = LTIExternalCourseEnrollment.objects.filter(
-        course = course,
-        user = user
-    ).first()
-    return course_enrollment.lti_user_id
+    if context_id is not None:
+        course = LTIExternalCourse.objects.get(context_id=context_id)
+        if course is not None and user is not None:
+            try:
+                course_enrollment = LTIExternalCourseEnrollment.objects.get(
+                    course = course,
+                    user = user
+                )
+                return course_enrollment.lti_user_id
+            except:
+                pass
+        else: return None
 
-def get_ext_wl_outcome_service_url(course_id):
+    # if there's not a context_id then we will still must 
+    # take into consideration that course_id may not be unique
+    # for LTIExternalCourse given that multiple external LMS'
+    # could potentially share a common Rover course.
+    courses = LTIExternalCourse.objects.filter(course_id = course_key)
+    for course in courses:
+        try:
+            course_enrollment = LTIExternalCourseEnrollment.objects.get(
+                course = course,
+                user = user
+            )
+            if course_enrollment is not None: return course_enrollment.lti_user_id
+        except:
+            pass
+    return None
+
+def get_ext_wl_outcome_service_url(course_id, context_id=None):
     """
      Retrieve a Willo Labs outcome service URL from the LTI cache.
      This is passed in tpa_params during LTI authentication and cached.
     """
+    if context_id is not None:
+        course = LTIExternalCourse.objects.get(context_id=context_id)
+    return course.ext_wl_outcome_service_url
+
     course_key = CourseKey.from_string(course_id)
     course = LTIExternalCourse.objects.filter(course_id=course_key).first()
-    return course.ext_wl_outcome_service_url
+    return course[0].ext_wl_outcome_service_url
 
 def willo_api_create_column(ext_wl_outcome_service_url, data):
     """
