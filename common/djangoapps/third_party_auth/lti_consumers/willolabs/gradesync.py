@@ -100,19 +100,38 @@ class LTIGradeSync:
         if not self.course_key: raise LTIBusinessRuleError("course_id has not been set.")
 
         students = CourseEnrollment.objects.users_enrolled_in(self.course_key)
+        if students is None:
+            return None
+
+        self.console_output(style.BOLD + u'\n\r' + (u'=' * 80) + style.END)
+        msg = u'Willo Labs Grade Sync -- PROCESSING COURSE course_id: {course_id}, context_id: {context_id}.'.format(
+            course_id=self.course_id,
+            context_id=self.context_id
+        )
+        self.console_output(style.BOLD + msg + style.END)
+        msg = style.BOLD + u'=' * 80
+        msg += style.END
+        self.console_output(msg)
+
         for student in students:
-            msg = u'iterate_students() - course_id: {course_id} Retrieving username: {username}.'.format(
+            msg = color.BOLD + color.PURPLE + '    \n\rSyncing ' + color.END + color.END
+            msg += u'context_id: {context_id}, course_id: {course_id}, username: {username}.'.format(
+                context_id=self.context_id,
                 course_id=self.course_id,
                 username=student.username
             )
-            msg = color.BOLD + color.PURPLE + msg + color.END + color.END
             self.console_output(msg)
             self.post_student_grades(student)
 
-        msg = u'iterate_students.py - Done! course_id: {course_id}.'.format(
-            course_id=self.course_id
+        self.console_output(style.BOLD + '\n\r\n\r' + (u'=' * 80) + style.END)
+        msg = u'Willo Labs Grade Sync -- DONE PROCESSING COURSE course_id: {course_id}, context_id: {context_id}.'.format(
+            course_id=self.course_id,
+            context_id=self.context_id
         )
-        self.console_output(msg, text_style=style.SUCCESS)
+        self.console_output(style.BOLD + msg + style.END)
+        msg = style.BOLD + u'=' * 80
+        msg += u'\n\r\n\r' + style.END
+        self.console_output(msg)
 
         return None
 
@@ -129,12 +148,12 @@ class LTIGradeSync:
          LTI cache data to see if this Rover user has ever authenticated via LTI. If not then
          we should just exit since we won't know the LTI user credentials.
         """
-        if not is_lti_cached_user(student):
+        if not is_lti_cached_user(student, self.context_id):
             self.console_output(u'    No LTI cache data for this user. Skipping.')
             return None
         
         results = InternalCourseGradeView().get(course_id=self.course_id, username=student.username)
-        self.console_output(u'post_student_grades() - retrieved grades for {username} / {course_id}'.format(
+        self.console_output(u'    post_student_grades() - retrieved grades for {username} / {course_id}'.format(
             username=student.username,
             course_id=self.course_id
         ))
@@ -202,13 +221,15 @@ class LTIGradeSync:
         }
         retval = willo_api_post_grade(ext_wl_outcome_service_url=url, data=data)
         if 200 <= retval <= 299:
-            result_string = u'  prepare_and_post_grade() - SUCCESS! syncd grade for {user} / {assignment}'.format(
+            msg = color.GREEN + color.BOLD + '    SUCCESS: ' + color.END + color.END
+            msg += u'syncd grade for {user} / {assignment}'.format(
                 user=student.username,
                 assignment=section.get('section_display_name')
             )
-            self.console_output(result_string, text_style=style.SUCCESS)
+            self.console_output(msg)
         else:
-            result_string = u'  prepare_and_post_grade() - HTTP Error {http_response} returned. did not sync grade for {user} / {assignment}. section_completed_date: {section_completed_date} / section_due_date: {section_due_date}'.format(
+            msg = color.RED + color.BOLD + '    HTTP Error  {http_response}: ' + color.END + color.END
+            msg += u'Did not sync grade for {user} / {assignment}. section_completed_date: {section_completed_date} / section_due_date: {section_due_date}'.format(
                 user=student.username,
                 assignment=section.get('section_display_name'),
                 http_response=retval,
@@ -236,16 +257,18 @@ class LTIGradeSync:
         }
         retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data)
         if 200 <= retval <= 299:
-            result_string = u'  prepare_and_post_column() - SUCCESS! syncd column for {assignment}'.format(
+            msg = color.GREEN + color.BOLD + '    SUCCESS: ' + color.END + color.END
+            msg += u'syncd column for {assignment}'.format(
                 assignment=section.get('section_display_name')
             )
-            self.console_output(result_string, text_style=style.SUCCESS)
+            self.console_output(msg, text_style=style.SUCCESS)
         else:
-            result_string = u'  prepare_and_post_column() - HTTP Error {http_response} returned. did not sync column {assignment}'.format(
+            msg = color.RED + color.BOLD + '    HTTP Error  {http_response}: ' + color.END + color.END
+            msg += u'Did not sync column {assignment}'.format(
                 assignment=section.get('section_display_name'),
                 http_response=retval
             )
-            self.console_output(result_string, text_style=style.ERROR)
+            self.console_output(msg)
 
         return (200 <= retval <= 299)
 
@@ -345,7 +368,9 @@ class LTIGradeSync:
 
     def write_console_banner(self):
 
-        msg = u'\r\n============================================================================\r\n'
+        msg = color.BOLD + u'\r\n'
+        msg += '=' * 80 
+        msg += '\r\n' + color.END
         msg += u'     ' + color.BOLD + color.UNDERLINE + 'Willo Labs Grade Sync API.\r\n'
         msg += color.END + color.END
         msg += u'\r\n'
@@ -375,9 +400,11 @@ class LTIGradeSync:
         msg += u'     ----------------------------        ------------------------\r\n'
         msg += u'     Matt Hanger                         Kent Fuka\r\n'
         msg += u'     matt.hanger@willolabs.com           kent@querium.com\r\n'
-        msg += u'\r\n'
-        msg += u'============================================================================\r\n'
-        msg += u'\r\n'
+        msg += u'\r\n' + color.BOLD
+        msg += '=' * 80
+        msg += '\r\n' + color.END
+
+        #msg += u'\r\n'
 
         self.console_output(msg)
 

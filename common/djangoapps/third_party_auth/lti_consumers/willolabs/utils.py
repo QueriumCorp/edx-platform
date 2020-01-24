@@ -55,14 +55,21 @@ except ImportError:
 import logging
 log = logging.getLogger(__name__)
 
-def is_lti_cached_user(user):
+def is_lti_cached_user(user, context_id):
     """
-     Test to see if there is cached LTI data for this user.
+     Test to see if there is cached LTI enrollment data for this user.
+
+     user: a Django user model
+     course_id: a Opaque Key object.
     """
-    ret = LTIExternalCourseEnrollment.objects.filter(
-        user=user
-    ).first()
-    return ret is not None
+    try:
+        ret = LTIExternalCourseEnrollment.objects.get(
+            course=LTIExternalCourse.objects.get(context_id=context_id),
+            user=user
+            )
+        return ret is not None
+    except:
+        return False
 
 def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
     """
@@ -158,11 +165,11 @@ def get_lti_user_id(course_id, username, context_id=None):
      This is passed in tpa_params during LTI authentication and cached.
     """
 
-    msg='get_lti_user_id() - course_id: {course_id}, username: {username}'.format(
-        course_id=course_id,
-        username=username
-    )
-    print(msg)
+    #msg='get_lti_user_id() - course_id: {course_id}, username: {username}'.format(
+    #    course_id=course_id,
+    #    username=username
+    #)
+    #print(msg)
 
     user = USER_MODEL.objects.get(username=username)
     course_key = CourseKey.from_string(course_id)
