@@ -274,7 +274,10 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
 
         sections = {}
         for section in chapter['sections']:
-            sections[section.url_name] = self.get_section_dict(chapter, section)
+            if section.attempted_graded or section.due is not None:
+                # build a dictionary containing any graded assignments which the student
+                # has attempted, or, have an assigned due date.
+                sections[section.url_name] = self.get_section_dict(chapter, section)
 
         return {
                     'chapter_url': self.course_url + chapter['url_name'],

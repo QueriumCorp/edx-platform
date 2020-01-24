@@ -24,6 +24,8 @@ Custom Modules (as per Lawrence McDaniel)
 
 .. _LTI Grade Synch module: common/djangoapps/third_party_auth/lti_consumers/willolabs/
 
+.. _Grades API: lms/djangoapps/grades/api/v2/
+
 .. _Rover Grades api: lms/djangoapps/grades/api/v2/
 
 `Salesforce Integration Module`_: Rest api, django admin console, and manage.py command line tools to capture and upload salesforce tracking data for Open Stax marketing team.
