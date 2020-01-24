@@ -42,10 +42,5 @@ class Command(BaseCommand):
         else: grade_sync = LTIGradeSync()
 
         grade_sync.write_console_banner()
-
-        if grade_sync.course_id is not None:
-            grade_sync.iterate_students()
-        else:
-            grade_sync.iterate_courses()
-
+        grade_sync.iterate_courses()
         grade_sync.write_console_banner()

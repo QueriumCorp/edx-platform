@@ -23,6 +23,7 @@ from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import (
     willo_activity_id_from_string,
     willo_id_from_url,
     is_lti_cached_user,
+    is_valid_course_id,
     willo_date,
     willo_api_post_grade,
     willo_api_create_column
@@ -65,7 +66,7 @@ class LTIGradeSync:
     def __init__(self, course_id=None):
         if course_id is not None:
             self.course_id = course_id
-            self.course_key = self.set_coursekey()
+            self.course_key = self.get_validated_coursekey()
     
     def iterate_courses(self):
         """
@@ -73,15 +74,14 @@ class LTIGradeSync:
          Run grade sync on each course.
         """
 
-        courses = LTIExternalCourse.objects.all()
-        for course in courses:
+        for course in self.get_courses():
             """
             set course_id and course_key from the CourseKey object in LTIExternalCourse
             
             You can read more here about why the syntax below works:
             https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
 
-            Note: we'll skip calling set_coursekey() bc in this case we're beginning 
+            Note: we'll skip calling get_validated_coursekey() bc in this case we're beginning 
             with a CourseKey from a confirmed Willo Labs LTI supported course
             (since the course came directly from the LTI course cache.)
             """
@@ -103,35 +103,13 @@ class LTIGradeSync:
         if students is None:
             return None
 
-        self.console_output(style.BOLD + u'\n\r' + (u'=' * 80) + style.END)
-        msg = u'Willo Labs Grade Sync -- PROCESSING COURSE course_id: {course_id}, context_id: {context_id}.'.format(
-            course_id=self.course_id,
-            context_id=self.context_id
-        )
-        self.console_output(style.BOLD + msg + style.END)
-        msg = style.BOLD + u'=' * 80
-        msg += style.END
-        self.console_output(msg)
+        self.write_course_banner()
 
         for student in students:
-            msg = color.BOLD + color.PURPLE + '    \n\rSyncing ' + color.END + color.END
-            msg += u'context_id: {context_id}, course_id: {course_id}, username: {username}.'.format(
-                context_id=self.context_id,
-                course_id=self.course_id,
-                username=student.username
-            )
-            self.console_output(msg)
+            self.write_student_banner(student.username)
             self.post_student_grades(student)
 
-        self.console_output(style.BOLD + '\n\r\n\r' + (u'=' * 80) + style.END)
-        msg = u'Willo Labs Grade Sync -- DONE PROCESSING COURSE course_id: {course_id}, context_id: {context_id}.'.format(
-            course_id=self.course_id,
-            context_id=self.context_id
-        )
-        self.console_output(style.BOLD + msg + style.END)
-        msg = style.BOLD + u'=' * 80
-        msg += u'\n\r\n\r' + style.END
-        self.console_output(msg)
+        self.write_course_banner(done=True)
 
         return None
 
@@ -340,31 +318,42 @@ class LTIGradeSync:
         self.console_output(msg, text_style=style.NOTICE, important=False)
         return False
 
-    def set_coursekey(self):
+    def get_validated_coursekey(self):
         """
           Set the CourseKey based on the course_id provided.
           Verify that the course supports Willo Labs LTI Grade Sync.
         """
         # validate the course_id provided
-        try:
-            key = CourseKey.from_string(self.course_id)
-        except Exception as err:
-            msg = u'set_coursekey() - Not a valid course_id: {course_id}. {err}'.format(
-                course_id=self.course_id,
-                err=err
+        if not is_valid_course_id(self.course_id):
+            msg = u'get_validated_coursekey() - Not a valid course_id: {course_id}'.format(
+                course_id=self.course_id
             )
-            self.console_output(msg, text_style=style.ERROR)
-            return False
+            raise LTIBusinessRuleError(msg)
 
         # verify that the course is a Willo Labs LTI course. If its a valid Willo Labs LTI course then
         # we'll find a cached course record.
+        key = CourseKey.from_string(self.course_id)
         course = LTIExternalCourse.objects.filter(
             course_id=key
         )
         if course is not None: return key
 
         # didn't find the course in the LTI cache, so raise an error.
-        raise LTIBusinessRuleError('The course_id provided is a valid Rover course identifier. However, this course does not support Willo Labs LTI Grade Sync.')
+        raise LTIBusinessRuleError('The course_id {course_id} is a valid Rover course identifier. However, this course does not support Willo Labs LTI Grade Sync.'.format(
+            course_id=self.course_id
+        ))
+
+    def get_courses(self):
+        if self.context_id is not None:
+            return LTIExternalCourse.objects.filter(
+                context_id=self.context_id
+            )
+        if self.course_key is not None:
+            return LTIExternalCourse.objects.filter(
+                course_id=self.course_key
+            )
+
+        return LTIExternalCourse.objects.all()
 
     def write_console_banner(self):
 
@@ -407,6 +396,32 @@ class LTIGradeSync:
         #msg += u'\r\n'
 
         self.console_output(msg)
+
+    def write_course_banner(self, done=False):
+        course_str = color.DARKCYAN + '{course_id}'.format(course_id=self.course_key) + color.END
+        context_str = color.DARKCYAN + '{context_id}'.format(context_id=self.context_id) + color.END
+
+        if done:
+            msg = u'Willo Labs Grade Sync -- PROCESSING COURSE'
+        else:
+            msg = u'Willo Labs Grade Sync -- DONE PROCESSING COURSE'
+
+        self.console_output(style.BOLD + u'\n\r' + (u'=' * 80) + style.END)
+        msg += u'\r\ncourse_id: ' + course_str + '\r\ncontext_id: ' + context_str
+        self.console_output(style.BOLD + msg + style.END)
+        msg = style.BOLD + u'=' * 80
+        msg += style.END
+        self.console_output(msg)
+
+    def write_student_banner(self, username):
+        msg = color.BOLD + color.PURPLE + '    \n\rSyncing ' + color.END + color.END
+        msg += u'context_id: {context_id}, course_id: {course_id}, username: {username}.'.format(
+            context_id=self.context_id,
+            course_id=self.course_id,
+            username=username
+        )
+        self.console_output(msg)
+
 
     def console_output(self, msg, text_style=None, important=True):
         """
