@@ -618,8 +618,10 @@ class CourseOverview(TimeStampedModel):
         # settings.DEFAULT_COURSE_ABOUT_IMAGE_URL if they didn't specify one.
         raw_image_url = self.course_image_url
 
+        # FIX NOTE: DELETE ME!!!!
         # mcdaniel oct-2019: hack to fix the missing course cards from the LMS
         # home screen. 
+        #
         if "precalculus" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/precalculus.svg'
         elif "trig" in self.display_name.lower():
