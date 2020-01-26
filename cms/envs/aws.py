@@ -683,19 +683,24 @@ derive_settings(__name__)
 INSTALLED_APPS.append('openstax_integrator.salesforce')
 
 # mcdaniel mar-2019: Openstax Backend parameters
-OPENSTAX_BACKEND_CLIENT_ID = ''
-OPENSTAX_BACKEND_CLIENT_SECRET = ''
+# jul-2019: changed these to hard-coded values in order to remove from lms.env.json
+OPENSTAX_BACKEND_CLIENT_ID = passwords.OPENSTAX_BACKEND_CLIENT_ID
+OPENSTAX_BACKEND_CLIENT_SECRET = passwords.OPENSTAX_BACKEND_CLIENT_SECRET
 OPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://accounts.openstax.org/oauth/authorize'
 OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
 OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
 OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
 
 # mcdaniel oct-2019: Added backend for oauth provider roverbyopenstax.org
-ROVERBYOPENSTAX_BACKEND_CLIENT_ID = ''
-ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET = ''
+ROVERBYOPENSTAX_BACKEND_CLIENT_ID = passwords.ROVERBYOPENSTAX_BACKEND_CLIENT_ID
+ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET = passwords.ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET
+ROVERBYOPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://roverbyopenstax.org/o/authorize'
+ROVERBYOPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://roverbyopenstax.org/o/token'
+ROVERBYOPENSTAX_BACKEND_USER_QUERY = 'https://roverbyopenstax.org/o/api/users?'
+ROVERBYOPENSTAX_BACKEND_USERS_QUERY = 'https://roverbyopenstax.org/o/api/users?'
 
 # mcdaniel jan-2020: Fixed Willo api token assigned by Willo Labs staff.
-WILLO_API_AUTHORIZATION_TOKEN = 'qHT28EAgrxag3AjyM3ZQmUYemBQeTy82eRC8hdua'
+WILLO_API_AUTHORIZATION_TOKEN = passwords.WILLO_API_AUTHORIZATION_TOKEN
 
 
 # mcdaniel feb-2019 - add REDIRECT_AM_REGISTRATION
