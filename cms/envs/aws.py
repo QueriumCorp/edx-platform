@@ -15,6 +15,7 @@ import datetime
 import json
 
 from .common import *
+from .passwords import *
 
 from openedx.core.lib.derived import derive_settings
 from openedx.core.lib.logsettings import get_logger_config
