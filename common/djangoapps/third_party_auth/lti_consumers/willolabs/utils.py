@@ -13,15 +13,6 @@ from __future__ import absolute_import
 
   Usage:        determine whether an LTI-authenticated user is faculty.
 
-Canvas via Willo Integration:
-===================
-https://willowlabs.instructure.com/
-un: rover_teach
-pw: WilloTest1
-
-https://willowlabs.instructure.com/
-un: rover_learner
-pw: WilloTest1
 
 """
 
@@ -55,6 +46,15 @@ except ImportError:
 import logging
 log = logging.getLogger(__name__)
 
+def is_lti_gradesync_enabled(course_key):
+    try:
+        cnt = LTIExternalCourse.objects.filter(course_id = course_key).count()
+        return cnt > 0
+    except:
+        return False
+
+    return False
+
 def is_lti_cached_user(user, context_id):
     """
      Test to see if there is cached LTI enrollment data for this user.
@@ -68,7 +68,7 @@ def is_lti_cached_user(user, context_id):
             user=user
             )
         return ret is not None
-    except:
+    except LTIExternalCourseEnrollment.DoesNotExist:
         return False
 
 def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
