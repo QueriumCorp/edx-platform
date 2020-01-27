@@ -401,7 +401,7 @@ class LTIGradeSync:
         course_str = color.DARKCYAN + '{course_id}'.format(course_id=self.course_key) + color.END
         context_str = color.DARKCYAN + '{context_id}'.format(context_id=self.context_id) + color.END
 
-        if done:
+        if not done:
             msg = u'Willo Labs Grade Sync -- PROCESSING COURSE'
         else:
             msg = u'Willo Labs Grade Sync -- DONE PROCESSING COURSE'
