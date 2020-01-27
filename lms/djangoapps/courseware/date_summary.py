@@ -506,12 +506,12 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
             #return _('Don\'t miss the opportunity to highlight your new knowledge and skills by earning a verified'
             #         ' certificate.')
             return _('You will need to pay for Rover by OpenStax before your free trial period ends or you will not be able to submit homework assignments in this course. '
-                     'If you are in the Educational Opportunity Program (EOP) at your institution, please have your instructor email roversupport@querium.com for information on payment assistance. Also, please read our FAQs (see link in the footer of this page) for information on payment assistance.')
+                     'If you are in the Educational Opportunity Program (EOP) at your institution, please check your school email inbox for information on payment assistance.')
 
         #return _('You are still eligible to upgrade to a Verified Certificate! '
         #         'Pursue it to highlight the knowledge and skills you gain in this course.')
         return _('You will need to pay for Rover by OpenStax before your free trial period ends or you will not be able to submit homework assignments in this course. '
-                 'If you are in the Educational Opportunity Program (EOP) at your institution, please have your instructor email roversupport@querium.com for information on payment assistance. Also, please read our FAQs (see link in the footer of this page) for information on payment assistance.')
+                 'If you are in the Educational Opportunity Program (EOP) at your institution, please check your school email inbox for information on payment assistance.')
 
 
 
@@ -519,7 +519,8 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
     def relative_datestring(self):
         dynamic_deadline = self._dynamic_deadline()
         if dynamic_deadline is None:
-            return super(VerifiedUpgradeDeadlineDate, self).relative_datestring
+            return '11:59PM PT on Tuesday, Feb 4'
+            #return super(VerifiedUpgradeDeadlineDate, self).relative_datestring
 
         if self.date is None or self.deadline_has_passed():
             return ' '
@@ -645,3 +646,5 @@ class VerificationDeadlineDate(DateSummary):
     def must_retry(self):
         """Return True if the user must re-submit verification, False otherwise."""
         return self.verification_status == 'must_reverify'
+
+
