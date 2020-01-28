@@ -214,8 +214,10 @@ class ProviderConfig(ConfigurationModel):
     def clean(self):
         """ Ensure that either `icon_class` or `icon_image` is set """
         super(ProviderConfig, self).clean()
-        if bool(self.icon_class) == bool(self.icon_image):
-            raise ValidationError('Either an icon class or an icon image must be given (but not both)')
+        # mcdaniel jan-2020
+        # breaks the django update screen
+        #if bool(self.icon_class) == bool(self.icon_image):
+        #    raise ValidationError('Either an icon class or an icon image must be given (but not both)')
 
     @property
     def provider_id(self):
