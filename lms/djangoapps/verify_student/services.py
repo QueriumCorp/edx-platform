@@ -62,6 +62,9 @@ class IDVerificationService(object):
 
         This will check for the user's *initial* verification.
         """
+        # mcdaniel jan-2020: rover does not require identity verification.
+        return True
+        """
         filter_kwargs = {
             'user': user,
             'status': 'approved',
@@ -71,6 +74,7 @@ class IDVerificationService(object):
         return (SoftwareSecurePhotoVerification.objects.filter(**filter_kwargs).exists() or
                 SSOVerification.objects.filter(**filter_kwargs).exists() or
                 ManualVerification.objects.filter(**filter_kwargs).exists())
+        """
 
     @classmethod
     def verifications_for_user(cls, user):

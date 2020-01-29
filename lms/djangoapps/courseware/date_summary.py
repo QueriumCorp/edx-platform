@@ -626,22 +626,30 @@ class VerificationDeadlineDate(DateSummary):
 
     @lazy
     def date(self):
-        return VerificationDeadline.deadline_for_course(self.course_id)
+        # mcdaniel jan-2020: rover does not require identity verifications
+        return None
+        #return VerificationDeadline.deadline_for_course(self.course_id)
 
     @lazy
     def is_enabled(self):
+        # mcdaniel jan-2020: rover does not require identity verifications
+        return False
+        """        
         if self.date is None:
             return False
         (mode, is_active) = CourseEnrollment.enrollment_mode_for_user(self.user, self.course_id)
         if is_active and mode == 'verified':
             return self.verification_status in ('expired', 'none', 'must_reverify')
         return False
+        """
 
     @lazy
     def verification_status(self):
         """Return the verification status for this user."""
         verification_status = IDVerificationService.user_status(self.user)
-        return verification_status['status']
+        #return verification_status['status']
+        # mcdaniel jan-2020: rover does not require identity verification.
+        return 'approved'
 
     def must_retry(self):
         """Return True if the user must re-submit verification, False otherwise."""
