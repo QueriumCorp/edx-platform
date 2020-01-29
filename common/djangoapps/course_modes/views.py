@@ -33,6 +33,10 @@ from util.db import outer_atomic
 from xmodule.modulestore.django import modulestore
 
 
+# mcdaniel jan-2020
+import logging
+log = logging.getLogger(__name__)
+
 class ChooseModeView(View):
     """View used when the user is asked to pick a mode.
 
@@ -112,12 +116,24 @@ class ChooseModeView(View):
             return redirect(reverse('dashboard'))
 
         # If a user has already paid, redirect them to the dashboard.
-        if is_active and (enrollment_mode in CourseMode.VERIFIED_MODES + [CourseMode.NO_ID_PROFESSIONAL_MODE]):
-            # If the course has started redirect to course home instead
-            if course.has_started():
-                return redirect(reverse('openedx.course_experience.course_home', kwargs={'course_id': course_key}))
-            return redirect(reverse('dashboard'))
+        """
+        # mcdaniel jan-2020: we do not want to evaluate ecommerce status at this point,
+        # since our students have not yet had an opportunity to pay.
+        """
+        #if is_active and (enrollment_mode in CourseMode.VERIFIED_MODES + [CourseMode.NO_ID_PROFESSIONAL_MODE]):
 
+        # If the course has started redirect to course home instead
+        if course.has_started():
+            log.info("get() -- to circumvent course_modes/choose.html: redirect(reverse('openedx.course_experience.course_home', kwargs={'course_id': course_key})) ")
+            return redirect(reverse('openedx.course_experience.course_home', kwargs={'course_id': course_key}))
+        log.info("get() -- to circumvent course_modes/choose.html: redirect(reverse('dashboard')) ")
+        return redirect(reverse('dashboard'))
+
+        """
+        mcdaniel jan-2020: nothing below this line will ever execute.
+         - we either send the student the course home page
+         - or, we send them the dashboard.
+        """
         donation_for_course = request.session.get("donation_for_course", {})
         chosen_price = donation_for_course.get(unicode(course_key), None)
 
