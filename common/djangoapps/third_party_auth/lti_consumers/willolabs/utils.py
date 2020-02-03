@@ -48,8 +48,7 @@ log = logging.getLogger(__name__)
 
 def is_lti_gradesync_enabled(course_key):
     try:
-        cnt = LTIExternalCourse.objects.filter(course_id = course_key).count()
-        return cnt > 0
+        return LTIExternalCourse.objects.filter(course_id = course_key).exists()
     except:
         return False
 
