@@ -20,25 +20,20 @@ Installation / Updates (as per Lawrence McDaniel)
 
 Custom Modules (as per Lawrence McDaniel)
 ------------
-`LTI Willo Labs Integration`_: Automated course enrollment (aka "provisioning") during LTI authentication. Real-time asynchronous grade sync to Willo Labs "Grade Sych" api. Rover grades REST api for course, chapter, lesson, problems.
 
-.. _LTI Grade Synch module: common/djangoapps/third_party_auth/lti_consumers/willolabs/
-
-.. _Grades API: lms/djangoapps/grades/api/v2/
-
-.. _Rover Grades api: lms/djangoapps/grades/api/v2/
-
-`Salesforce Integration Module`_: Rest api, django admin console, and manage.py command line tools to capture and upload salesforce tracking data for Open Stax marketing team.
-
-.. _Salesforce Integration Module: cms/djangoapps/openstax_integrator
-
-`Openstax oAuth Backend`_: A Python Social Auth backend for OpenStax, mostly used for Open edX but can be used elsewhere.
-
-.. _Openstax oAuth Backend: https://github.com/QueriumCorp/openstax-oauth-backend
+[title](https://www.example.com)
 
 
-`Guide for working with Git`_: Guide for working with Git
-.. _Guide for working with Git: https://www.git-tower.com/blog/git-cheat-sheet/
+[LTI Willo Labs Integration](common/djangoapps/third_party_auth/lti_consumers/willolabs/): Automated course enrollment (aka "provisioning") during LTI authentication. Real-time asynchronous grade sync to Willo Labs "Grade Sych" api. Rover grades REST api for course, chapter, lesson, problems.
+
+[Grades API](lms/djangoapps/grades/api/v2/)
+
+[Salesforce Integration Module](cms/djangoapps/openstax_integrator): Rest api, django admin console, and manage.py command line tools to capture and upload salesforce tracking data for Open Stax marketing team.
+
+[Openstax oAuth Backend](https://github.com/QueriumCorp/openstax-oauth-backend): A Python Social Auth backend for OpenStax, mostly used for Open edX but can be used elsewhere.
+
+[Guide for working with Git](https://www.git-tower.com/blog/git-cheat-sheet/): Guide for working with Git
+
 
 Git Work Flow
 ------------

@@ -40,6 +40,11 @@ def rover_env_token(token, default=None):
     else:
         return obj
 
+# mcdaniel feb-2020: feature settings for custom Rover modules.
+ROVER_ENABLE_LTI_GRADE_SYNC = os.environ.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
+ROVER_ENABLE_GRADES_API = os.environ.get('ROVER_ENABLE_GRADES_API', False)
+ROVER_ENABLE_SALESFORCE_API = os.environ.get('ROVER_ENABLE_SALESFORCE_API', False)
+
 
 # SERVICE_VARIANT specifies name of the variant used, which decides what JSON
 # configuration files are read during startup.
