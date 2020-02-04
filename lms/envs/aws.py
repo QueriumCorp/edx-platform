@@ -32,7 +32,7 @@ from path import Path as path
 from xmodule.modulestore.modulestore_settings import convert_module_store_setting_if_needed
 
 # McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
-with open("/home/ubuntu/rover/rover.env.json") as rover_env_file:
+with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
     ROVER_TOKENS = json.load(rover_env_file)
     ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
 
