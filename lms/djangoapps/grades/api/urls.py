@@ -21,5 +21,10 @@ urlpatterns = [
         views.CourseGradingPolicy.as_view(), name='course_grading_policy'
     ),
     url(r'^v1/', include('grades.api.v1.urls', namespace='v1')),
-    url(r'^v2/', include('grades.api.v2.urls', namespace='v2')),
 ]
+
+# mcdaniel feb-2020: only include grades api if feature flag is set.
+if settings.ROVER_ENABLE_GRADES_API:
+    urlpatterns.append(
+        url(r'^v2/', include('grades.api.v2.urls', namespace='v2'))
+    )

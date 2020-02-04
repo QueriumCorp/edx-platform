@@ -1,6 +1,7 @@
 from __future__ import with_statement
 from __future__ import absolute_import
 import os
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from openstax_integrator.salesforce.models import Contact, Campaign
 from openstax_integrator.salesforce.connector import Connection
@@ -25,14 +26,17 @@ class Command(BaseCommand):
 
         # Fix Note: how is the "default" campaign determined?
 
-        try:
-            campaign = Campaign.objects.filter(active=True).first()
-        except:
-            raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
-                                    u"Django Admin to create a Salesforce Campaign.")
+        if settings.ROVER_ENABLE_SALESFORCE_API:
+            try:
+                campaign = Campaign.objects.filter(active=True).first()
+            except:
+                raise EmptyResultSet(u"No salesforce campaign found. Hint: use " \
+                                        u"Django Admin to create a Salesforce Campaign.")
 
-        self.insert_am_contacts()
-        self.update_am_contacts()
+            self.insert_am_contacts()
+            self.update_am_contacts()
+        else:
+            self.stdout.write(self.style.NOTICE(u"Enable this module by setting ROVER_ENABLE_SALESFORCE_API = true in ~/.rover/rover.env.json"))
 
     def update_am_contacts(self):
         self.stdout.write(self.style.NOTICE(u"salesforce.com interface: update Contacts"))

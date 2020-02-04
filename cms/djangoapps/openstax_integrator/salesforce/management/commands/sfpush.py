@@ -1,5 +1,6 @@
 from __future__ import with_statement
 from __future__ import absolute_import
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from openstax_integrator.salesforce.models import Contact, Campaign
@@ -20,11 +21,16 @@ class Command(BaseCommand):
         parser.add_argument(u'-u', u'--update', action=u'store_true', help=u'Update existing salesforce contacts.')
 
     def handle(self, *args, **kwargs):
-        insert = kwargs[u'insert']
-        update = kwargs[u'update']
 
-        self.sf_insert()
-        self.sf_update()
+        if settings.ROVER_ENABLE_SALESFORCE_API:
+
+            insert = kwargs[u'insert']
+            update = kwargs[u'update']
+
+            self.sf_insert()
+            self.sf_update()
+        else:
+            self.stdout.write(self.style.NOTICE(u"Enable this module by setting ROVER_ENABLE_SALESFORCE_API = true in ~/.rover/rover.env.json"))
 
 
     u"""
