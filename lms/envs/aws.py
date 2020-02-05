@@ -36,6 +36,12 @@ with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
     ROVER_TOKENS = json.load(rover_env_file)
     ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
 
+    # mcdaniel feb-2020: feature settings for custom Rover modules.
+    ROVER_ENABLE_LTI_GRADE_SYNC = ROVER_TOKENS.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
+    ROVER_ENABLE_GRADES_API = ROVER_TOKENS.get('ROVER_ENABLE_GRADES_API', False)
+    ROVER_ENABLE_SALESFORCE_API = ROVER_TOKENS.get('ROVER_ENABLE_SALESFORCE_API', False)
+
+
 # mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
 #       the values to the actual client code. Example:
 #           {CLIENT} = 'dev'
@@ -47,10 +53,6 @@ def rover_env_token(token, default=None):
     else:
         return obj
 
-# mcdaniel feb-2020: feature settings for custom Rover modules.
-ROVER_ENABLE_LTI_GRADE_SYNC = os.environ.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
-ROVER_ENABLE_GRADES_API = os.environ.get('ROVER_ENABLE_GRADES_API', False)
-ROVER_ENABLE_SALESFORCE_API = os.environ.get('ROVER_ENABLE_SALESFORCE_API', False)
 
 # SERVICE_VARIANT specifies name of the variant used, which decides what JSON
 # configuration files are read during startup.

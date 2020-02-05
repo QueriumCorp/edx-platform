@@ -7,20 +7,21 @@ from rest_framework_swagger.views import get_swagger_view
 
 from .views import ContactViewSet, CampaignViewSet, CourseCreatorViewSet
 
-if settings.ROVER_ENABLE_SALESFORCE_API:
-    # Note: include_docs_urls stopped working after the python backport
-    API_TITLE = u'OpenStax Salesforce api V1.00'
-    API_DESCRIPTION = u'A Web API for integrating AM instructor data to salesforce.com'
-    docs = include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)
+#if settings.ROVER_ENABLE_SALESFORCE_API:
 
-    router = DefaultRouter(trailing_slash=False)
+# Note: include_docs_urls stopped working after the python backport
+API_TITLE = u'OpenStax Salesforce api V1.00'
+API_DESCRIPTION = u'A Web API for integrating AM instructor data to salesforce.com'
+docs = include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)
 
-    # add routes with default CRUD behavior here
-    router.register(ur'contacts', ContactViewSet)
-    router.register(ur'campaigns', CampaignViewSet)
-    router.register(ur'coursecreators', CourseCreatorViewSet)
+router = DefaultRouter(trailing_slash=False)
 
-    # add customized routes here
-    urlpatterns = [
-        url(u'docs/', get_swagger_view(title=API_TITLE)), # formatted swagger documentation
-    ] + router.urls
+# add routes with default CRUD behavior here
+router.register(ur'contacts', ContactViewSet)
+router.register(ur'campaigns', CampaignViewSet)
+router.register(ur'coursecreators', CourseCreatorViewSet)
+
+# add customized routes here
+urlpatterns = [
+    url(u'docs/', get_swagger_view(title=API_TITLE)), # formatted swagger documentation
+] + router.urls
