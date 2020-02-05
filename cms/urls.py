@@ -75,9 +75,7 @@ urlpatterns = [
     # process there.
     url(r'^register/$', RedirectView.as_view(url=registration_redirect() , permanent=True)),
     url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=True)),
-
-    # mcdaniel feb-2019 - add salesforce REST api
-    url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls')),
+        
     url(r'', include('student.urls')),
     url(r'^transcripts/upload$', contentstore.views.upload_transcripts, name='upload_transcripts'),
     url(r'^transcripts/download$', contentstore.views.download_transcripts, name='download_transcripts'),
@@ -223,6 +221,12 @@ JS_INFO_DICT = {
     # We need to explicitly include external Django apps that are not in LOCALE_PATHS.
     'packages': ('openassessment',),
 }
+
+# mcdaniel feb-2019 - add salesforce REST api
+if settings.ROVER_ENABLE_SALESFORCE_API:
+    urlpatterns.append(
+    url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls'))
+    )
 
 if settings.FEATURES.get('ENABLE_CONTENT_LIBRARIES'):
     urlpatterns += [

@@ -1,13 +1,10 @@
 from __future__ import absolute_import
 from django.conf.urls import url, include
-from django.conf import settings
 from rest_framework.routers import DefaultRouter
 from rest_framework.documentation import include_docs_urls
 from rest_framework_swagger.views import get_swagger_view
 
 from .views import ContactViewSet, CampaignViewSet, CourseCreatorViewSet
-
-#if settings.ROVER_ENABLE_SALESFORCE_API:
 
 # Note: include_docs_urls stopped working after the python backport
 API_TITLE = u'OpenStax Salesforce api V1.00'
