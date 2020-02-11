@@ -33,6 +33,8 @@ with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
     ROVER_ENABLE_LTI_GRADE_SYNC = ROVER_TOKENS.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
     ROVER_ENABLE_GRADES_API = ROVER_TOKENS.get('ROVER_ENABLE_GRADES_API', False)
     ROVER_ENABLE_SALESFORCE_API = ROVER_TOKENS.get('ROVER_ENABLE_SALESFORCE_API', False)
+    ROVER_ENABLE_TRAINING_WHEELS = ROVER_TOKENS.get('ROVER_ENABLE_TRAINING_WHEELS', False)
+    ROVER_ENABLE_PAGE_TIPS = ROVER_TOKENS.get('ROVER_ENABLE_PAGE_TIPS', False)
 
 # mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
 #       the values to the actual client code. Example:
