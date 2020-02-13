@@ -1,0 +1,311 @@
+<%page expression_filter="h"/>
+<%inherit file="main.html" />
+<%namespace name='static' file='static_content.html'/>
+<%!
+from django.utils.translation import ugettext as _
+from django.urls import reverse
+from openedx.core.djangolib.markup import HTML, Text
+from openedx.core.djangolib.js_utils import js_escaped_string
+## copied from LMS login.html
+## --------------------------
+import third_party_auth
+from third_party_auth import provider, pipeline
+## --------------------------
+
+%>
+
+<link rel="prefetch" href="${static.url("fonts/3dac71eb-afa7-4c80-97f0-599202772905.woff2")}">
+<link rel="prefetch" href="${static.url("fonts/531c5a28-5575-4f58-96d4-a80f7b702d7b.woff2")}">
+<link rel="prefetch" href="${static.url("fonts/5b1fbd62-45dc-4433-a7df-a2b24a146411.woff2")}">
+<link rel="prefetch" href="${static.url("fonts/21c44514-f4d6-4cff-a5de-e4cac5e61aff.woff2")}">
+
+<style>
+  html {
+    background: #424242;
+  }
+  div#content {
+    padding: 0px !important;
+    margin: 0px !important;
+    width: 100% !important;
+    max-width:initial !important;
+  }
+  main.landing_page {
+    font-family: 'Neue Helvetica W01', Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: white;
+  }
+  .login_logo {
+    max-width: 600px;
+    margin: 0 auto;
+    padding-top: 42px;
+    padding-bottom: 21px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .login_logo img {
+    height: initial;
+  }
+  .login_title {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 60px;
+    margin-bottom: 10px;
+    color: white;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .login_intro {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    line-height: 1.5rem;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .login_link {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    color: white;
+    font-weight: 700;
+    text-align: center;
+    padding-bottom: 20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .login_link a{
+    color: #0C2767;
+  }
+  .login_link a:visited{
+    color: #0C2767;
+  }
+  .login_instructor {
+    font-style: italic;
+    font-weight: 400;
+  }
+  a.login_instructor {
+    font-weight: 700;
+  }
+  .login_btn_box {
+    display: flex;
+    justify-content: center;
+    padding-top: 0px;
+    padding-bottom: 20px;
+  }
+  .login_button {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    border-radius: 2px;
+    background: #25C0DD;
+    color: white !important;
+    text-decoration: none !important;
+    box-shadow: initial;
+    text-shadow: initial;
+    border: none;
+    padding: 0.7em 2em;
+  }
+  .login_button:hover {
+    background: rgb(30, 155, 177);
+  }
+  .login_bkgd {
+    background-image: url('data:image/svg+xml;base64,PCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDIzLjAuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPg0NCjxzdmcgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCAxNDQwIDkwMDsiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgdmlld0JveD0iMCAwIDE0NDAgOTAwIiBoZWlnaHQ9IjEwMCUiIHdpZHRoPSIxMDAlIiB2ZXJzaW9uPSIxLjEiIHk9IjBweCIgeD0iMHB4IiB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIiB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iPjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+DQoJLnN0MHtmaWxsOnVybCgjQmFja2dyb3VuZF8yXyk7fQ0KCS5zdDF7ZmlsbDp1cmwoI0JhY2tncm91bmRfM18pO30NCjwvc3R5bGU+DQoJCTxsaW5lYXJHcmFkaWVudCBpZD0iQmFja2dyb3VuZF8yXyIgeTI9IjQ0OS4wOSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgyPSIxNDQwIiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIC0xIDAgODk5LjA5KSIgeTE9IjQ0OS4wOSI+DQoJCTxzdG9wIHN0b3AtY29sb3I9IiNGRkNDNjIiIG9mZnNldD0iMCIvPg0KCQk8c3RvcCBzdG9wLWNvbG9yPSIjRkY5ODY1IiBvZmZzZXQ9IjEiLz4NCgk8L2xpbmVhckdyYWRpZW50Pg0KCTxyZWN0IHk9Ii0yLjA5MjEiIHdpZHRoPSIxNDQwIiBoZWlnaHQ9IjkwNC4xOCIgY2xhc3M9InN0MCIvPg0KCTxyZWN0IHk9Ii0yLjA5MjEiIHdpZHRoPSIxNDQwIiBoZWlnaHQ9IjkwNC4xOCIgY2xhc3M9InN0MSIvPg0KPG1ldGFkYXRhPjxyZGY6UkRGPjxjYzpXb3JrIHJkZjphYm91dD0iIj48ZGM6dGl0bGUvPjwvY2M6V29yaz48L3JkZjpSREY+PC9tZXRhZGF0YT48L3N2Zz4NDQo=');
+    background-size: 100% auto;
+  }
+
+  .ftr_bkgd {
+    background-color: #424242;
+    color: #9a9a9a;
+  }
+  .ftr_title {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    color: #9a9a9a;
+    text-align: center;
+    padding-top: 42px;
+    font-weight: 700;
+  }
+
+  a:not(.btn) {
+    color: #25C0dd !important;
+    font-weight: 300 !important;
+    text-decoration: none !important;
+  }
+  p.ftr_links {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    color: #25C0dd !important;
+    font-size: 10px;
+    text-align: center;
+    font-weight: 300;
+  }
+  p.ftr_links a.ftr_link:visited {
+    color: #25C0dd !important;
+    font-weight: 300;
+  }
+  p.ftr_links a.ftr_link:active {
+    color: #25C0dd !important;
+    font-weight: 300;
+  }
+  p.ftr_links a.ftr_link:hover {
+    color: #25C0dd !important;
+    font-weight: 300;
+  }
+  .ftr_supporters {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    text-align: center;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    text-align: center;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-weight: 400;
+  }
+  .ftr_rights {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    text-align: center;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    text-align: center;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-weight: 400;
+  }
+  .ftr_attributions {
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    text-align: center;
+    font-family: "Roboto", Helvetica, Arial, sans-serif;
+    font-size: 10px;
+    text-align: center;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-weight: 400;
+  }
+  .ftr_socials{
+    display: flex;
+    height: 3.6rem;
+    justify-content: center;
+    padding-top: 24px;
+    padding-bottom: 48px;
+  }
+  .ftr_socials a{
+    height: 42px;
+    width: 42px;
+    margin-left: 8px;
+    margin-right: 8px;
+  }
+</style>
+
+<main id="main" class="landing_page" aria-label="Content" tabindex="-1">
+    <section class="login_bkgd">
+      <div class="login_logo">
+        <img src="${static.url("images/rover-logo-white-opt.svg")}" alt="">
+      </div>
+      <h1 class="login_title">Student Login</h1>
+      <p class="login_intro">With Rover by OpenStax, you can solve problems in the way that makes the most sense to you – Rover’s cutting-edge technology from StepWise can evaluate if the steps you use to solve a problem are logical, no matter which route you take. You get a textbook and a homework system for $22 per semester, and you never have to pay again to retake the course. <a href="https://openstax.org/rover-by-openstax">Learn more</a></p>
+      ## mcdaniel mar-2019 - hide traditional login UI
+      <h4 class="login_link" style="color: #1F3368; margin: 25px 0 0 0; font-weight: 700;">Log in here to access your course and get started.</h4>
+      <div class="login_btn_box">
+        ## mcdaniel Feb-2019
+        ## Refactored code from LMS login.html
+        ## --------------------------
+        % if third_party_auth.is_enabled():
+        % for enabled in provider.Registry.displayed_for_login():
+          <a href="${pipeline_url[enabled.provider_id]}" class="login_button btn">
+            % if enabled.icon_class:
+            <span class="icon fa ${enabled.icon_class}" aria-hidden="true"></span>
+            % else:
+            <span class="icon" aria-hidden="true"><img class="icon-image" src="${enabled.icon_image.url}" alt="${enabled.name} icon" /></span>
+            % endif
+            ${_('Sign in with {provider_name}').format(provider_name=enabled.name)}
+          </a>
+        % endfor
+        % endif
+      </div>
+
+      <%
+        site_domain = 'am.' + static.get_value('site_domain', settings.SITE_NAME)
+        site_protocol = 'https' if settings.HTTPS == 'on' else 'http'
+
+        cms_url=u"{protocol}://{domain}".format(
+          protocol=site_protocol,
+          domain=site_domain
+        )
+      %>
+
+      <h4 class="login_link login_instructor">For instructor log in, click <a class="login_instructor" href="${cms_url}">here.</a></h4>
+      % if third_party_auth_error:
+        <div role="alert" class="status message third-party-auth-error is-shown" tabindex="-1">
+          <h3 class="message-title">${_("An error occurred when signing you in to {platform_name}.").format(platform_name=platform_name)} </h3>
+          <ul class="message-copy">
+            <li>${third_party_auth_error}</li>
+          </ul>
+        </div>
+      % endif
+
+      ## mcdaniel - mar-2019: no longer required.
+      ##<h4 class="login_link login_instructor">Need to create an account? Click <a class="login_instructor" href="/register">here.</a></h4>
+      ##<h4 class="login_link login_instructor">For instructor log in, click <a class="login_instructor" href="https://am.roverbyopenstax.com/signin">here.</a></h4>
+
+    </section>
+    <footer class="ftr_bkgd">
+      <h1 class="ftr_title">Access. The Future of Education.</h1>
+      <p class="ftr_links">
+        <a class="ftr_link" href="http://www2.openstax.org/l/218812/2016-10-04/lvk">News&nbsp;&nbsp;</a>
+        <a class="ftr_link" href="https://openstax.org/license">Licensing&nbsp;&nbsp;</a>
+        <a class="ftr_link" href="https://openstax.org/tos">Terms of Use&nbsp;&nbsp;</a>
+        <a class="ftr_link" href="https://openstax.org/accessibility-statement">Accessibility Statement&nbsp;&nbsp;</a>
+        <a class="ftr_link" href="https://openstax.org/contact">Contact</a>
+      </p>
+      <p class="ftr_supporters">Supported by William & Flora Hewlett Foundation, Bill & Melinda Gates Foundation, 20 Million Minds Foundation, Maxfield Foundation, Open Society Foundations, and Rice University.</p>
+      <p class="ftr_rights">© 1999-2015, Rice University. Except where otherwise noted, content created on this site is licensed under a Creative Commons Attribution 4.0 License.</p>
+      <p class="ftr_attributions">Advanced Placement® and AP® are trademarks registered and/or owned by the College Board, which was not involved in the production of, and does not endorse, this site. EdX, Open edX, Studio, and the edX and Open edX logos are registered trademarks or trademarks of <a href="https://edx.org">edX Inc.</a></p>
+      <div class="ftr_socials">
+        <a href="https://www.facebook.com/openstax">
+          <svg class="svg-inline--fa fa-facebook fa-w-14" aria-hidden="true" data-prefix="fab" data-icon="facebook" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+            <path fill="#9a9a9a" d="M448 56.7v398.5c0 13.7-11.1 24.7-24.7 24.7H309.1V306.5h58.2l8.7-67.6h-67v-43.2c0-19.6 5.4-32.9 33.5-32.9h35.8v-60.5c-6.2-.8-27.4-2.7-52.2-2.7-51.6 0-87 31.5-87 89.4v49.9h-58.4v67.6h58.4V480H24.7C11.1 480 0 468.9 0 455.3V56.7C0 43.1 11.1 32 24.7 32h398.5c13.7 0 24.8 11.1 24.8 24.7z"></path>
+          </svg>
+        </a>
+        <a href="https://www.linkedin.com/company/openstax">
+          <svg class="svg-inline--fa fa-linkedin fa-w-14" aria-hidden="true" data-prefix="fab" data-icon="linkedin" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+            <path fill="#9a9a9a" d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"></path>
+          </svg>
+        </a>
+        <a href="https://www.instagram.com/openstax/">
+          <svg class="svg-inline--fa fa-instagram fa-w-14" aria-hidden="true" data-prefix="fab" data-icon="instagram" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+            <path fill="#9a9a9a" d="M224.1 141c-63.6 0-114.9 51.3-114.9 114.9s51.3 114.9 114.9 114.9S339 319.5 339 255.9 287.7 141 224.1 141zm0 189.6c-41.1 0-74.7-33.5-74.7-74.7s33.5-74.7 74.7-74.7 74.7 33.5 74.7 74.7-33.6 74.7-74.7 74.7zm146.4-194.3c0 14.9-12 26.8-26.8 26.8-14.9 0-26.8-12-26.8-26.8s12-26.8 26.8-26.8 26.8 12 26.8 26.8zm76.1 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM398.8 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z"></path>
+          </svg>
+        </a>
+        <a href="https://twitter.com/openstax">
+          <svg class="svg-inline--fa fa-twitter-square fa-w-14" aria-hidden="true" data-prefix="fab" data-icon="twitter-square" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg="">
+            <path fill="#9a9a9a" d="M400 32H48C21.5 32 0 53.5 0 80v352c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V80c0-26.5-21.5-48-48-48zm-48.9 158.8c.2 2.8.2 5.7.2 8.5 0 86.7-66 186.6-186.6 186.6-37.2 0-71.7-10.8-100.7-29.4 5.3.6 10.4.8 15.8.8 30.7 0 58.9-10.4 81.4-28-28.8-.6-53-19.5-61.3-45.5 10.1 1.5 19.2 1.5 29.6-1.2-30-6.1-52.5-32.5-52.5-64.4v-.8c8.7 4.9 18.9 7.9 29.6 8.3a65.447 65.447 0 0 1-29.2-54.6c0-12.2 3.2-23.4 8.9-33.1 32.3 39.8 80.8 65.8 135.2 68.6-9.3-44.5 24-80.6 64-80.6 18.9 0 35.9 7.9 47.9 20.7 14.8-2.8 29-8.3 41.6-15.8-4.9 15.2-15.2 28-28.8 36.1 13.2-1.4 26-5.1 37.8-10.2-8.9 13.1-20.1 24.7-32.9 34z"></path>
+          </svg>
+        </a>
+      </div>
+    </footer>
+</main>
+
+
+<%block name="js_extra">
+   <script type="text/javascript">
+      $(window).load(function() {
+         if(getParameterByName('next')) {
+              $('#login').trigger("click");
+         }
+      })
+   </script>
+</%block>
+
+% if show_signup_immediately is not UNDEFINED:
+  ## NOTE: This won't work in production, because anonymous views are cached, so it will
+  ## show either with or without this extra js for 3 minutes at a time.
+<script type="text/javascript">
+  $(window).load(function() {$('#signup_action').trigger("click");});
+</script>
+% endif

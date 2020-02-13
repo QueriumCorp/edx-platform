@@ -1,0 +1,504 @@
+<%page expression_filter="h"/>
+<%! from django.utils.translation import ugettext as _ %>
+
+<!-- Mapping Breadcrumbs DOM from Tutor to Rover
+
+  ITEM
+    TUTOR
+    ROVER
+
+  BREADCRUMB CONTAINER        
+    .pinned-header
+    .sequence-nav
+
+  INNER BREADCRUMB CONTAINER  
+    .task-breadcrumbs
+    .sequence-list-wrapper  ol#sequence-list
+
+  SCROLL LEFT
+    !nothing
+    .sequence-nav-button .button-previous 
+  
+  SCROLL RIGHT
+    !nothing
+    .sequence-nav-button .button-next
+
+  QUESTION BUTTON VIRGIN
+    span .openstax-breadcrumbs-step .icon-stack .icon-lg .core .breadcrumb-exercise
+    .xmodule_display.xmodule_SequenceModule .sequence-nav ol li button
+
+  QUESTION BUTTON VIRGIN ACTIVE/HOVER
+    span .openstax-breadcrumbs-step .icon-stack .icon-lg .core .breadcrumb-exercise .active
+
+  QUESTION BUTTON CORRECT
+    span .openstax-breadcrumbs-step .icon-stack .icon-lg .core .breadcrumb-exercise completed status-correct
+
+  QUESTION BUTTON CORRECT ACTIVE/HOVER
+    span .openstax-breadcrumbs-step .icon-stack .icon-lg .core .breadcrumb-exercise completed status-correct .active
+
+  QUESTION BUTTON INCORRECT
+    span .openstax-breadcrumbs-step .icon-stack .icon-lg .core .breadcrumb-exercise completed status-incorrect
+
+  QUESTION BUTTON INCORRECT ACTIVE/HOVER
+    span .openstax-breadcrumbs-step .icon-stack .icon-lg .core .breadcrumb-exercise completed status-incorrect
+-->
+
+<!-- Styling notes 
+  * .xmodule_display.xmodule_SequenceModule .sequence-nav-button.disabled could probably be used to show/hide 
+  the next and previous buttons
+
+  in Rover, the button has the event listener
+
+-->
+<!-- Embedded styles for development -->
+<style>
+  header.page-header {
+    padding-bottom: 0px;
+    border:none !important;
+  }
+
+  .breadcrumbs span.nav-item-course {
+    display: none;
+  }
+  .breadcrumbs span.nav-item-chapter {
+    display: none;
+  }
+  .breadcrumbs span.nav-item-sequence {
+    display: none;
+  }
+  .breadcrumbs span.fa-angle-right {
+    display: none;
+  }
+
+
+  /* CAROUSEL-CONTAINER */
+  .xmodule_display.xmodule_SequenceModule .sequence-nav {
+    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.12) !important;
+    margin: 12px auto 20px;
+    border: none;
+    height: 60px;
+    display: flex;
+  }
+
+  /* CAROUSEL-INNER */
+  .xmodule_display.xmodule_SequenceModule .sequence-nav .sequence-list-wrapper {
+      overflow: hidden;
+      background: none;
+  }
+
+  /* TRACK */
+  .xmodule_display.xmodule_SequenceModule .sequence-nav ol {
+    display: inline-flex;
+    transition: transform 0.5s;
+    margin-top: 9px;
+    margin-left: 9px;
+  }
+
+  /* CARD-CONTAINER */
+  .xmodule_display.xmodule_SequenceModule .sequence-nav ol li {
+    height: 40px;
+    width: 40px;
+    min-height: 40px;
+    min-width: 40px;
+    border: none !important;
+    background: none;
+    flex-grow:initial;
+    flex-shrink: 0;
+  }
+
+  /* question buttons 
+  .xmodule_display.xmodule_SequenceModule .sequence-nav-button.focused, .xmodule_display.xmodule_SequenceModule .sequence-nav-button:hover, .xmodule_display.xmodule_SequenceModule .sequence-nav-button:active, .xmodule_display.xmodule_SequenceModule .sequence-nav-button.active, .xmodule_display.xmodule_SequenceModule .sequence-nav button.focused, .xmodule_display.xmodule_SequenceModule .sequence-nav button:hover, .xmodule_display.xmodule_SequenceModule .sequence-nav button:active, .xmodule_display.xmodule_SequenceModule .sequence-nav button.active {
+  */
+  .xmodule_display.xmodule_SequenceModule ol li {
+    position: relative;
+    overflow: visible;
+    margin-right: 2px;
+  }
+
+  /* CARD */
+  .xmodule_display.xmodule_SequenceModule ol li button.nav-item {
+    position: absolute;
+    z-index: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 20px;
+    line-height: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+
+    background-color: white;
+    color: rgb(244,118,65);
+    border: none !important;
+    height: 40px !important;
+    width: 40px !important;
+    border-radius: 50% !important;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    padding: 0px !important;
+
+    transform: scale(1, 1);
+    transition: transform 0.25s ease-in-out;
+  }
+
+  .xmodule_display.xmodule_SequenceModule ol li button.nav-item.is-complete {
+    background: #d8ffb4;
+    color: #77af42;
+  }
+  .question-complete {
+    display: block;
+    position: absolute;
+    right: 0px;
+    bottom: 0px;
+  }
+  .question-not-complete {
+    display: none;
+  }
+
+  .xmodule_display.xmodule_SequenceModule ol li button.nav-item.is-complete span.is-complete::before {
+    content: url(https://tutor-demo.openstax.org/assets/d62f4fb9677b23b176d92210a6e635ef.svg);
+  }
+
+  .xmodule_display.xmodule_SequenceModule ol li button.nav-item:focus, 
+  .xmodule_display.xmodule_SequenceModule ol li button.nav-item:hover, 
+  .xmodule_display.xmodule_SequenceModule ol li button.nav-item.active {
+    transform: scale(1.4, 1.4);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    background-color: white;
+    z-index: 2 !important;
+  }
+
+  .sequence-tooltip {
+    display: none;
+  }
+
+  /* navigation buttons */
+  .xmodule_display.xmodule_SequenceModule .sequence-nav-button {
+    border: none;
+    z-index: 0;
+    display: block;
+    top: 0;
+    min-width: 40px;
+    max-width: 40px;
+    height: 100%;
+    text-shadow: none;
+    background: none;
+    background-color: #fff;
+    border-color: #e7e7e7;
+    border: none;
+    box-shadow: none;
+    font-size: 36px;
+    font-weight: normal;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .xmodule_display.xmodule_SequenceModule .sequence-nav-button.button-previous {
+    left: -45px;
+  }
+  .xmodule_display.xmodule_SequenceModule .sequence-nav-button.button-next {
+    right: -45px;
+  }
+  .xmodule_display.xmodule_SequenceModule .sequence-nav-button.button-previous:hover {
+    background-color: white !important;
+    border-bottom: none;
+  }
+  .xmodule_display.xmodule_SequenceModule .sequence-nav-button.button-next:hover {
+    background-color: white !important;
+    border-bottom: none;
+  }
+
+  nav.sequence-bottom {
+    display:none !important;
+  }
+
+  .carousel-nav {
+    position: absolute;
+    height: 20px;
+    background: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -12px;
+    z-index: 100;
+  }
+  .carousel-nav button {
+    cursor: pointer;
+  }
+
+  .carousel-nav .prev-page {
+    margin: 0px;
+    padding: 0px;
+    color: rgb(244,118,65);
+  }
+
+  .carousel-nav .next-page {
+    margin: 0px;
+    padding: 0px;
+    color: rgb(244,118,65);
+  }
+
+  .carousel-nav .carousel-indicators {
+    list-style: none;
+    display:flex;
+    padding: 0;
+    margin: 0;
+  }
+
+  .carousel-nav .carousel-indicators .carousel-indicator {
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgb(244,118,65);
+    border-radius: 50%;
+    margin: 5px;
+    background: transparent;
+    cursor: pointer;
+  }  
+  .carousel-nav .carousel-indicators .carousel-indicator.selected{
+    background:  rgb(244,118,65);
+  }
+
+  .concealed{
+    visibility: hidden;
+  }
+</style>
+
+<div id="sequence_${element_id}" class="sequence" data-id="${item_id}" data-position="${position}" data-ajax-url="${ajax_url}" data-next-url="${next_url}" data-prev-url="${prev_url}">
+  % if banner_text:
+    <div class="pattern-library-shim alert alert-information subsection-header" tabindex="-1">
+      <span class="pattern-library-shim icon alert-icon fa fa-info-circle" aria-hidden="true"></span>
+      <span class="sr">${_('Important!')}&nbsp;</span>
+      <div class="pattern-library-shim alert-message">
+        <p class="pattern-library-shim alert-copy">
+          ${banner_text}
+        </p>
+      </div>
+    </div>
+  % endif
+
+  <div class="carousel-container sequence-nav">
+    <nav class="carousel-inner sequence-list-wrapper" aria-label="${_('Sequence')}">
+      <ol class="track" id="sequence-list" role="tablist">
+        % if gated_content['gated']:
+        <li>
+          <button class="active nav-item tab" title="${_('Content Locked')}" id="tab_0" role="tab" tabindex="-1" aria-selected="true" aria-expanded="true" aria-controls="content_locked" disabled>
+            <span class="icon fa fa-lock" aria-hidden="true"></span>
+          </button>
+        </li>
+        % else:
+        % for idx, item in enumerate(items):
+        <li class="card-container" role="presentation">
+          <button class="card seq_${item['type']} ${'is-complete' if item['complete'] else 'not-complete'} inactive nav-item tab"
+            role="tab"
+            title="${item['page_title']}"
+            tabindex="-1"
+            aria-selected="false"
+            aria-expanded="false"
+            aria-controls="seq_content"
+            data-index="${idx}"
+            data-id="${item['id']}"
+            data-element="${idx+1}"
+            data-page-title="${item['page_title']}"
+            data-path="${item['path']}"
+            data-graded="${item['graded']}"
+            id="tab_${idx}"
+            ${"disabled=disabled" if disable_navigation else ""}>
+            <span class="question-sequence-number" aria-hidden="true">${idx+1}</span>
+            <img class="${'question-complete' if item['complete'] else 'question-not-complete'}" src="https://tutor-demo.openstax.org/assets/d62f4fb9677b23b176d92210a6e635ef.svg"></img>
+            <div class="sequence-tooltip sr"><span class="sr">${item['type']}&nbsp;</span>${item['page_title']}<span class="sr bookmark-icon-sr">&nbsp;${_("Bookmarked") if item['bookmarked'] else ""}</span></div>
+          </button>
+        </li>
+        % endfor
+        % endif
+      </ol>
+    </nav>
+    <div class="carousel-nav concealed">
+      <div class="prev-page" title="Previous Page">
+        <span class="icon fa fa-arrow-circle-left" aria-hidden="true"></span>
+      </div>
+      <ul class="carousel-indicators">
+        <li class="carousel-indicator selected"></li>
+        <li class="carousel-indicator"></li>
+        <li class="carousel-indicator"></li>
+        <li class="carousel-indicator"></li>
+      </ul>
+      <div class="next-page" title="Next Page">
+        <span class="icon fa fa-arrow-circle-right" aria-hidden="true"></span>
+      </div>
+    </div>
+    <!-- NEXT & PREVIOUS QUESTION BUTTONS -->
+    <button class="sequence-nav-button button-previous" title="Previous Question">
+      <span class="icon fa fa-angle-left" aria-hidden="true"></span>
+      <!-- <span class="sequence-nav-button-label">${_('Previous')}</span> -->
+    </button>
+    <button class="sequence-nav-button button-next" title="Next Question">
+      <!-- <span class="sequence-nav-button-label">${_('Next')}</span> -->
+      <span class="icon fa fa-angle-right" aria-hidden="true"></span>
+    </button>
+  </div>
+  % if gated_content['gated']:
+    <%include file="_gated_content.html" args="prereq_url=gated_content['prereq_url'], prereq_section_name=gated_content['prereq_section_name'], gated_section_name=gated_content['gated_section_name']"/>
+  % else:
+  <div class="sr-is-focusable" tabindex="-1"></div>
+
+  % for idx, item in enumerate(items):
+  <div id="seq_contents_${idx}"
+    aria-labelledby="tab_${idx}"
+    aria-hidden="true"
+    class="seq_contents tex2jax_ignore asciimath2jax_ignore">
+    ${item['content']}
+  </div>
+  % endfor
+  <div id="seq_content" role="tabpanel"></div>
+  % endif
+
+  <nav class="sequence-bottom" aria-label="${_('Section')}">
+    <button class="sequence-nav-button button-previous">
+      <span class="icon fa fa-chevron-prev" aria-hidden="true"></span>
+      <!-- <span>${_('Previous')}</span> -->
+    </button>
+    <button class="sequence-nav-button button-next">
+      <!-- <span>${_('Next')}</span> -->
+      <span class="icon fa fa-chevron-next" aria-hidden="true"></span>
+    </button>
+  </nav>
+</div>
+
+<!-- QUESTION NAVIGATOR SCRIPTS -->
+<script>
+  console.info('setting up carousel');
+
+  var carouselContainer = document.querySelector(".carousel-container");
+  var carouselInner = document.querySelector(".carousel-inner");
+  var track = document.querySelector(".track");
+  var carousel_nav = document.querySelector(".carousel-nav");
+  var carousel_indicators = document.querySelector(".carousel-indicators");
+  var prevPage = document.querySelector(".prev-page");
+  var nextPage = document.querySelector(".next-page");
+
+  var numQuestions = 0;
+  var cardWidth = 0;
+  var carouselWidth = 0;
+  var numQuestionsPerPage = 0;
+  var numPages = 0;
+  var currentPage = 0;
+
+  resizeNavigator();
+
+  prevPage.addEventListener( "click", ()=> {
+    if( currentPage > 0 ){
+      currentPage--;
+      track.style.transform = 'translateX(-' + currentPage * carouselWidth + 'px)';
+    }
+    updateIndicators();
+  });
+
+  nextPage.addEventListener( "click", ()=> {
+    if( currentPage < numPages-1 ){
+      currentPage++;
+      track.style.transform = 'translateX(-' + currentPage * carouselWidth + 'px)';
+    }
+    updateIndicators();
+  });
+
+  function updateIndicators(){
+    carousel_nav.classList.add("concealed");
+
+    carousel_indicators.querySelector('.selected').classList.remove('selected');
+    carousel_indicators.querySelectorAll('LI')[currentPage].classList.add('selected');
+
+    // only one page
+    if( numPages===1 ){
+      carousel_nav.classList.add("concealed");
+    }
+    // on first page
+    else if( currentPage === 0 ){
+      carousel_nav.classList.remove("concealed");
+      prevPage.classList.add('concealed');
+      nextPage.classList.remove('concealed');
+    }
+    
+    // on last page
+    else if( currentPage === numPages-1 ){
+      carousel_nav.classList.remove("concealed");
+      prevPage.classList.remove('concealed');
+      nextPage.classList.add('concealed');
+    }
+    
+    // in middle of pages
+    else{
+      carousel_nav.classList.remove("concealed");
+      prevPage.classList.remove('concealed');
+      nextPage.classList.remove('concealed');
+    }
+  }
+
+  function resizeNavigator(){
+    console.info("resizeNavigator");
+    
+    numQuestions = track.getElementsByTagName('li').length;
+    cardWidth = ( numQuestions ? track.getElementsByTagName('li')[0].offsetWidth : 0 );
+    carouselWidth = carouselInner.offsetWidth;
+    numQuestionsPerPage = Math.floor(carouselWidth / cardWidth);
+
+    numPages = Math.ceil( numQuestions / numQuestionsPerPage );
+    currentPage = 0;
+
+    // delete indicators
+    while( carousel_indicators.firstChild ){
+      carousel_indicators.removeChild( carousel_indicators.firstChild );
+    }
+    // add indicators
+    let node;
+    for( let i=0; i<numPages; i++ ){
+      node = document.createElement("LI");
+      node.classList.add( "carousel-indicator" );
+      node.setAttribute( 'title', "Page " + (i+1) );
+      if( i==currentPage ){
+        node.classList.add( "selected" );
+      }
+      carousel_indicators.appendChild( node );
+    }
+    updateIndicators();
+
+    // indicator event handlers
+    carousel_indicators.querySelectorAll('.carousel-indicator').forEach( function(indicator, ind){
+      indicator.addEventListener('click', function(){
+        currentPage= ind;
+        track.style.transform = 'translateX(-' + currentPage * carouselWidth + 'px)';
+        updateIndicators();
+      })
+    });
+  }
+
+// WINDOW RESIZING EVENT HANDLER 
+
+  console.info( 'setting up window resizing' );
+  // Returns a function, that, as long as it continues to be invoked, will not
+  // be triggered. The function will be called after it stops being called for
+  // N milliseconds. If `immediate` is passed, trigger the function on the
+  // leading edge, instead of the trailing.
+  function debounce(func, wait, immediate) {
+    var timeout;
+    return function() {
+      var context = this, args = arguments;
+      var later = function() {
+        timeout = null;
+        if (!immediate) func.apply(context, args);
+      };
+      var callNow = immediate && !timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+      if (callNow) func.apply(context, args);
+    };
+  };
+
+  var winResizeHandler = debounce(function() {
+    resizeNavigator();
+  }, 250);
+
+  window.addEventListener('resize', winResizeHandler);
+</script>

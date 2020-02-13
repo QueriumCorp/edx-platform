@@ -1,0 +1,483 @@
+/*============================================================================
+  McDaniel Oct-2018:
+
+  Usage: this compiles to rover.css which is linked to main.html
+
+  JVR ASSIGNMENT PAGE STYLING
+  McDaniel: these look "global" and so i'm exposing these via main.html
+
+  @import 'rover-variables';
+  ============================================================================*/
+
+/*----------------------------------------------------------------------
+ McDaniel Oct-2018
+ completely hide LMS header menu: Discover New, Courses, Profile, sysAdmin
+----------------------------------------------------------------------*/
+.global-header .main-header .nav-links .main {
+  display: none !important;
+}
+
+/*----------------------------------------------------------------------
+ McDaniel Oct-2018
+ Begin: Aside, responsive for small devices
+----------------------------------------------------------------------*/
+@media (max-width: 767.98px)  {
+  .page-content-secondary.course-sidebar {
+     padding: 25px !important;
+     border: none !important;
+     margin: 0 !important;
+     width: 100% !important;
+     text-align: center !important;
+  }
+
+  .section-dates .date-summary-container .date-summary-todays-date {
+    border: none !important;
+  }
+
+  .date-summary-container.date-summary {
+     border: none !important;
+  }
+
+  .hd.hd-6.heading.localized-datetime {
+     font-weight: normal !important;
+  }
+
+}
+.date-summary.date-summary-end-date {
+  display: none !important;
+}
+
+
+/*----------------------------------------------------------------------
+ Jim Oct-2018
+ Begin: Course sidebar (Aside) responsive styling.
+ make the dates section appear above the course outline on smaller devices.
+----------------------------------------------------------------------*/
+@media (max-width: 1100px) {
+
+  // mcdaniel: not sure this belongs in main.scss
+  .page-content {
+    padding: 0px !important;
+  }
+
+  .content-wrapper {
+    padding: 0px !important;
+  }
+}
+
+
+.page-content-container {
+  border: 1px solid #e7e7e7 !important;
+  background-color: #f1f1f1 !important;
+  max-width: 1920px !important;
+  margin: 0 auto
+}
+
+
+a.btn.btn-primary.action-resume-course {
+  display: none;
+}
+
+.page-content .page-content-main {
+  flex-grow: 1 !important;
+}
+
+.page-content .page-content-secondary {
+  //min-width: 350px !important;    // McDaniel: no longer relevant?
+  //max-width: 350px !important;    // McDaniel: no longer relevant?
+  margin-left: 40px;
+}
+
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .page-content .page-content-secondary {
+    //min-width: 250px !important;  // McDaniel: no longer relevant?
+    //max-width: 250px !important   // McDaniel: no longer relevant?
+  }
+}
+/*----------------------------------------------------------------------
+ End: Course sidebar (Aside) responsive styling.
+----------------------------------------------------------------------*/
+
+
+/*----------------------------------------------------------------------*/
+// User menu and top-right header site header area.
+// drop-down button for user menu (top-right of screen in full-size mode)
+.global-header .nav-links .secondary .dropdown-user-menu {
+  // make the menu border the same shade as the menu separators
+  border: 1px solid #e7e7e7;
+}
+
+// change profile image from rounded corners to circular
+.global-header .nav-links .secondary .user-image-frame {
+  border-radius: 50% !important;
+}
+
+/*----------------------------------------------------------------------*/
+
+
+// Course Textbook outline links
+.xmodule_display.xmodule_StaticTabModule a:link,
+.xmodule_display.xmodule_StaticTabModule a:visited,
+.xmodule_display.xmodule_StaticTabModule a:hover,
+.xmodule_display.xmodule_StaticTabModule div.info-wrapper section.handouts ol li div.hitarea:hover+h4,
+div.info-wrapper section.handouts ol li .xmodule_display.xmodule_StaticTabModule div.hitarea:hover+h4,
+.xmodule_display.xmodule_StaticTabModule div.info-wrapper section.handouts ol li div.hitarea:focus+h4,
+div.info-wrapper section.handouts ol li,
+.xmodule_display.xmodule_StaticTabModule div.hitarea:focus+h4,
+.xmodule_display.xmodule_StaticTabModule a:active,
+.xmodule_display.xmodule_StaticTabModule a:focus {
+  color: black !important;
+}
+
+
+// hide Course Tools on top of sidebase in Course module
+.section-tools {
+  display: none !important;
+}
+
+.section-handouts {
+  display: none !important;
+}
+
+// custom styling from Jim
+.content-wrapper .course-tabs {
+  padding: 0 !important;
+  font-size: 0.875rem !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  white-space: nowrap !important;
+}
+
+// custom styling from Jim
+.page-content-container {
+  border: 1px solid #e7e7e7;
+  background-color: white !important;
+  max-width: 1920px !important;
+  margin: 0 auto !important;
+}
+
+
+// Course menu - custom styling from Jim
+.content-wrapper .course-tabs .nav-item .nav-link,
+.content-wrapper .course-tabs .nav-item:hover .nav-link,
+.content-wrapper .course-tabs .nav-item:focus .nav-link,
+.content-wrapper .course-tabs .nav-item.active .nav-link,
+.wrapper-course-material .course-tabs .tab a,
+.wrapper-course-material .course-tabs .tab a:hover,
+.wrapper-course-material .course-tabs .tab a:focus,
+.wrapper-course-material .course-tabs .tab a.active {
+  color: inherit !important;
+  text-transform: uppercase !important;
+  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-size: initial !important;
+}
+
+// Course menu - Green menu bar. custom styling from Jim
+.content-wrapper .course-tabs .nav-item.active .nav-link,
+.content-wrapper .course-tabs .nav-item:hover .nav-link,
+.wrapper-course-material .course-tabs .tab a:hover,
+.wrapper-course-material .course-tabs .tab a:focus,
+.wrapper-course-material .course-tabs .tab a.active {
+  border-bottom-color: #77AF42 !important;
+}
+
+/*------------------------------------------------------------------------*/
+
+
+/* Everything that follows mostly affects the top part of the Course screens. */
+
+// McDaniel: i set this in partials/lms/theme/_variables.scss - $body_bg
+//----------------------------------------------
+//.window-wrap {
+//  background: #f1f1f1;
+//}
+//----------------------------------------------
+
+// custom styling from Jim
+header.global-header {
+  border: initial !important;
+  box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.1) !important;
+  background: white !important;
+}
+
+// custom styling from Jim
+.global-header .main-header {
+  max-width: 1200px !important;
+  margin: auto !important;
+}
+
+// custom styling from Jim
+.wrapper-course-material .course-material {
+  /* McDaniel: added !important. this was getting ignored on some screens. */
+  overflow-x: auto !important;
+}
+
+// custom styling from Jim
+.unit-title {
+  display: none !important;
+}
+
+// custom styling from Jim
+.content-wrapper {
+  margin-top: 0px !important;
+  padding-top: 1rem !important;
+  max-width: 1080px !important;
+  margin: auto !important;
+}
+
+// custom styling from Jim
+body.view-in-course .course-wrapper {
+  border: none !important;
+  background: none !important;
+}
+
+// custom styling from Jim
+.course-wrapper .course-content .vert-mod .vert,
+.course-wrapper .courseware-results-wrapper .vert-mod .vert {
+  padding: 0 !important;
+}
+
+// custom styling from Jim
+.course-wrapper .course-content .vert-mod .vert {
+  background: white !important;
+  margin-bottom: 0px !important;
+  padding-top: 5px !important;
+  padding-bottom: 15px !important;
+  border-bottom: none !important;
+  box-sizing: border-box;
+  border-left: solid 4px #ffffff00;
+}
+
+.course-wrapper .course-content .vert-mod .vert:not(.dont_number):hover {
+  background: #f1f1f1 !important;
+  border-left: solid 4px #77AF42;
+}
+
+// custom styling from Jim
+.course-content .page-header {
+  background: white !important;
+}
+
+// custom styling from Jim
+.dont_number {
+  margin-top: 20px !important;
+}
+
+// custom styling from Jim
+.has-breadcrumbs .breadcrumbs .nav-item {
+  max-width: none !important;
+}
+
+// custom styling from Jim
+.bookmark-button-wrapper {
+  display: none !important;
+}
+
+// custom styling from Jim
+.course-content main#main {
+  padding: 0px !important;
+}
+
+/* ------------------ course outline numbering
+.vert-mod {
+  counter-reset: question-number;
+}
+
+.vert:not(.dont_number) {
+  counter-increment: question-number;
+}
+
+.vert:not(.dont_number) .xblock:before {
+  content: counter(question-number);
+  position: absolute;
+  margin-top: 0px;
+  margin-left: -50px;
+  height: 40px;
+  width: 40px;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  padding: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  font-family: "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.vert:not(.dont_number) .xblock {
+  padding-left: 60px !important;
+}
+
+.hdrxblock_block {
+  background: none !important;
+}
+---------------------------------*/
+
+/* ------------------ Instructor's View Selector panel ---------------------------------*/
+body.view-in-course .wrapper-preview-menu .preview-menu {
+  padding: 5px 5px !important;
+  float: right !important;
+}
+
+/* ------------------ Instructor's Edit Action Buttons ---------------------------------*/
+.wrap-instructor-info .instructor-info-action {
+  position: relative !important;
+  z-index: 10 !important;
+  color: #002469 !important;
+}
+
+/* ------------------ Course Outline Formatting ---------------------------------*/
+button.accordion-trigger,
+button.prerequisite-button {
+  text-overflow: ellipsis !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+}
+
+.course-outline .block-tree .section ol.outline-item .subsection .vertical a.outline-item {
+  border: none !important;
+}
+
+#expand-collapse-outline-all-button {
+  display: none !important;
+}
+
+/* ------------------ Courses Listing ---------------------------------*/
+
+.view-dashboard {
+  height: 100vh;
+}
+
+ul.listing-courses {
+  display: flex;
+}
+
+li.course-item {
+  max-width: 30%;
+}
+
+div#dashboard-main {
+  display: block;
+  position: absolute;
+  bottom: 0px;
+  top: 75px;
+}
+
+ul.listing-courses {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+li.course-item {
+  min-width: 300px;
+}
+
+.dashboard .main-container {
+  padding: 0px;
+  box-sizing: border-box;
+}
+
+li.course-item {
+  background: white;
+}
+
+
+
+.dashboard .main-container .my-courses .listing-courses .course-item .course-container {
+  box-sizing: border-box;
+  border: none !important;
+  overflow: hidden;
+}
+
+.wrapper-course-image {
+  width: 100% !important;
+  max-height: initial !important;
+}
+
+section.details {
+  display: flex;
+  flex-direction: column;
+  padding: 0px !important;
+}
+
+.wrapper-course-image {
+  float: initial;
+}
+
+a.cover {
+  width: 100%;
+}
+
+.dashboard .main-container .my-courses .listing-courses .course-item {
+  border: solid 1px grey;
+  height: 400px;
+  margin-bottom: initial;
+  border-bottom: initial;
+  padding-bottom: initial;
+ }
+
+.dashboard .main-container .my-courses .listing-courses .course-item {
+  margin-bottom: 10px !important;
+  border: solid 1px grey !important;
+  padding-bottom: initial;
+  overflow: hidden;
+}
+
+.wrapper-course-actions {
+  display: none;
+}
+
+.wrapper-course-details {
+  padding: 0px 10px 0px 10px !important;
+}
+
+.dashboard .main-container .my-courses .course .details .wrapper-course-image {
+  display: block;
+}
+
+.dashboard .main-container .my-courses .listing-courses .course-item:hover {
+    -webkit-filter: brightness(70%);
+	-moz-filter: brightness(70%);
+	-o-filter: brightness(70%);
+	-ms-filter: brightness(70%);
+	filter: brightness(70%);
+}
+
+/* ------------------ StepWise Hack ---------------------------------
+  Because the AI does not create a algorithmically generated
+  fingerprint of a question, we have to hack a horrible kludge
+  with the title.  This CSS hides that so prospects dont walk
+  away
+-------------------------------------------------------------------*/
+
+h3.hd.hd-3.problem-header {
+  display: none;
+}
+
+.questionTitle {
+  display: none;
+}
+
+/* ------------------ Courses Enrollment Page ---------------------------------*/
+
+.course-info header.course-profile {
+  height: initial;
+  padding-top: 0px;
+  margin-top: 20px;
+  border: none !important;
+}
+
+.container {
+  background: white;
+  padding: 10px;
+}
+
+.intro-inner-wrapper {
+  border: none !important;
+  box-shadow: none !important;
+}

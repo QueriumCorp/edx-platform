@@ -1,0 +1,420 @@
+<%page expression_filter="h"/>
+<%inherit file="base.html" />
+<%def name="online_help_token()"><% return "develop_course" %></%def>
+<%!
+import logging
+from cms.djangoapps.contentstore.config.waffle_utils import should_show_checklists_page, should_show_checklists_quality
+from util.date_utils import get_default_time_display
+from django.utils.translation import ugettext as _
+from openedx.core.djangolib.js_utils import js_escaped_string, dump_js_escaped_json
+from contentstore.utils import reverse_usage_url
+from openedx.core.djangolib.markup import HTML, Text
+%>
+<%block name="title">${_("Course Outline")}</%block>
+<%block name="bodyclass">is-signedin course view-outline</%block>
+
+<%namespace name='static' file='static_content.html'/>
+
+<%block name="requirejs">
+    require(["js/factories/outline"], function (OutlineFactory) {
+        OutlineFactory(
+            ${course_structure | n, dump_js_escaped_json},
+            ${initial_state | n, dump_js_escaped_json}
+        );
+    });
+</%block>
+
+<%block name="header_extras">
+<link rel="stylesheet" type="text/css" href="${static.url('js/vendor/timepicker/jquery.timepicker.css')}" />
+% for template_name in ['course-outline', 'xblock-string-field-editor', 'basic-modal', 'modal-button', 'course-outline-modal', 'due-date-editor', 'release-date-editor', 'grading-editor', 'publish-editor', 'staff-lock-editor', 'unit-access-editor', 'content-visibility-editor', 'verification-access-editor', 'timed-examination-preference-editor', 'access-editor', 'settings-modal-tabs', 'show-correctness-editor', 'highlights-editor', 'highlights-enable-editor', 'course-highlights-enable']:
+<script type="text/template" id="${template_name}-tpl">
+    <%static:include path="js/${template_name}.underscore" />
+</script>
+% endfor
+<%static:optional_include_mako file="course_outline_header_extras_post.html" />
+
+% if not settings.STUDIO_FRONTEND_CONTAINER_URL:
+<link rel="stylesheet" type="text/css" href="${static.url('common/css/vendor/common.min.css')}" />
+<link rel="stylesheet" type="text/css" href="${static.url('common/css/vendor/courseOutlineHealthCheck.min.css')}" />
+% endif
+</%block>
+
+<%block name="page_alert">
+  %if notification_dismiss_url is not None:
+  <div class="wrapper wrapper-alert wrapper-alert-announcement is-shown">
+    <div class="alert announcement has-actions">
+      <span class="feedback-symbol fa fa-bullhorn" aria-hidden="true"></span>
+
+      <div class="copy">
+        <h2 class="title title-3">${_("This course section was created as a copy of an existing course section. Some manual configuration is needed.")}</h2>
+
+        <p>${_("No course content is currently visible, and no learners are enrolled. Be sure to review and reset all dates, including the Course Start Date; set up the course team; review course updates and other assets for dated material; and seed the discussions and wiki.")}</p>
+      </div>
+
+      <ul class="nav-actions">
+        <li class="action action-dismiss">
+          <a href="#" class="button dismiss-button" data-dismiss-link='${notification_dismiss_url}'>
+            <span class="icon fa fa-times-circle" aria-hidden="true"></span>
+            <span class="button-copy">${_("Dismiss")}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+  %endif
+
+    %if deprecated_blocks_info.get('blocks') or deprecated_blocks_info.get('deprecated_enabled_block_types'):
+      <div class="wrapper wrapper-alert wrapper-alert-error is-shown">
+        <div class="alert announcement">
+          <span class="feedback-symbol fa fa-warning" aria-hidden="true"></span><span class="sr">${_("Warning")}</span>
+
+          <div class="copy">
+            <h2 class="title title-3 warning-heading-text">${_("This course uses features that are no longer supported.")}</h2>
+
+            %if deprecated_blocks_info.get('blocks'):
+              <div class="components-list">
+                <p class="components-list-heading-text">${_("You must delete or replace the following components.")}</p>
+                  <nav class="nav-related" aria-label="${_('Unsupported Components')}">
+                    <ul>
+                      % for component_parent_url, component_display_name in deprecated_blocks_info['blocks']:
+                          <li class="nav-item">
+                                % if component_display_name:
+                                    <a href="${component_parent_url}">${component_display_name}</a>
+                                % else:
+                                    <a href="${component_parent_url}">${_("Deprecated Component")}</a>
+                                % endif
+                          </li>
+                      % endfor
+                    </ul>
+                  </nav>
+              </div>
+            %endif
+
+            % if deprecated_blocks_info.get('deprecated_enabled_block_types'):
+              <div class="advance-modules-list">
+                <p class="advance-modules-remove-text">
+                  ${Text(_("To avoid errors, {platform_name} strongly recommends that you remove unsupported features from the course advanced settings. To do this, go to the {link_start}Advanced Settings page{link_end}, locate the \"Advanced Module List\" setting, and then delete the following modules from the list.")).format(
+                    platform_name=static.get_platform_name(),
+                    link_start=HTML('<a href="{advance_settings_url}">').format(advance_settings_url=deprecated_blocks_info['advance_settings_url']),
+                    link_end=HTML("</a>")
+                  )}
+                </p>
+                <nav class="nav-related" aria-label="${_('Unsupported Advance Modules')}">
+                  <ul>
+                    % for block_type in deprecated_blocks_info['deprecated_enabled_block_types']:
+                      <li class="nav-item">${block_type}</li>
+                    % endfor
+                  </ul>
+                </nav>
+              </div>
+            % endif
+          </div>
+        </div>
+      </div>
+    %endif
+
+</%block>
+
+<%block name="content">
+<style>
+  /*
+    McDaniel Nov-2018
+    Styling for 2-column course outline layout. Publish button goes on the left.
+    original content pushed into a 2nd column to the right-hand side.
+    Note: The course section (aka chapter) content is generated via Js using a non-themable template
+    stored in /edx/app/edxapp/edx-platform/cms/js/course-outline.underscore
+  */
+
+  .outline.section.is-collapsable,
+  .outline-subsection.is-collapsable { /* prevents screen flicker during transition from section to subsection when expanding. */
+
+      background-color: white;
+  }
+
+  .rover-hidden {
+    /* added dynamically from /edx/app/edxapp/edx-platform/cms/templates/js/course-outline.underscore */
+    visibility: hidden;
+  }
+  .rover-bg-orange {
+    /* added dynamically from /edx/app/edxapp/edx-platform/cms/templates/js/course-outline.underscore */
+    background-color: #f47641 !important;  /* Rover orange */
+  }
+
+  .rover-publishable-content {
+    /* added dynamically from /edx/app/edxapp/edx-platform/cms/templates/js/course-outline.underscore */
+  }
+
+  .rover-white-text {
+    color: white !important;    /* set favicon colors */
+  }
+  .rover-box-shadow {
+    box-shadow: 1px 1px 3px 1px #c8c8c8;    /* mcdaniel  5-feb-2019 */
+  }
+
+  .outline-section {
+    border-right: none !important;
+  }
+  .outline-subsection {
+    margin-left: 10px;  /* left side of 10px space around colored left bar. */
+  }
+  .rover-outline-item {
+  }
+
+  .rover-outline-item.outline-item.is-collapsed {
+    padding: 0 !important;
+    border-radius: 8px 0 0 8px !important;    /* outer border area */
+    background-color: #F47641;                /* Rover orange */
+  }
+  .outline-item-row {
+    display: flex;
+    border-radius: 8px 0 0 8px !important;  /* mcdaniel  5-feb-2019: changed from 3px inner border area */
+  }
+  .outline-subsection {
+    /* remove default top and bottom gray border, which distorts the shape of green/orange left bars */
+    border: none !important;
+    padding-left: 0px !important;
+  }
+  .outline-subsection.is-collapsed.has-warnings {
+    background-color: #F47641 !important;   /* set entire row to orange. we'll paint over this on the right column. */
+  }
+  .outline-subsection.is-collapsed.is-live {
+    background-color: #77AF42 !important;   /* set entire row to green. we'll paint over this on the right column. */
+  }
+  .outline-section.is-collapsed.is-live {
+    border-left-color: #77AF42 !important;      /* Rover green */
+    border-top: 1px solid #77AF42;      /*  Rover green */
+    border-bottom: 1px solid #77AF42;
+  }
+  .outline-section.is-collapsed.has-warnings {
+    border-left-color: #F47641 !important;      /* Rover orange */
+    border-top: 1px solid #F47641;    /* Rover orange */
+    border-bottom: 1px solid #F47641;
+  }
+
+  .outline-section.is-collapsed .outline-item-row .outline-item-left {
+    /* mcdaniel: this interferes with save button icons */
+    /* width: 0px !important; */
+  }
+
+  .outline-item-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    height: 100%;
+    width: 30px;
+    border-radius: 8px 0 0 8px !important;    /* outer border area */
+    background-color: #77AF42;                /*  Rover green */
+  }
+
+  .outline-item-left-editmode {
+    background-color: #f47641 !important;
+  }
+
+  .outline-item-right {
+    flex: calc(100% - 50px) !important;
+    background-color: white !important;  /* cover up the green background */
+    padding-top: 15px;      /* replace the padding that we removed */
+    padding-bottom: 15px;      /* replace the padding that we removed */
+    padding-right: 15px;      /* replace the padding that we removed */
+    padding-left: 10px;     /* other half of 10px space around colored left bar. */
+  }
+
+  .rover-publish {
+    transition: font-size 0.25s linear 0s;
+  }
+  .rover-publish:hover {
+    font-weight: bolder;
+    font-size: larger;
+  }
+
+  .rover-link:hover {
+    background-color: #666 !important;
+    color: white !important;
+    border-radius: 3px !important;
+    padding: 5px !important;
+    font-weight: normal !important;
+  }
+
+  /* JVR - chapter and assignment names use all available space */
+  .subsection-header {
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  h3.subsection-header-details{
+    flex-grow: 2 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+  .view-outline .outline-complex .outline-subsection .subsection-header-actions {
+    width: initial !important;
+  }
+
+  span.wrapper-subsection-title.wrapper-xblock-field.incontext-editor.is-editable {
+    flex-grow: 2 !important;
+  }
+</style>
+
+<div class="wrapper-mast wrapper">
+    <header class="mast has-actions has-subtitle">
+        <h1 class="page-header">
+            <!-- McDaniel Nov-2018: change "Course Outline" to Assignments.
+            <small class="subtitle">${_("Content")}</small>
+            -->
+            <span class="sr">&gt; </span>Assignments
+        </h1>
+
+        <nav class="nav-actions" aria-label="${_('Page Actions')}">
+            <h3 class="sr">${_("Page Actions")}</h3>
+            <ul>
+                <li class="nav-item">
+                    <a href="#" class="button button-new" data-category="chapter" data-parent="${context_course.location}" data-default-name="${_('Section')}" title="Click to add a new chapter">
+                        <span class="icon fa fa-plus" aria-hidden="true"></span>${_('New Chapter')}
+                    </a>
+                </li>
+                %if reindex_link:
+                    <li class="nav-item">
+                        <a href="${reindex_link}" class="button button-reindex" data-category="reindex" title="${_('Reindex current course')}">
+                            <span class="icon-arrow-right" aria-hidden="true"></span>${_('Reindex')}
+                        </a>
+                    </li>
+                %endif
+                <li class="nav-item">
+                    <a href="#" class="button button-toggle button-toggle-expand-collapse collapse-all is-hidden">
+                        <span class="collapse-all"><span class="icon fa fa-arrow-up" aria-hidden="true"></span> <span class="label">${_("Collapse All Chapters")}</span></span>
+                        <span class="expand-all"><span class="icon fa fa-arrow-down" aria-hidden="true"></span> <span class="label">${_("Expand All Chapters")}</span></span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    ## McDaniel Apr-2019: enable LMS grade book link
+                    <a href="${gradebook_link}" rel="external" class="button view-button view-live-button"
+                       title="Click to open the course grade book in the LMS">Grade Book</a>
+                </li>
+                <li class="nav-item">
+                  ## McDaniel Oct-2018: hard code Student View button text
+                    <a href="${lms_link}" rel="external" class="button view-button view-live-button"
+                       title="${_('Click to open the courseware in the LMS in a new tab')}">Student View</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+</div>
+
+<div class="wrapper-content wrapper">
+    <section class="content">
+        <article class="content-primary" role="main">
+            <div class="course-status">
+                <div class="status-release">
+                  <!-- McDaniel Nov-2018: change "Course Start Date" to Section Start Date -->
+                    <h2 class="status-release-label">Course Section Start Date</h2>
+                    <br>
+                    <p class="status-release-value">${course_release_date}</p>
+                    <ul class="status-actions">
+                      <li class="action-item action-edit">
+                        <a href="${settings_url}" class="edit-button action-button" data-tooltip="${_("Edit Start Date")}">
+                            <span class="icon fa fa-pencil" aria-hidden="true"></span>
+                            <span class="action-button-text sr">${_("Edit Start Date")}</span>
+                        </a>
+                      </li>
+                    </ul>
+                </div>
+                <div class="status-pacing">
+                  <!--
+                  McDaniel Nov-2018: removing Course Pacing title box
+                  <h2 class=status-pacing-label>${_("Course Pacing")}</h2>
+                  <br>
+                  % if context_course.self_paced:
+                      <p class="status-pacing-value">${_("Self-Paced")}</p>
+                  % else:
+                      <p class="status-pacing-value">${_("Instructor-Paced")}</p>
+                  % endif
+                  -->
+                </div>
+                <div class="status-highlights-enabled"></div>
+                % if should_show_checklists_page(request.user):
+                <div class="status-checklist">
+                    <%static:studiofrontend entry="courseOutlineHealthCheck">
+                        {
+                            "lang": "${language_code | n, js_escaped_string}",
+                            "course": {
+                                "id": "${context_course.id | n, js_escaped_string}",
+                                "name": "${context_course.display_name_with_default | n, js_escaped_string}",
+                                "course_release_date": "${course_release_date | n, js_escaped_string}",
+                                "is_course_self_paced": ${context_course.self_paced | n, dump_js_escaped_json},
+                                "url_name": "${context_course.location.name | n, js_escaped_string}",
+                                "org": "${context_course.location.org | n, js_escaped_string}",
+                                "num": "${context_course.location.course | n, js_escaped_string}",
+                                "display_course_number": "${context_course.display_coursenumber | n, js_escaped_string}",
+                                "revision": "${context_course.location.revision | n, js_escaped_string}"
+                            },
+                            "help_tokens": {
+                                "files": "${get_online_help_info(online_help_token())['doc_url'] | n, js_escaped_string}"
+                            },
+                            "enable_quality": ${should_show_checklists_quality(request.user, context_course.id) | n, dump_js_escaped_json}
+                        }
+                    </%static:studiofrontend>
+
+                </div>
+                % endif
+            </div>
+            <div class="wrapper-dnd"
+              % if getattr(context_course, 'language'):
+                lang="${context_course.language}"
+              % endif
+            >
+                <%
+                course_locator = context_course.location
+                %>
+                <h2 class="sr">${_("Course Outline")}</h2>
+                <article class="outline outline-complex outline-course" data-locator="${course_locator}" data-course-key="${course_locator.course_key}">
+                </article>
+            </div>
+            <div class="ui-loading">
+                <p><span class="spin"><span class="icon fa fa-refresh" aria-hidden="true"></span></span> <span class="copy">${_("Loading")}</span></p>
+            </div>
+        </article>
+        <aside class="content-supplementary" role="complementary">
+            <div class="bit">
+                <h3 class="title-3">${_("Creating your course organization")}</h3>
+                <p>${_("You add chapters, assignments, and questions directly in the outline.")}</p>
+                <p>${_("Create a chapter, then add assignments and questions. Open a question to add course components.")}</p>
+            </div>
+            <div class="bit">
+                <h3 class="title-3">${_("Reorganizing your course")}</h3>
+                <p>${_("Drag chapters, assignments, and questions to new locations in the outline.")}</p>
+                <div class="external-help">
+                    <a href="${get_online_help_info('outline')['doc_url']}" target="_blank" class="button external-help-button">${_("Learn more about the course outline")}</a>
+                </div>
+            </div>
+            <div class="bit">
+                <h3 class="title-3">${_("Setting release dates and grading policies")}</h3>
+                <p>${_("Select the Configure icon for a chapter or assignment to set its release date. When you configure an assignment, you can also set the grading policy and due date.")}</p>
+                <div class="external-help">
+                    <a href="${get_online_help_info('grading')['doc_url']}" target="_blank" class="button external-help-button">${_("Learn more about grading policy settings")}</a>
+                </div>
+            </div>
+            <div class="bit">
+                <h3 class="title-3">${_("Changing the content learners see")}</h3>
+                <p>${_("To publish draft content, select the Publish icon for a chapter, assignment, or question.")}</p>
+                <p>${Text(_("To make a chapter, assignment, or question unavailable to learners, select the Configure icon for that level, then select the appropriate {em_start}Hide{em_end} option. Grades for hidden chapters, assignments, and questions are not included in grade calculations.")).format(em_start=HTML("<strong>"), em_end=HTML("</strong>"))}</p>
+                <p>${Text(_("To hide the content of an assignment from learners after the assignment due date has passed, select the Configure icon for an assignment, then select {em_start}Hide content after due date{em_end}. Grades for the assignment remain included in grade calculations.")).format(em_start=HTML("<strong>"), em_end=HTML("</strong>"))}</p>
+                <div class="external-help">
+                    <a href="${get_online_help_info('visibility')['doc_url']}" target="_blank" class="button external-help-button">${_("Learn more about content visibility settings")}</a>
+                </div>
+            </div>
+
+        </aside>
+    </section>
+</div>
+
+<script type="text/javascript">
+  // mcdaniel jul-2019: added three super training wheel slides to beginning of steps.
+  //if ( hopscotch.getState() && hopscotch.getState().match( "cms-itinerary:10" ) ){
+    //ResumeRoverTour(10);
+  if ( hopscotch.getState() && hopscotch.getState().match( "cms-itinerary:13" ) ){
+    ResumeRoverTour(13);
+  }
+</script>
+
+</%block>

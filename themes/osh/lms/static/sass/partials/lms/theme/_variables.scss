@@ -1,0 +1,113 @@
+/* ==========================================================================================
+  McDaniel
+  Oct-2018
+
+  Usage: variable overrides of /edx/app/edxapp/edx-platform/node_modules/@edx/edx-bootstrap/sass/open-edx/_variables.scss
+
+  documentation: https://getbootstrap.com/docs/4.0/getting-started/theming/
+
+  ========================================================================================== */
+
+// Theme colors
+//
+// Note: define colors needed by your theme first
+/*
+Primary colors
+======================================
+OpenStax Green:		#77AF42
+OpenStax Orange:	#F47641
+OpenStax Gray:		#5E6062
+OpenStax Yellow:	#F4D019
+OpenStax Blue:		#002469		<------ Primary theme color
+
+Hover colors
+=======================================
+OpenStax Green:   #0C9372
+OpenStax Red:		  #C22032
+OpenStax Gray:		#9A9A9B
+OpenStax Gold:		#FDBD3E
+OpenStax Light Blue:	#0DC0DC	<------ Secondary theme color
+
+*/
+
+// McDaniel Oct-2018: disable theme default rounded borders
+$enable-rounded: false;
+
+// Define the primary colors
+$openstax-green: #77AF42;
+$openstax-orange: #F47641;
+$openstax-gray: #5E6062;
+$openstax-yellow: #F4D019;
+$openstax-blue: #002469;
+
+
+// Define the hover colors
+$openstax-green-hover: #0C9372;
+$openstax-red-hover: #C22032;
+$openstax-gray-hover: #9A9A9B;
+$openstax-gold-hover: #FDBD3E;
+$openstax-lightblue: #0DC0DC;
+
+// Bootstrap theme colors from $theme-colors
+$primary: $openstax-blue;
+$secondary: black;        // McDaniel: per customizations & markups from Jim
+$rover-menu: #77AF42;     // Rover green menu
+$body-bg: #f1f1f1;        // McDaniel Oct-2018: set the outer background of all pages to light-gray
+$blue: #0EC0DB;           // McDaniel Nov-2018: Rover sky blue
+
+
+// Add Openstax colors to the Bootstrap global theme color array
+$theme-colors: (
+  "primary": $primary,
+  "secondary": $secondary,
+  "rover-menu": $rover-menu,
+  "openstax-green": $openstax-green,
+  "openstax-orange": $openstax-orange,
+  "openstax-gray": $openstax-gray,
+  "openstax-yellow": $openstax-yellow,
+  "openstax-blue": $openstax-blue,
+  "openstax-green-hover": $openstax-green-hover,
+  "openstax-red-hover": $openstax-red-hover,
+  "openstax-gray-hover": $openstax-gray-hover,
+  "openstax-gold-hover": $openstax-gold-hover,
+  "openstax-lightblue": $openstax-lightblue
+);
+
+
+/*
+$primary:       $blue !default;
+$secondary:     $gray-800 !default;
+$inverse:       $white !default;
+$disabled:      $gray-600 !default;
+$success:       $green !default;
+$info:          $cyan !default;
+$warning:       $yellow !default;
+$danger:        $red !default;
+$purchase:      $green !default;
+$lightest:      $gray-100 !default;
+$light:         $gray-200 !default;
+$dark:          $gray-800 !default;
+$darker:        $gray-900 !default;
+$darkest:       $black !default;
+
+$theme-colors: () !default;
+$theme-colors: map-merge((
+  primary: $primary,
+  secondary: $secondary,
+  inverse: $inverse,
+  disabled: $disabled,
+  success: $success,
+  info: $info,
+  warning: $warning,
+  danger: $danger,
+  purchase: $purchase,
+  lightest: $lightest,
+  light: $light,
+  dark: $dark,
+  darker: $darker,
+  darkest: $darkest
+), $theme-colors);
+*/
+
+// Initialize the Open edX Bootstrap theme
+@import 'edx-bootstrap/sass/open-edx/theme';

@@ -1,0 +1,152 @@
+## mako
+
+<%namespace name='static' file='/static_content.html'/>
+<%!
+ from django.utils.translation import ugettext as _
+ from django.urls import reverse
+ %>
+<%page args="tab_list, active_page, default_tab, tab_image" expression_filter="h" />
+
+<%
+def url_class(is_active):
+  if is_active:
+    return "active"
+  return ""
+%>
+
+## mcdaniel jun-2019: is user slobal staff or confirmed faculty?
+<%
+from student.models import is_faculty
+from student.roles import GlobalStaff
+
+def show_instructor_tab(user):
+  return is_faculty(user) or GlobalStaff().has_user(user)
+%>
+
+## =======================================================================
+##  McDaniel Oct-2018:
+##  Fix the presentation order of the Courseware menu to the following:
+##  a. Assignments
+##  b. Scores
+##  c. Textbook
+##  d. Discussions
+##  e. Instructor    (modified by mcdaniel mar-2019)
+## =======================================================================
+
+## a. Assignments
+% for tab in tab_list:
+  % if tab.name == 'Course':
+    <%
+      tab_is_active = tab.tab_id in (active_page, default_tab)
+      tab_class = url_class(tab_is_active)
+    %>
+    <li class="tab">
+    <a href="${tab.link_func(course, reverse)}" class="${tab_class}">
+    <span>Assignments</span>
+    % if tab_is_active:
+        <span class="sr">, current location</span>
+    %endif
+    % if tab_image:
+        ## Translators: 'needs attention' is an alternative string for the
+        ## notification image that indicates the tab "needs attention".
+        <img src="${tab_image}" alt="${_('needs attention')}" />
+    %endif
+    </a>
+    </li>
+  %endif
+% endfor
+
+## b. Score
+% for tab in tab_list:
+  % if tab.name == 'Progress':
+    <%
+      tab_is_active = tab.tab_id in (active_page, default_tab)
+      tab_class = url_class(tab_is_active)
+    %>
+    <li class="tab">
+    <a href="${tab.link_func(course, reverse)}" class="${tab_class}">
+    <span>Scores</span>
+    % if tab_is_active:
+        <span class="sr">, current location</span>
+    %endif
+    % if tab_image:
+        ## Translators: 'needs attention' is an alternative string for the
+        ## notification image that indicates the tab "needs attention".
+        <img src="${tab_image}" alt="${_('needs attention')}" />
+    %endif
+    </a>
+    </li>
+  %endif
+% endfor
+
+## c. Textbook
+% for tab in tab_list:
+  % if tab.name == 'Textbook':
+    <%
+      tab_is_active = tab.tab_id in (active_page, default_tab)
+      tab_class = url_class(tab_is_active)
+    %>
+    <li class="tab">
+    <a href="${tab.link_func(course, reverse)}" class="${tab_class}">
+    ${_(tab.name)}
+    % if tab_is_active:
+        <span class="sr">, current location</span>
+    %endif
+    % if tab_image:
+        ## Translators: 'needs attention' is an alternative string for the
+        ## notification image that indicates the tab "needs attention".
+        <img src="${tab_image}" alt="${_('needs attention')}" />
+    %endif
+    </a>
+    </li>
+  %endif
+% endfor
+
+## d. Discussion
+% for tab in tab_list:
+  % if tab.name == 'Discussion':
+    <%
+      tab_is_active = tab.tab_id in (active_page, default_tab)
+      tab_class = url_class(tab_is_active)
+    %>
+    <li class="tab">
+    <a href="${tab.link_func(course, reverse)}" class="${tab_class}">
+    ${_(tab.name)}
+    % if tab_is_active:
+        <span class="sr">, current location</span>
+    %endif
+    % if tab_image:
+        ## Translators: 'needs attention' is an alternative string for the
+        ## notification image that indicates the tab "needs attention".
+        <img src="${tab_image}" alt="${_('needs attention')}" />
+    %endif
+    </a>
+    </li>
+  %endif
+% endfor
+
+##  e. Instructor
+% if show_instructor_tab(user) :
+   % for tab in tab_list:
+   ## mcdaniel mar-2019: instructor_access = Globalstaff or confirmed_faculty
+     % if tab.name == 'Instructor':
+       <%
+         tab_is_active = tab.tab_id in (active_page, default_tab)
+         tab_class = url_class(tab_is_active)
+       %>
+       <li class="tab">
+       <a href="${tab.link_func(course, reverse)}" class="${tab_class}">
+       <span>Instructor</span>
+       % if tab_is_active:
+           <span class="sr">, current location</span>
+       %endif
+       % if tab_image:
+           ## Translators: 'needs attention' is an alternative string for the
+           ## notification image that indicates the tab "needs attention".
+           <img src="${tab_image}" alt="${_('needs attention')}" />
+       %endif
+       </a>
+       </li>
+     %endif
+   % endfor
+ % endif

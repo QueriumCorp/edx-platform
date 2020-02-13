@@ -1,0 +1,464 @@
+## By:   Lawrence McDaniel
+##       lpm0073@gmail.com
+##       lawrencemcdaniel.com
+##
+##       Jul-2019
+##
+## Usage:
+##         html, CSS and Javascript to generate Rover tours for AM.
+##
+##         The tour uses LinkedIn's hopscotch which is documented here.
+##         http://linkedin.github.io/hopscotch/
+##         https://github.com/linkedin/hopscotch
+##
+##         Note that there have been no commits to hopscotch since June 2017.
+<%namespace name='static' file='../static_content.html'/>
+
+% if user.is_authenticated:
+<%
+  site_domain = static.get_value('site_domain', settings.SITE_NAME)
+  site_protocol = 'https' if settings.HTTPS == 'on' else 'http'
+
+  ## sfdc_data_url=u"{protocol}://am.{domain}{path}".format(
+  ##   protocol=site_protocol,
+  ##   domain=site_domain,
+  ##   path='/salesforce/v1/contacts/' + user.username
+  ## )
+
+  getting_started_video_url=u"{protocol}://{domain}{path}".format(
+    protocol=site_protocol,
+    domain=site_domain,
+    path='/getting-started-video'
+  )
+
+  getting_started_guide_url=u"https://openstax.org/general/rover-onboarding"
+
+  ##
+  ## https://roverbyopenstax.com/courses/course-v1:Querium+OS9471721_54be+2019_T1/course/
+  ## https://roverbyopenstax.com/courses/
+  ##
+  lms_course_outline_url=u"{protocol}://{domain}{path}".format(
+                  protocol=site_protocol,
+                  domain=site_domain,
+                  path='/courses/'
+              )
+%>
+
+<!-- ROVERIZED TOUR -->
+<style>
+/* McDaniel: Jul-2019. Super Training image styling */
+.super-training-wheel {
+  width: 700px;
+}
+
+span.hopscotch-bubble-number {
+  display: none !important;
+}
+
+.hopscotch-bubble.animated.tour-cms-itinerary {
+  border: 2px solid rgb(244, 118, 65) !important;
+  border-radius: 10px;
+}
+
+
+
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.up {
+  top: -18px;
+  left: 10px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.up .hopscotch-bubble-arrow {
+  border-bottom: 17px solid #ffffff;
+  border-left: 17px solid transparent;
+  border-right: 17px solid transparent;
+  position: relative;
+  top: -14px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.up .hopscotch-bubble-arrow-border {
+  border-bottom: 17px solid #000000;
+  border-bottom: 17px solid rgba(244, 118, 65, 1);
+  border-left: 17px solid transparent;
+  border-right: 17px solid transparent;
+}
+
+
+
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.down {
+  bottom: -35px;
+  left: 10px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.down .hopscotch-bubble-arrow {
+  border-top: 17px solid #ffffff;
+  border-left: 17px solid transparent;
+  border-right: 17px solid transparent;
+  position: relative;
+  top: -20px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.down .hopscotch-bubble-arrow-border {
+  border-top: 17px solid #000000;
+  border-top: 17px solid rgba(244, 118, 65, 1);
+  border-left: 17px solid transparent;
+  border-right: 17px solid transparent;
+}
+
+
+
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.left {
+  top: 10px;
+  left: -18px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.left .hopscotch-bubble-arrow {
+  border-bottom: 17px solid transparent;
+  border-right: 17px solid #ffffff;
+  border-top: 17px solid transparent;
+  position: relative;
+  left: 3px;
+  top: -34px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.left .hopscotch-bubble-arrow-border {
+  border-right: 17px solid #000000;
+  border-right: 17px solid rgba(244, 118, 65, 1);
+  border-bottom: 17px solid transparent;
+  border-top: 17px solid transparent;
+}
+
+
+
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.right {
+  top: 10px;
+  right: -35px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.right .hopscotch-bubble-arrow {
+  border-bottom: 17px solid transparent;
+  border-left: 17px solid #ffffff;
+  border-top: 17px solid transparent;
+  position: relative;
+  left: -3px;
+  top: -34px;
+}
+div.hopscotch-bubble .hopscotch-bubble-arrow-container.right .hopscotch-bubble-arrow-border {
+  border-left: 17px solid #000000;
+  border-left: 17px solid rgba(244, 118, 65, 1);
+  border-bottom: 17px solid transparent;
+  border-top: 17px solid transparent;
+}
+
+
+button.hopscotch-nav-button.prev.hopscotch-prev {
+  background: initial;
+  color: white;
+  font-weight: initial;
+  text-shadow: initial;
+  background-color: #E5743D;
+  border: none;
+}
+button.hopscotch-nav-button.prev.hopscotch-prev:hover {
+  background: initial;
+  background-color: #076e7d;
+}
+
+button.hopscotch-nav-button.next.hopscotch-next {
+  background: initial;
+  color: white;
+  font-weight: initial;
+  text-shadow: initial;
+  background-color: #E5743D;
+  border: none;
+}
+
+button.hopscotch-nav-button.next.hopscotch-next:hover {
+  background: initial;
+  background-color: #076e7d;
+}
+
+/* McDaniel jul-2019: removing the original 50px left margin that was placed to accomodate the rover head. */
+div.hopscotch-bubble .hopscotch-bubble-content {
+  /* margin: 0 0 0 50px; */
+  margin: 0 0 0 0;
+}
+
+/*
+  McDaniel Jul-2019:
+  this puts a Rover dog headshot into the top-left corner of the Hopscotch tour content window.
+  Dani asked for this in 2018 but later wanted it removed, at least, from the super training wheels.
+
+.hopscotch-content::before {
+  content: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD4AAAA+CAYAAABzwahEAAAABGdBTUEAALGPC/xhBQAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABh0RVh0U29mdHdhcmUAcGFpbnQubmV0IDQuMS41ZEdYUgAADX5JREFUaEPtmvlTVFcWx/OHTM0PUzUzNVUTl6AoLgkgCkgrm6IRWQREkEVjApEg0LgAyqYsAdmhWbubfRNBGxAEQY2CCEbBBZFYjpZbJnEM/Z17r/2aXi7QIqip8lZ9Cvq97nfP951zzz33vvfZp/apfWpz0pDsZzrhu1iMnZ+LcdAR2Lca8F0EeH/+hsDlQIgllAfWK9h3Iu3Fqp/++RrCNoiVQWYK+CycFPi2BJsDu8iNyPzWVHXZj7NBEmGqDN+owO4v+ELeAaX/UsXEUZePLxJYmO5awDV6Ttm/Dtiz8sNHAB2P8DPiGzmPTASYKFAS/WFugDLAWMEz6n2h9DcmOWDh+xOPQ46mLDNzjHnvkOGlPOKkUJk2f42Or/lIXu+Kct/q+RPPRPtozL8fGcq9K+ZePEJtPkpP66IMNp878XR+RqAJtyND+cN7AYZdP8flbf/C+S3/YIx7LMRve1bjVeAKTPjO3U1VxnvMjXilzyKDszcVOOJhhGYvc8gDnNCbHIHTB3agNiUKilo5zivOoK2hCg2FJ5ETGYBY1zVICtwMSayYHMtCuyQdfclhuBvliWdBlph15feucz2CzMTcC+vwwHMxUreaYbudNTZu3IgNGzbAdoMIWdE/oLO9FbKyMmSm/YjUpCRkpKejtLAApxrrcam3G82yAiQFbELIur/hyNcrEe+/GSmhvjh58DtIwvzQ5G1OIuSfOOf0TxYpNHJ+9/o31w41e1dAJeHtG11cGHLHe9yWwclWxMRqErh1PdrOnEZiXByiDh5UkxAbi9LSEhRKCnAsKgr5OTloP3sGLRVFCLddgGCzv+D7NX9FrJc1ciP9IU+NYhFySpqHxsIMVPwYg/xwbzSRfp978m2iKA9Yzy7klYHLZwxxKtp+o7Zgip3IGnlHgiDJz9MSffTIEUilZSgvlyM5MVHrXFZ6GspPxiHU8u+oK8tDR+tZ1FZXQVpSDEluNuQkaqSlRSgrLkRTQz16us6jKuUQWlyM0etujP940JJZp2wmNYdKjmGN3HLTmWrvEc8lXE9TtlmvRi3xTmJcrJa4k2lEnFyGXOJlzeMC8oIM/Bjqg8b6OvL5kNa5nKwsVFSU40RCPPtMo6WyXIZGkhe2iCzYEPNzsELjdhNMqGxU7l31dl6nc6KuUE0eey2Cl50VVzTFxXolmitLEXP4sJbxdIzLZFJmtOZxCo0GWVocShIjSU4o0Tt/PD6eCS/QiaK6mirE+DuznEL7pjdAvNkCr3YSx1HnxboZ5nW6/uWJFfiDXJBeWFesJoLHqbGaRuZmZzOvax4TqCSiYj0skRbuB0Xzac53DrGbJi0rRfShyWhISToBWZIYm2zWqvun4oM3rcOvOxeyDQ6VtOkbKfynzeQKVxN15hYQiWxgablO/Zne/ZQQH9TX1mgZWUaMjo2OVn+m0PPlMhmKYkNw1N0Cce5r0Xuhi0THCa3vUQry8pCdmYm4mBj1MZosa7KPs5utaROFin/ls9iwDI9vVnIFC9STMaQrfNWqVTAyMiLiLdXHnDdYoCI7CW2KsygkBicfP84yuWBwzJHDzPuKMy2oI1lbJsnGzzeGMNR/BWfJnN/eqtAbEifT0pGVkaF1LD0lGaWJYq5wW1tbHHEiYR+5efpNjJnCnNLnYax18TVr1mDJkiUMExMTrXN7dmxBZpgv6osy0dPZjssXe9HV0Y6uc+242NOF0+WFkGcno6qKFDUkUz948IAxONCPC+c7yE1pRtzRSe/SHJGTnaUlvKq8HMl7nOAgmjrnHPeZYQWHgKUzFiyvyLjZYvvmgjTEjY2N1cIp69ZNhnxEeBgTVZwUhRNBHoj3c8Jxfycc+84baRHfoLw4HzU1NQwFmcvHx8fVXOruQHdrMy719JChIGWepcVPhipH0MQpyctFW1Mt9lgvYv1ZWVnB3Nxc3b9A4FbR9OHOtpA4YnWJcFrDLmhmZqYlmqLp9ZiYaCaqqrISERFh8PXxwYEDBxAZGYnDxHApmZsF4efa27WEjxPPdzXXoTIrERfaFej/6SdcvXwJl3t7cLG7Cz+R6Dl3ug5i17WsbhCJRMwJdMjpig91sppeOL41bIOhwW0Vu+Dy5cv1hFPWr1/PzqempqKstBSenp7YtWsXExwSEoLdu3cjMDCQnReEd3R0aAtn4sdwa3AANZlxSA92Q1qQO3LCfRlZobvgYbNCPY1pDjmKZr5JdvoSSNw59TjnieTxwmshbK3WanWkiZmZKeswLzcX7m5u7H8vLy+4uLioEyP9G0MyvCD8/Pnz+sJV3Lz5M/tOOqnu6M2jnCDJ0t7OTi2ORpqmDZqRV+9CV4CLpxH+FjulYtEyrY40oSG3bds2hOzfr+5cc7oT8N65Uy28u7ubK5pymYS4hMwI/v7+7OYFBQXhIBG/ZcsWdh0aYbo20JC3sHhT0dEVI31YoZKp33gCp4JWRo89F2LEaylyyBRDPRAcHAxnIvirr75iIb19+3ZmmB3xDD2XkpIC26ADWLjGEstXfwlra2vkk6mOCu/t7eWKpkilUriQawkeptNUQEAAG0L0Mx3TusIp1Ovu9utZ0TWlcJSRRfEs9sZf+y9DPcncgucoNJNTEshCxNXVlRlHcXdzRWxmNkwyZDALi4GTqxsSEhLYb/r7+riib926pb6Bujg4OLC/umGuSbyjKm9NK1xHlCHwhOuSQ0rV0B9+gLOzMzPUhmRgEflLPZhFKjH6nZGREa7wrMwMbCe/o7PBBu/d+EJkDzOSuOiMQjM5nVKXLl2qFmq5wgjOXy7A/rWLkGCzmKzfVc6cq1AXeO1nTIRX6InlUV1djaLCQiSRQoR6WiKRsOPtba24T6avh7dH8aRzEE8U1/C4awgPh+8hPvaYOhE2t7Yhqq4FCfmFJH98D3t7e9hYW8GJCE0XLcJVlwVsF4iU3W/QtHVa4bMI9YndRmiokuuJNJQzpHC5d/cuHg3cxvOyHjwvvjAJ+XyzrRd7yNRHo0OzVKbjnJK2fR2xw4Atqrn2OF38n66QckVNRz1Zc18hRQktUcfHHuC5vFdbtIC0Bz1tHawIKiwuhiQ/n9T8EpSWlKCClKvjYmeOTRzI4kslU78ZWsDocrZssvQ0hA5Sq9+9c2dyLBPhT2sv8YWXXMDDyzfJYueM3nVqa6rx214DbCaRPBG7Y2rhhpasunTlJuoZxYN6+dq1a2+8rJHAKA/ujuJZ/RUt0S+I6KcNV/ALGfujo6NQKBRa12srztYfyzyIcJVEfkPAslll9r6UMC2DeDQ2NJAK7KaeYE0eXR1mHhZEP7pyS+smjY2NsUQoXLMvNZxrjx6By2cQbsCylMdolKeWSB43btzQEsmDinzaco0ltUe9Q9zIUIuvrcXDsM1ce3QxaBdmpo0IHi/3mXPFCrS1tekJELh3757W57F7oxgfHuWKFmBh31CNP3wNezY/cWiGjQja2Is6nB/PRKckjSua0td3Vc/44eFbGLw+gIFr/STR3VYfv3//vtb3eNCb8ktrNenXgOnXd5GBW0+zDPdHoY5c0ZQbQ4N6xg+RY8OkHKVDgHpQOM4TToVev35d69jD0TsGPXMzeLORtpm2l6diKOFbrvBBHaOpuMHBQeLta7h7V2NaI+iGPoV+jwofGBjQOo4gc64damhBZuj2Mm2GPFDgQqaW4WN+qCWlqabw6ZacutDkpXtsZHiYDI1hXCfDQjg2RlDumf4p7qyemb/LOy5jwSKkp6erhdP5mxqvKYYHFc0TTqHe/nloaDIibt7g9q2GOu5tHyHRZuhDQx7Vbl/BzdUFcrlMLZ7O4zS8dQUJsCx+Z3RK4bo8aS7j9i0w64eGtLHHxLMI+eRtFojW2FbSpKfnAjO8pbkZdaXleNp+HU+b+/Gi6jJekvn7RVMfK2ToZqOuWIGH927jdaQjt2/GuzwmFtrbvBhAeeZthK/tNyKTrKN5wmnY03DNzc2F21ZnvCzpwa+lvVr8t6wXLysuYbT5Ihrq69mDBhoRD8m096S7Ca+OunP7VjMXLwG+eRVkGb8DDknOFvDcsYOtvXnCKa2trWQ6G2L7ZwNpNXrCBU4dy2VLULoZ8ayO1uU0+qaPQGWC1+xDXLcZ+vJPt7sJHB0ciLff7KpMR2dnJ8v2RTHJXNGUxH3h8PTwQH/fFbwIdyB9zCB6Ll/+ERp73UvzdWsdfvH8As6b7CAWR3CF8mhpacEAFVV7RU/0Y2kXMlPTyM3pYomxpUyC3wOnLqfn5XUvoU31gh99HLvXyQZ+fn5sk5EncjoUdU24X96hFk0XKVdPn2MJUPN7rUVZ+J+f/rCb1xf8hKb7Sifd44p2tmY7oXLZ5PQ1G5pr6qGobkQDWXnxzlM6ClLx2m/ppOj38UqnZhMKnEJXczg6OqKgoIBr6HzQk5OICfru3ft8iVezjZzYp9hkb4fUlBSugfNBLaGpQq7or8z9MKKF1lWSaXq2WqrgGTnXnKkuR2Nl5YcVrNuoB85WyxV108zfs4F6uL6qQtFZWTLzZsKHbgpZkbipQqqo0xFhKFRsS1U5XeWJaUSpLvvnaudKck1rqyvFpJITt1aU4lSlDEJUqLwJRaWUhLFcQYUqyiQfv2c/tU/tz9I+++z/OHew/t/Y1cUAAAAASUVORK5CYII=');
+  position: absolute;
+  left: 0;
+}
+*/
+
+.adoption_modal_bkgd {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  bottom: 0px;
+  right: 0px;
+  z-index: 10000;
+  display:flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.75);
+}
+.adoption_modal, .adoption_count_modal {
+  width: 500px;
+  padding: 50px;
+  background: #e5e5e5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.adoption_modal_bkgd button {
+  background: white;
+  border: 1px solid #999999;
+  font-size: 18px;
+  color: black;
+  font-weight: 500;
+  width: 100%;
+  height: 50px;
+  margin-bottom: 10px;
+}
+.adoption_modal_bkgd button:hover {
+  background: #ff7e3e;
+  color: white;
+  font-weight: 700;
+}
+.adoption_modal h2 {
+  font-size: 18px;
+  color: black;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+.adoption_count_modal h2 {
+  font-size: 18px;
+  color: black;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+.adoption_count_modal input {
+  font-size: 18px;
+  color: black;
+  font-weight: 500;
+  margin-bottom: 30px;
+  width: 100%
+}
+.adoption_count_modal button {
+  background: #ff7e3e;
+  color: white;
+  font-weight: 700;
+  border: 1px solid #999999;
+  font-size: 18px;
+  font-weight: 500;
+  width: 100px;
+  height: 40px;
+}
+</style>
+
+<script>
+  var roverTourItinerary;
+
+  /*
+    McDaniel Sep-2019. do some basic cookie management to track whether students
+    have already seen the Rover tour.
+  */
+  ## window.rover_mktg_url = "${sfdc_data_url}";
+  ## console.info( "window.rover_mktg_url", window.rover_mktg_url);
+
+  function roverSetCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+  }
+
+  function roverGetCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+
+   /*
+    McDaniel Jul-2019
+   */
+  function lms_course_outline_itinerary(){
+    console.info('lms_course_outline_itinerary() - start');
+    superTrainingWheelImg1 = "${static.url('images/super-training-wheel-welcome-to-rover.png')}";
+    superTrainingWheel1HTML = "<img class='super-training-wheel' src='" + superTrainingWheelImg1 + "' alt='Super Training Wheel 1'>";
+
+    roverTourItinerary = {
+      id: "lms-course-outline-itinerary",
+      showCloseButton: (sessionStorage.getItem("hopscotch.lms.tour.again") ? true : false),
+      showPrevButton: true,
+      onEnd: function(){
+        console.info('lms_course_outline_itinerary() - roverTourItinerary - start');
+        let rightNow = new Date()
+        $.ajax({
+          url: window.rover_mktg_url,
+          type: "PUT",
+          global: false,
+          data: { "lms_completed_assignment_tour": rightNow.toISOString() }
+        })
+        .done(function(data){
+          console.info("lms_course_outline_itinerary() - roverTourItinerary - Done Recording Tour Completion")
+        })
+        .fail( function(err){
+          console.info( "lms_course_outline_itinerary() - roverTourItinerary - Failed Recording Tour Completion", err );
+        });
+
+      },
+      steps: [
+      {
+        content: superTrainingWheel1HTML,
+        target: document.querySelector('.global-header'),
+        width: '750px',
+        xOffset: 'center',
+        placement: "bottom",
+        arrowWidth: 0,
+        onShow: function(){
+          document.querySelector(".hopscotch-bubble-arrow-container").style.display="none";
+          document.querySelector("div.hopscotch-bubble .hopscotch-bubble-close").style.display="none";
+        }
+      },
+      {
+        content: superTrainingWheel2HTML(),
+        target: document.querySelector('.global-header'),
+        width: '800px',
+        xOffset: 'center',
+        placement: "bottom",
+        arrowWidth: 0,
+        onShow: function(){
+          document.querySelector(".hopscotch-bubble-arrow-container").style.display="none";
+          document.querySelector("div.hopscotch-bubble .hopscotch-bubble-close").style.display="inherit";
+        }
+      },
+        {
+          content: "<p>All your current assignments are listed here. You can expand and close the chapters and their assignments.</p>",
+          target: document.querySelector('.page-header-main'),
+          xOffset: 'center',
+          placement: "bottom",
+          arrowWidth: 0,
+          onShow: function(){
+            document.querySelector(".hopscotch-bubble-arrow-container").style.display="none";
+          }
+        },
+        {
+          content: "<p>Click on the pencil icon to start an assignment.</p>",
+          target: document.querySelector('.assignment_icon'),
+          placement: "top",
+          yOffset: 250
+        },
+        {
+          content: "<p>You can always turn on Page Tips to learn how to use Rover, or download our <a href='${getting_started_guide_url}' target='_blank'>Quick Start guide</a> and watch our <a href='${getting_started_video_url}' target='_blank'>tutorial</a></p>",
+          target: document.querySelector('.assignment_icon'),
+          placement: "bottom",
+          multipage: true,
+          nextOnTargetClick: true,
+          onNext: function(){
+            window.location = '/course_rerun/course-v1:OpenStax+OS94717210+Template';
+          }
+        }
+      ]
+    };
+
+    return roverTourItinerary;
+  }
+
+
+  /*
+    mcdaniel jul-2019
+    super training wheel #2 with embedded youtube video orientation
+  */
+  function superTrainingWheel2HTML() {
+    console.info("superTrainingWheel2HTML() - start")
+    var html = `
+      <style>
+        a:hover,
+        a:active {
+          text-decoration: underline;
+        }
+      </style>
+      <div id="tour-video" style="margin: 15px 0 15px 0; text-align: center;">
+       <div id="tour-video-title">
+         <h1 style="font-weight: 700; ">Rover quickstart video</h1>
+       </div>
+       <div id="tour-video-subtitle" style="margin: inherit;">
+         <p>Watch our getting started video and learn how to use Rover</p>
+       </div>
+       <div id="tour-video-content" style="margin: inherit;">
+
+         ## wistia embed code - begin
+         <iframe src="//fast.wistia.net/embed/iframe/saqcsa2mhp" allowtransparency="true" frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" allowfullscreen mozallowfullscreen webkitallowfullscreen oallowfullscreen msallowfullscreen width="620" height="349"></iframe>
+         <sc`+`ript src="//fast.wistia.net/assets/external/E-v1.js" async></scr`+`ipt>
+
+         ## wistia embed code - end
+
+       </div>
+       <div class="tour-video-links" style="margin: inherit;">
+         <p>
+           <a href="${getting_started_guide_url}" target="_blank">Download the getting started guide</a> or <a href="${getting_started_video_url}" target="_blank">watch the tutorial in a new window</a>
+         </p>
+       </div>
+     </div>
+    `
+    return html
+  }
+
+  function startRoverTour(repeat){
+
+    ##  mcdaniel jul-2019
+    ##  only launch the tour if the user is authenticated
+    sessionStorage.setItem("hopscotch.lms.tour.state", "");
+    sessionStorage.setItem("hopscotch.lms.tour.again", ( repeat? true : false ));
+
+    ## mcdaniel sep-2019
+    ## only start tour if we don't find a current cookie
+    var toured = roverGetCookie("roverTour");
+    if (toured == "true") {
+        ## user has already seen the Tour, so exit
+        console.info("startRoverTour() - user has already seen the tour. Exiting.");
+        return true
+    }
+
+    ## example:
+    ## url = https://roverbyopenstax.com/courses/course-v1:Querium+OS9471721_54be+2019_T1/course/
+    ## lms_course_outline_url = https://roverbyopenstax.com/courses/
+    lms_course_outline_url_length = "${lms_course_outline_url}".length
+    window_location_str = String(window.location)
+    console.info("startRoverTour() ", window_location_str.substring(0, lms_course_outline_url_length))
+    console.info("startRoverTour() ", "${lms_course_outline_url}")
+    console.info("startRoverTour() ", window_location_str.substring(window_location_str.length - 8))
+    if (window_location_str.substring(0, lms_course_outline_url_length)=="${lms_course_outline_url}") {
+      console.info("startRoverTour() - we are in the courses section")
+      if (window_location_str.substring(window_location_str.length - 8)=="/course/") {
+        console.info("startRoverTour() - start the hopscotch tour!")
+        setTimeout(hopscotch.startTour( lms_course_outline_itinerary(), 0 ), 250);
+
+        ## mcdaniel sep-2019
+        ## mark our cookie to prevent the Tour from launching in the future.
+        roverSetCookie("roverTour", "true", 365);
+      }
+    }
+  }
+
+  ## mcdaniel jul-2019
+  ## default entry point. this executes as a diffy.
+  $( document ).ready(
+     startRoverTour(false)
+  );
+
+
+
+</script>
+
+
+% endif

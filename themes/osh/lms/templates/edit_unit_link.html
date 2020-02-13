@@ -1,0 +1,18 @@
+<%! from django.utils.translation import ugettext as _ %>
+
+## mcdaniel jun-2019: is user slobal staff or confirmed faculty?
+<%
+from student.models import is_faculty
+from student.roles import GlobalStaff
+
+def show_instructor_tab(user):
+  return is_faculty(user) or GlobalStaff().has_user(user)
+%>
+
+% if show_instructor_tab(user) :
+<div class="wrap-instructor-info studio-view">
+  <a class="instructor-info-action" href="${edit_link}">${_("Edit Assignment")}</a>
+</div>
+% endif
+
+${frag_content}

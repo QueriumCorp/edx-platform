@@ -1,0 +1,191 @@
+<%page expression_filter="h"/>
+<%inherit file="base.html" />
+<%def name="online_help_token()"><% return "course_rerun" %></%def>
+<%!
+from django.utils.translation import ugettext as _
+from django.urls import reverse
+from openedx.core.djangolib.js_utils import js_escaped_string
+%>
+
+<%block name="title">${_("Create a Course Section")}</%block>
+<%block name="bodyclass">is-signedin view-course-create view-course-create-rerun</%block>
+
+<%block name="jsextra">
+  <script type="text/javascript">
+    var source_course_key = "${source_course_key | n, js_escaped_string}";
+  </script>
+</%block>
+<%block name="requirejs">
+  require(["js/factories/course_create_rerun"], function (CourseCreateRerunFactory) {
+      CourseCreateRerunFactory();
+  });
+</%block>
+
+<%block name="content">
+
+<div id="content">
+  <div class="wrapper-mast wrapper">
+    <header class="mast mast-wizard has-actions">
+      <h1 class="page-header">
+        <span class="page-header-sub">${_("Create a new course section")}</span>
+      </h1>
+      <nav class="nav-actions" aria-label="${_('Page Actions')}">
+        <h3 class="sr">${_("Page Actions")}</h3>
+        <ul>
+          <li class="nav-item">
+            <a href="" class="sr button cancel-button">${_("Cancel")}</a>
+          </li>
+        </ul>
+      </nav>
+
+      <h2 class="page-header-super course-original">
+        <span >${_("Copy of...")}</span>
+        <!--<span class="course-original-title-id">${source_course_key.org} ${source_course_key.course} ${source_course_key.run}</span> -->
+        <span class="course-original-title">${display_name}</span>
+        <span class="course-original-title-id">${source_course_key.run}</span>
+      </h2>
+    </header>
+  </div>
+
+  <div class="wrapper-content wrapper">
+    <div class="inner-wrapper">
+      <section class="content">
+        <article class="content-primary">
+          <div class="introduction">
+            <div class="copy">
+              <p>
+                <strong>${_("Note that the original course section or template is not affected by changes made here.")}</strong>
+              <p>
+            </div>
+          </div>
+
+          <div class="wrapper-rerun-course">
+            <form class="form-create rerun-course course-info" id="rerun-course-form" name="rerun-course-form">
+              <!-- NOTE: this element's contents should be only included when they are needed and not kept in the DOM for all states -->
+              <div class="wrapper-error is-hidden">
+                <div id="course_rerun_error" name="course_rerun_error" class="message message-status error" role="alert">
+                </div>
+              </div>
+
+              <div class="wrapper-form">
+                <fieldset>
+                  <legend class="sr">${_("Required Information to Create a course section")}</legend>
+
+                  <ol class="list-input">
+                    <li class="field text required" id="field-course-name">
+                      <label for="rerun-course-name">${_("Course Name")}</label>
+                      <input class="rerun-course-name" id="rerun-course-name" type="text" name="rerun-course-name" spellcheck="false" aria-required="true" value="${display_name}" placeholder="${_('e.g. Introduction to Computer Science')}" />
+                      <span class="tip">
+                        ${_("This is the course name that your students will see. For example, 'Math 103 - Introduction to College Mathematics'")}
+                      </span>
+                      <span class="tip tip-error is-hidden"></span>
+                    </li>
+                    <li class="field text required">
+                      <label for="rerun-course-org">${_("Institution")}</label>
+                      <input class="rerun-course-org" id="rerun-course-org" type="text" name="rerun-course-org" spellcheck="false" aria-required="true" value="${source_course_key.org}" placeholder="${_('e.g. UniversityX or OrganizationX')}" />
+                      <span class="tip">
+                        ${_("An alphanumeric identifier for your institution.  For example, 'RiceUniversity'")}
+                        <strong class="tip-note" class="tip-note">${_("Note: No spaces or special characters are allowed.")}</strong>
+                      </span>
+                      <span class="tip tip-error is-hidden"></span>
+                    </li>
+
+                    <li class="row">
+                      <div class="column field text" id="field-course-number">
+                        <label class="rerun-course-number-label" for="rerun-course-number">${_("Course Number")}</label>
+                        <input class="rerun-course-number" id="rerun-course-number" type="text" name="rerun-course-number" spellcheck="false" value="${source_course_key.course}" placeholder="${_('e.g. CS101')}" readonly="readonly"/>
+                        <span class="tip">
+                          ${_("The unique number that identifies the new course within the organization.  (This number will be the same as the original course number and cannot be changed.)")}
+                        </span>
+                        <span class="tip tip-error is-hidden"></span>
+                      </div>
+
+                      <div class="column field text required" id="field-course-run">
+                        <label for="rerun-course-run">${_("Course Section")}</label>
+                        <input class="rerun-course-run" id="rerun-course-run" type="text" name="rerun-course-run" spellcheck="false" aria-required="true" placeholder="${_('e.g. Spring2019_Nicholson_MWF800-850')}" />
+                        <span class="tip">
+                          ${_("A unique identifier for this course section. Rover recommends the format term_instructor_times.  For example 'Spring2019_Nicholson_MWF800-850'")}
+                          <strong class="tip-note" class="tip-note">${_("Note: No spaces or special characters are allowed.")}</strong>
+                        </span>
+                        <span class="tip tip-error is-hidden"></span>
+                      </div>
+                    </li>
+                  </ol>
+
+                  <input type="hidden" value="${allow_unicode_course_id}" class="allow-unicode-course-id" /> <!-- TODO: need to add support for allow_unicode_course_id in real view's template -->
+                </fieldset>
+              </div>
+
+              <div class="actions">
+                <button type="submit" class="action action-primary rerun-course-save is-disabled" aria-disabled="true" >${_('Create')}</button>
+                <button type="button" class="action action-secondary action-cancel rerun-course-cancel">${_('Cancel')}</button>
+              </div>
+            </form>
+          </div>
+
+        </article>
+
+        <aside class="content-supplementary" role="complementary">
+          <div class="bit">
+            <h3 class="title-3">${_("When will my course re-run start?")}</h3>
+            <ul class="list-details">
+              <li class="item-detail">${_("The new course is set to start on January 1, 2030 at midnight (UTC).")}</li>
+            </ul>
+          </div>
+
+          <div class="bit">
+            <h3 class="title-3">${_("What transfers from the original course?")}</h3>
+            <ul class="list-details">
+              <li class="item-detail">${_("The new course has the same course outline and content as the original course. All problems, videos, announcements, and other files are duplicated to the new course.")}</li>
+            </ul>
+          </div>
+
+          <div class="bit">
+            <h3 class="title-3">${_("What does not transfer from the original course?")}</h3>
+            <ul class="list-details">
+              <li class="item-detail">${_("You are the only member of the new course's staff. No students are enrolled in the course, and there is no student data. There is no content in the discussion topics or wiki.")}</li>
+            </ul>
+          </div>
+
+          <div class="bit external-help">
+            <a href="${get_online_help_info(online_help_token())['doc_url']}" target="_blank" class="button external-help-button">${_("Learn more about Course Re-runs")}</a>
+          </div>
+        </aside>
+
+      </section>
+    </div>
+
+  </div>
+</div>
+
+<script type="text/javascript">
+  if ( hopscotch.getState() === "cms-itinerary:3" ){
+    // ResumeRoverTour(3);
+    // mcdaniel jul-2019: added three super training wheel slides to beginning of steps.
+    ResumeRoverTour(6);
+  }
+
+  // From public CodePen at https://codepen.io/Jvsierra/pen/BNbEjW
+  // All public CodePens are MIT https://blog.codepen.io/legal/licensing/
+  function qq_guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4();
+  }
+
+  let course_number_field = document.querySelector( "#new-course-number");
+  let rerun_number_field = document.querySelector( "#rerun-course-number");
+
+  if( course_number_field ){
+    course_number_field.value = course_number_field.value.slice(0,9) + "_" + qq_guid();
+  }
+
+  if( rerun_number_field ){
+    rerun_number_field.value = rerun_number_field.value.slice(0,9) + "_" + qq_guid();
+  }
+</script>
+
+</%block>
