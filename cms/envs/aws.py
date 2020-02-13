@@ -25,16 +25,23 @@ from path import Path as path
 from xmodule.modulestore.modulestore_settings import convert_module_store_setting_if_needed
 
 # McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
-with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
-    ROVER_TOKENS = json.load(rover_env_file)
-    ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
+# feb-2020: wrap this in a try/except so that we have a stop-gap default without crashing the platform
+try:
 
-    # mcdaniel feb-2020: feature settings for custom Rover modules.
-    ROVER_ENABLE_LTI_GRADE_SYNC = ROVER_TOKENS.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
-    ROVER_ENABLE_GRADES_API = ROVER_TOKENS.get('ROVER_ENABLE_GRADES_API', False)
-    ROVER_ENABLE_SALESFORCE_API = ROVER_TOKENS.get('ROVER_ENABLE_SALESFORCE_API', False)
-    ROVER_ENABLE_TRAINING_WHEELS = ROVER_TOKENS.get('ROVER_ENABLE_TRAINING_WHEELS', False)
-    ROVER_ENABLE_PAGE_TIPS = ROVER_TOKENS.get('ROVER_ENABLE_PAGE_TIPS', False)
+    with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
+        ROVER_TOKENS = json.load(rover_env_file)
+        ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
+
+except IOError:
+        ROVER_TOKENS = {}
+        ROVER_CLIENT_CODE = 'MISSING'
+
+# mcdaniel feb-2020: feature settings for custom Rover modules.
+ROVER_ENABLE_LTI_GRADE_SYNC = ROVER_TOKENS.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
+ROVER_ENABLE_GRADES_API = ROVER_TOKENS.get('ROVER_ENABLE_GRADES_API', False)
+ROVER_ENABLE_SALESFORCE_API = ROVER_TOKENS.get('ROVER_ENABLE_SALESFORCE_API', False)
+ROVER_ENABLE_TRAINING_WHEELS = ROVER_TOKENS.get('ROVER_ENABLE_TRAINING_WHEELS', False)
+ROVER_ENABLE_PAGE_TIPS = ROVER_TOKENS.get('ROVER_ENABLE_PAGE_TIPS', False)
 
 # mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
 #       the values to the actual client code. Example:
