@@ -1,5 +1,9 @@
 Rover Open edX Platform
 =======================
+.. image:: https://img.shields.io/badge/hack.d-Lawrence%20McDaniel-orange.svg
+     :target: https://lawrencemcdaniel.com
+     :alt: Hack.d Lawrence McDaniel
+
 This is the main edX platform which consists of LMS and Studio. 
 
 Documentation
