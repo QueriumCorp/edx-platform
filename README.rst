@@ -1,38 +1,16 @@
-Querium  Open edX Platform Fork
-This is the main edX platform which consists of LMS and Studio.
+Rover Open edX Platform
+=======================
+This is the main edX platform which consists of LMS and Studio. 
 
+Documentation
+-------------
+Documentation for all Rover source code is now located 
+in `Read The Docs <https://querium-adminroverbyopenstaxorg.readthedocs-hosted.com>`__
 
-Installation / Updates (as per Lawrence McDaniel)
-------------
+**Legacy Documentation** can be found in the `docs index.rst`_.
 
-*Add any changes to /edx/app/edx_ansible/server-vars.yml*
+.. _docs index.rst: docs/index.rst
 
-.. code-block:: bash
-
-  sudo ./edx.platform-stop.sh
-  sudo rm -rf /edx/app/edxapp/edx-platform
-  sudo /edx/bin/update edx-platform querium.dev
-  sudo ./edx.install-theme.sh
-  sudo ./edx.install-config.sh
-  sudo ./edx.compile-assets.sh
-  sudo ./edx.platform-restart-full.sh
-
-
-Custom Modules (as per Lawrence McDaniel)
-------------
-
-[title](https://www.example.com)
-
-
-[LTI Willo Labs Integration](common/djangoapps/third_party_auth/lti_consumers/willolabs/): Automated course enrollment (aka "provisioning") during LTI authentication. Real-time asynchronous grade sync to Willo Labs "Grade Sych" api. Rover grades REST api for course, chapter, lesson, problems.
-
-[Grades API](lms/djangoapps/grades/api/v2/)
-
-[Salesforce Integration Module](cms/djangoapps/openstax_integrator): Rest api, django admin console, and manage.py command line tools to capture and upload salesforce tracking data for Open Stax marketing team.
-
-[Openstax oAuth Backend](https://github.com/QueriumCorp/openstax-oauth-backend): A Python Social Auth backend for OpenStax, mostly used for Open edX but can be used elsewhere.
-
-[Guide for working with Git](https://www.git-tower.com/blog/git-cheat-sheet/): Guide for working with Git
 
 
 Git Work Flow
@@ -81,15 +59,6 @@ Merge querium.dev into querium.master
   git push origin querium.dev
 
 
-Deployment Notes
--------
-This fork will not install "cleanly" due to UI customizations that are not themeable. Because of these file modifications Paver will compile successfully only when the custom theme for this fork is also installed and configured.
-Other stuff that is prone to challenges:
-1. RabbitMQ initially caused problems on roverbyopenstax.com and had to be installed. Oddly, most celery tasks worked correctly. Only write operations to Mongo were problematic
-2. Assets have to be compiled using our own compiler scripts, located in the config repos
-3. Letsencrypt ssl certificates have to be hand replaced.
-4. It's not a bad idea to search the code base and the custom theme for hard-coded domain names, as these tend to creep into the code on a regular basis.
-
 
 License
 -------
@@ -101,11 +70,3 @@ unless otherwise noted. Please see the `LICENSE`_ file for details.
 
 
 
-
-
-Documentation
--------------
-
-Documentation details can be found in the `docs index.rst`_.
-
-.. _docs index.rst: docs/index.rst
