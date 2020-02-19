@@ -14,6 +14,8 @@ import logging
 import json
 from django.utils.dateparse import parse_date
 from django.conf import settings
+from django.core.exceptions import ValidationError
+import traceback
 
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourse,
@@ -31,7 +33,8 @@ from opaque_keys.edx.locator import BlockUsageLocator
 #from django.db.models import Sum
 
 log = logging.getLogger(__name__)
-DEBUG = settings.DEBUG
+#DEBUG = settings.DEBUG
+DEBUG = True
 
 class LTISession:
     """
@@ -205,8 +208,19 @@ class LTISession:
             # the course_id could materialize at any time, and if so then we'll 
             # need to persist the value.
             if course.course_id is None and self.get_course_id() is not None:
-                course.course_id = self.get_course_id()
-                course.save()
+                try:
+                    course.course_id = self.get_course_id()
+                    course.save()
+                except ValidationError as err:
+                    msg='LTISession.register_course() - could not update course_id of LTIExternalCourse for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
+                        context_id=self.context_id,
+                        course_id=course_id,
+                        err=err,
+                        traceback=traceback.format_exc()
+                    )
+                    log.error(msg)
+                    return None
+
             else:
                 # sneaky write to ensure integrity between context_id / course_id.
                 #
@@ -231,26 +245,38 @@ class LTISession:
 
         custom_canvas_course_startat = parse_date(date_str)
 
-        course = LTIExternalCourse(
-            context_id = self.get_context_id(),
-            course_id = self.get_course_id(),
-            context_title = self._lti_params.get('context_title'),
-            context_label = self._lti_params.get('context_label'),
-            ext_wl_launch_key = self._lti_params.get('ext_wl_launch_key'),
-            ext_wl_launch_url = self._lti_params.get('ext_wl_launch_url'),
-            ext_wl_version = self._lti_params.get('ext_wl_version'),
-            ext_wl_outcome_service_url = self._lti_params.get('ext_wl_outcome_service_url'),
-            custom_canvas_api_domain = self._lti_params.get('custom_canvas_api_domain'),
-            custom_canvas_course_id = self._lti_params.get('custom_canvas_course_id'),
-            custom_canvas_course_startat = custom_canvas_course_startat,
-            tool_consumer_info_product_family_code = self._lti_params.get('tool_consumer_info_product_family_code'),
-            tool_consumer_info_version = self._lti_params.get('tool_consumer_info_version'),
-            tool_consumer_instance_contact_email = self._lti_params.get('tool_consumer_instance_contact_email'),
-            tool_consumer_instance_guid = self._lti_params.get('tool_consumer_instance_guid'),
-            tool_consumer_instance_name = self._lti_params.get('tool_consumer_instance_name'),
-        )
-        
-        course.save()
+        try:
+            course = LTIExternalCourse(
+                context_id = self.get_context_id(),
+                course_id = self.get_course_id(),
+                context_title = self._lti_params.get('context_title'),
+                context_label = self._lti_params.get('context_label'),
+                ext_wl_launch_key = self._lti_params.get('ext_wl_launch_key'),
+                ext_wl_launch_url = self._lti_params.get('ext_wl_launch_url'),
+                ext_wl_version = self._lti_params.get('ext_wl_version'),
+                ext_wl_outcome_service_url = self._lti_params.get('ext_wl_outcome_service_url'),
+                custom_canvas_api_domain = self._lti_params.get('custom_canvas_api_domain'),
+                custom_canvas_course_id = self._lti_params.get('custom_canvas_course_id'),
+                custom_canvas_course_startat = custom_canvas_course_startat,
+                tool_consumer_info_product_family_code = self._lti_params.get('tool_consumer_info_product_family_code'),
+                tool_consumer_info_version = self._lti_params.get('tool_consumer_info_version'),
+                tool_consumer_instance_contact_email = self._lti_params.get('tool_consumer_instance_contact_email'),
+                tool_consumer_instance_guid = self._lti_params.get('tool_consumer_instance_guid'),
+                tool_consumer_instance_name = self._lti_params.get('tool_consumer_instance_name'),
+            )
+            
+            course.save()
+
+        except ValidationError as err:
+            msg='LTISession.register_course() - could not save LTIExternalCourse record for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
+                context_id=self.get_context_id(),
+                course_id=self.get_course_id(),
+                err=err,
+                traceback=traceback.format_exc()
+            )
+            log.error(msg)
+            return None
+
         if DEBUG: log.info('LTISession.register_course() - saved new cache record.')
         return course
 
@@ -291,21 +317,39 @@ class LTISession:
             if DEBUG: log.info('LTISession.register_enrollment() - user not enrolled, or missing some required information. exiting.')
             return None
 
-        enrollment = LTIExternalCourseEnrollment(
-            course = self.get_course(),
-            user = self.get_user(),
-            lti_user_id = self.user_id,
-            custom_canvas_user_id = self._lti_params.get('custom_canvas_user_id'),
-            custom_canvas_user_login_id = self._lti_params.get('custom_canvas_user_login_id'),
-            custom_canvas_person_timezone = self._lti_params.get('custom_canvas_person_timezone'),
-            ext_roles = self._lti_params.get('ext_roles'),
-            ext_wl_privacy_mode = self._lti_params.get('ext_wl_privacy_mode'),
-            lis_person_contact_email_primary = self._lti_params.get('lis_person_contact_email_primary'),
-            lis_person_name_family = self._lti_params.get('lis_person_name_family'),
-            lis_person_name_full = self._lti_params.get('lis_person_name_full'),
-            lis_person_name_given = self._lti_params.get('lis_person_name_given'),
-        )
-        enrollment.save()
+        try:
+            enrollment = LTIExternalCourseEnrollment(
+                course = self.get_course(),
+                user = self.get_user(),
+                lti_user_id = self.user_id,
+                custom_canvas_user_id = self._lti_params.get('custom_canvas_user_id'),
+                custom_canvas_user_login_id = self._lti_params.get('custom_canvas_user_login_id'),
+                custom_canvas_person_timezone = self._lti_params.get('custom_canvas_person_timezone'),
+
+                # mcdaniel feb-2020
+                # KU puts their roles into "roles" rather than "ext_roles". But Willo uses "roles" to store a more human-readable 
+                # descriptor of roles. therefore we want to continue to prioritize "ext_roles" but fallback to "roles" if the former
+                # is not present in the dictionary.
+                # ---------------------------------------------------------
+                ext_roles = self._lti_params.get('ext_roles') if self._lti_params.get('ext_roles') is not None else self._lti_params.get('roles'),
+                # ---------------------------------------------------------
+
+                ext_wl_privacy_mode = self._lti_params.get('ext_wl_privacy_mode'),
+                lis_person_contact_email_primary = self._lti_params.get('lis_person_contact_email_primary'),
+                lis_person_name_family = self._lti_params.get('lis_person_name_family'),
+                lis_person_name_full = self._lti_params.get('lis_person_name_full'),
+                lis_person_name_given = self._lti_params.get('lis_person_name_given'),
+            )
+            enrollment.save()
+        except ValidationError as err:
+            msg='LTISession.register_enrollment() - could not save LTIExternalCourseEnrollment record for lti_user_id {lti_user_id}, username {username}.\r\nError: {err}.\r\n{traceback}'.format(
+                lti_user_id=self.user_id,
+                username=student.username,
+                err=err,
+                traceback=traceback.format_exc()
+            )
+            log.error(msg)
+            return None
 
         if DEBUG: log.info('LTISession - register_enrollment() saved new cache record.')
         return enrollment
@@ -355,6 +399,7 @@ class LTISession:
                     key_type=type(usage_key),
                     usage_key=usage_key
                 ))
+            return False
 
         curr = LTIExternalCourseEnrollmentGrades.objects.filter(
             course_enrollment = self.get_course_enrollment(),
@@ -379,18 +424,30 @@ class LTISession:
             curr.earned_graded != grades_dict['grades']['section_earned_graded'] or\
             curr.possible_graded != grades_dict['grades']['section_possible_graded']:
 
-            # cache the grade data
-            grades = LTIExternalCourseEnrollmentGrades(
-                course_enrollment = self.get_course_enrollment(),
-                course_assignment = assignment,
-                usage_key = usage_key,
-                section_url = grades_dict['url'],
-                earned_all = grades_dict['grades']['section_earned_all'],
-                possible_all = grades_dict['grades']['section_possible_all'],
-                earned_graded = grades_dict['grades']['section_earned_graded'],
-                possible_graded = grades_dict['grades']['section_possible_graded']
-            )
-            grades.save()
+            try:
+
+                # cache the grade data
+                grades = LTIExternalCourseEnrollmentGrades(
+                    course_enrollment = self.get_course_enrollment(),
+                    course_assignment = assignment,
+                    usage_key = usage_key,
+                    section_url = grades_dict['url'],
+                    earned_all = grades_dict['grades']['section_earned_all'],
+                    possible_all = grades_dict['grades']['section_possible_all'],
+                    earned_graded = grades_dict['grades']['section_earned_graded'],
+                    possible_graded = grades_dict['grades']['section_possible_graded']
+                )
+                grades.save()
+
+            except ValidationError as err:
+                msg='LTISession.post_grades() - could not save LTIExternalCourseEnrollmentGrades record for usage_key {usage_key}, grades_dict {grades_dict}.\r\nError: {err}.\r\n{traceback}'.format(
+                    usage_key=usage_key,
+                    grades_dict=grades_dict,
+                    err=err,
+                    traceback=traceback.format_exc()
+                )
+                log.error(msg)
+                return False
 
             if DEBUG: log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
                 'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}, grades: {grades}'.format(
@@ -491,12 +548,24 @@ class LTISession:
             if DEBUG: log.info('LTISession.set_course_assignment() - get_course() returned None. Exiting.')
             return None
 
-        assignment = LTIExternalCourseAssignments(
-            course = self.get_course(),
-            url = url,
-            display_name = display_name
-        )
-        assignment.save()
+        try:
+            assignment = LTIExternalCourseAssignments(
+                course = self.get_course(),
+                url = url,
+                display_name = display_name
+            )
+            assignment.save()
+
+        except ValidationError as err:
+            msg='LTISession.set_course_assignment() - could not save LTIExternalCourseAssignments record for display_name {display_name}, url {url}. Error: {err}.\r\n{traceback}'.format(
+                display_name=display_name,
+                url=url,
+                err=err,
+                traceback=traceback.format_exc()
+            )
+            log.error(msg)
+            return None
+
         if DEBUG: log.info('LTISession.set_course_assignment() - creating and returning a new record.')
         return assignment
 
@@ -529,11 +598,23 @@ class LTISession:
             ))
             return problem
 
-        problem = LTIExternalCourseAssignmentProblems(
-            course_assignment = course_assignment,
-            usage_key = usage_key
-        )
-        problem.save()
+        try:
+            problem = LTIExternalCourseAssignmentProblems(
+                course_assignment = course_assignment,
+                usage_key = usage_key
+            )
+            problem.save()
+
+        except ValidationError as err:
+            msg='LTISession.set_course_assignment_problem() - could not save LTIExternalCourseAssignmentProblems record for {course_assignment}, {usage_key}. Error: {err}.\r\n{traceback}'.format(
+                course_assignment=course_assignment,
+                usage_key=usage_key,
+                err=err,
+                traceback=traceback.format_exc()
+            )
+            log.error(msg)
+            return None
+
         return problem
 
     

@@ -9,7 +9,7 @@ This is the main edX platform which consists of LMS and Studio.
 Documentation
 -------------
 Documentation for all Rover source code is now located 
-in `Read The Docs <https://querium-adminroverbyopenstaxorg.readthedocs-hosted.com>`__
+in `Read The Docs <http://readthedocs.roverbyopenstax.org/>`__
 
 **Legacy Documentation** can be found in the `docs index.rst`_.
 
