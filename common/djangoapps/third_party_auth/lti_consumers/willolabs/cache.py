@@ -407,13 +407,16 @@ class LTISession(object):
         ))
 
         if self.course_enrollment is None:
-            raise LTIBusinessRuleError("course_enrollment is not set.")
+            log.error('LTISession.post_grades() - self.course_enrollment is not set."')
+            return False
 
         if self.user is None:
-            raise LTIBusinessRuleError("user is not set.")
+            log.error('LTISession.post_grades() - self.user is not set."')
+            return False
 
         if self.course is None:
-            raise LTIBusinessRuleError("course is not set.")
+            log.error('LTISession.post_grades() - self.course is not set."')
+            return False
 
         if not grades_dict['grades']['section_attempted_graded']:
             if DEBUG: log.info('no grade data to report. exiting.')
