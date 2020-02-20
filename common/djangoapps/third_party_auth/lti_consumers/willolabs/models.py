@@ -93,21 +93,49 @@ class LTIExternalCourse(TimeStampedModel):
         null=True,
         )
 
-    custom_canvas_api_domain = models.CharField(
+    custom_tpa_next = models.URLField(
+        verbose_name="LTI Params - custom_tpa_next",
+        help_text="/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false",
+        max_length=255,
+        null=True,
+        )
+
+    custom_orig_context_id = models.CharField(
+        verbose_name="custom_orig_context_id",
+        help_text="Context_id from the original source system (ie Canvas, Blackboard). Example: 9caf71ef12da4d2993f8929242d93922",
+        max_length=50,
+        null=True,
+        )
+
+    custom_profile_url = models.URLField(
+        verbose_name="custom_profile_url",
+        help_text="URL pointing to user profile in the original source system. Example: https://courseware.ku.edu/learn/api/v1/lti/profile?lti_version=LTI-1p0",
+        max_length=50,
+        null=True,
+        )
+
+    tool_consumer_instance_description = models.CharField(
+        verbose_name="tool_consumer_instance_description",
+        help_text="Example: The University of Kansas",
+        max_length=50,
+        null=True,
+        )
+
+    custom_api_domain = models.CharField(
         verbose_name="Custom Canvas API Domain",
         help_text="Example: willowlabs.instructure.com",
         max_length=255,
         null=True,
         )
 
-    custom_canvas_course_id = models.CharField(
+    custom_course_id = models.CharField(
         verbose_name="Custom Canvas Course ID",
         help_text="Example: 421",
         max_length=50,
         null=True,
         )
 
-    custom_canvas_course_startat = models.DateTimeField(
+    custom_course_startat = models.DateTimeField(
         verbose_name="Custom Canvas Course Start At",
         help_text="Example: 2019-12-11 16:18:01 -0500",
         db_index=False,
@@ -151,9 +179,6 @@ class LTIExternalCourse(TimeStampedModel):
     def __str__(self):
         return self.course_id.html_id()
 
-    #public_key = models.TextField()
-
-
     class Meta(object):
         verbose_name = "LTI External Course"
         verbose_name_plural = verbose_name
@@ -192,8 +217,6 @@ class LTIExternalCourseAssignmentProblems(TimeStampedModel):
         blank=False, 
         max_length=255,
         )
-
-
     class Meta(object):
         verbose_name = "LTI External Course Assignment Problems"
         verbose_name_plural = verbose_name
@@ -219,7 +242,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=255,
         )
 
-    custom_canvas_user_id = models.CharField(
+    custom_user_id = models.CharField(
         verbose_name="Canvas User ID",
         help_text="Canvas User ID provided to . Example: 394",
         max_length=25,
@@ -228,7 +251,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         null=True,
         )
 
-    custom_canvas_user_login_id = models.CharField(
+    custom_user_login_id = models.CharField(
         verbose_name="Canvas Username",
         help_text="Canvas Username provided to . Example: rover_student",
         max_length=50,
@@ -237,7 +260,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         null=True,
         )
 
-    custom_canvas_person_timezone = models.CharField(
+    custom_person_timezone = models.CharField(
         verbose_name="Canvas user time zone",
         help_text="Canvas time zone from user's profile, provided to Willo Labs. Example: America/New_York",
         max_length=50,
@@ -297,6 +320,15 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         null=True,
         )
 
+    lis_person_sourcedid = models.CharField(
+        verbose_name="Source system Username",
+        help_text="Example: _tonn_test5",
+        max_length=255,
+        default=None, 
+        blank=True, 
+        null=True,
+        )
+
     class Meta(object):
         verbose_name = "LTI External Course Enrollment"
         verbose_name_plural = verbose_name
@@ -305,8 +337,6 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     def __str__(self):
         return self.course.course_id.html_id() + ' - ' + self.user.username
-
-
 
 class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     """
@@ -350,8 +380,6 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     possible_all = models.FloatField(blank=False)
     earned_graded = models.FloatField(blank=False)
     possible_graded = models.FloatField(blank=False)
-
-
     class Meta(object):
         verbose_name = "LTI External Course Enrollment Grades"
         verbose_name_plural = verbose_name

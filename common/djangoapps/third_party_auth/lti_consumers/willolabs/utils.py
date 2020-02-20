@@ -465,26 +465,20 @@ def get_lti_faculty_status(lti_params):
     "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User"
     """
 
+    # 1. look for a roles_param tuple
     roles_param = lti_params.get("roles_param", ())
     if roles_param != ():
         log.info('get_lti_faculty_status() - found roles_param: {}'.format(roles_param))
         for role_param in roles_param:
-            # build the lti_params dict similar to what exists in openedx third_party_auth LTIAuthBackend
-            lti_params = {
-                'email': 'matt.hanger@willolabs.com',
-                'lis_person_name_full': 'Matt Hanger',
-                'lis_person_name_given': 'Matt',
-                'lis_person_name_family': 'Hanger',
-                'roles': role_param
-            }
-            # extract the roles from lti_params
-            user_roles = {x.strip() for x in lti_params.get('roles', '').split(',')}
+            # extract a list of the roles from lti_params
+            user_roles = {x.strip() for x in role_param.split(',')}
             # check if the lti_params represent an instructor
             # use python set intersection operator "&" to simplify the check
             is_instructor = bool(user_roles & WILLO_INSTRUCTOR_ROLES)
             if is_instructor:
                 return "confirmed_faculty"
 
+    # 2. check for roles list
     """
     mcdaniel oct-2019
     example from University of Kansas:
@@ -496,6 +490,8 @@ def get_lti_faculty_status(lti_params):
         if roles in WILLO_INSTRUCTOR_ROLES:
             return "confirmed_faculty"
 
+
+    # 3. check for ext_roles list
     """
     mcdaniel feb-2020
     example from Willo Labs

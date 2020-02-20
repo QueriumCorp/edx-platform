@@ -17,6 +17,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 import traceback
 
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.cache_config import parser
+
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
@@ -56,6 +58,8 @@ class LTISession(object):
         course                      - external course cache
         course_enrollment           - external course enrollments cache
         course_enrollment_grades    - external grade sync data cache
+        course_assignments
+        course_assignment_problems
 
     methods:
     -----------
@@ -64,18 +68,8 @@ class LTISession(object):
         register_course()
         register_enrollment()
         post_grades()
+        get_lti_param()
 
-    properties:
-    -----------
-        lti_params
-        user
-        course_id
-        context_id
-        course
-        course_assignments
-        course_assignment_problems
-        course_enrollment
-        course_enrollment_grades
     """
     def __init__(self, lti_params=None, user=None, course_id=None, clear_cache=False):
         if DEBUG: log.info('LTISession.__init__() user: {user}, course_id: {course_id}, lti_params: {lti_params}'.format(
@@ -254,34 +248,34 @@ class LTISession(object):
             if DEBUG: log.info('LTISession.register_course() - course_id is not set. cannot cache. exiting.')
             return None
 
-        date_str = self._lti_params.get('custom_canvas_course_startat')
-        # FIX NOTE: this is a complete kluge. need to learn more about custom_canvas_course_startat
+        date_str = self._lti_params.get('custom_course_startat')
+        # FIX NOTE: this is a complete kluge. need to learn more about custom_course_startat
         # and then change this logic accordingly.
         if date_str is not None:
             date_str = date_str[0:10]
         else:
             date_str = "2019/01/01"
 
-        custom_canvas_course_startat = parse_date(date_str)
+        custom_course_startat = parse_date(date_str)
 
         try:
             course = LTIExternalCourse(
                 context_id = self.context_id,
                 course_id = self.course_id,
-                context_title = self._lti_params.get('context_title'),
-                context_label = self._lti_params.get('context_label'),
-                ext_wl_launch_key = self._lti_params.get('ext_wl_launch_key'),
-                ext_wl_launch_url = self._lti_params.get('ext_wl_launch_url'),
-                ext_wl_version = self._lti_params.get('ext_wl_version'),
-                ext_wl_outcome_service_url = self._lti_params.get('ext_wl_outcome_service_url'),
-                custom_canvas_api_domain = self._lti_params.get('custom_canvas_api_domain'),
-                custom_canvas_course_id = self._lti_params.get('custom_canvas_course_id'),
-                custom_canvas_course_startat = custom_canvas_course_startat,
-                tool_consumer_info_product_family_code = self._lti_params.get('tool_consumer_info_product_family_code'),
-                tool_consumer_info_version = self._lti_params.get('tool_consumer_info_version'),
-                tool_consumer_instance_contact_email = self._lti_params.get('tool_consumer_instance_contact_email'),
-                tool_consumer_instance_guid = self._lti_params.get('tool_consumer_instance_guid'),
-                tool_consumer_instance_name = self._lti_params.get('tool_consumer_instance_name'),
+                context_title = self.get_lti_param(table='LTIExternalCourse', key='context_title'),
+                context_label = self.get_lti_param(table='LTIExternalCourse', key='context_label'),
+                ext_wl_launch_key = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_launch_key'),
+                ext_wl_launch_url = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_launch_url'),
+                ext_wl_version = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_version'),
+                ext_wl_outcome_service_url = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_outcome_service_url'),
+                custom_api_domain = self.get_lti_param(table='LTIExternalCourse', key='custom_api_domain'),
+                custom_course_id = self.get_lti_param(table='LTIExternalCourse', key='custom_course_id'),
+                custom_course_startat = custom_course_startat,
+                tool_consumer_info_product_family_code = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_info_product_family_code'),
+                tool_consumer_info_version = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_info_version'),
+                tool_consumer_instance_contact_email = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_instance_contact_email'),
+                tool_consumer_instance_guid = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_instance_guid'),
+                tool_consumer_instance_name = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_instance_name'),
             )
             
             course.save()
@@ -342,23 +336,15 @@ class LTISession(object):
                     user = self.user,
                     lti_user_id = self.user_id,
 
-                    custom_canvas_user_id = self._lti_params.get('custom_canvas_user_id'),
-                    custom_canvas_user_login_id = self._lti_params.get('custom_canvas_user_login_id'),
-                    custom_canvas_person_timezone = self._lti_params.get('custom_canvas_person_timezone'),
-
-                    # mcdaniel feb-2020
-                    # KU puts their roles into "roles" rather than "ext_roles". But Willo uses "roles" to store a more human-readable 
-                    # descriptor of roles. therefore we want to continue to prioritize "ext_roles" but fallback to "roles" if the former
-                    # is not present in the dictionary.
-                    # ---------------------------------------------------------
-                    ext_roles = self._lti_params.get('ext_roles') if self._lti_params.get('ext_roles') is not None else self._lti_params.get('roles'),
-                    # ---------------------------------------------------------
-
-                    ext_wl_privacy_mode = self._lti_params.get('ext_wl_privacy_mode'),
-                    lis_person_contact_email_primary = self._lti_params.get('lis_person_contact_email_primary'),
-                    lis_person_name_family = self._lti_params.get('lis_person_name_family'),
-                    lis_person_name_full = self._lti_params.get('lis_person_name_full'),
-                    lis_person_name_given = self._lti_params.get('lis_person_name_given'),
+                    custom_user_id = self.get_lti_param(table='LTIExternalCourseEnrollment', key='custom_user_id'),
+                    custom_user_login_id = self.get_lti_param(table='LTIExternalCourseEnrollment', key='custom_user_login_id'),
+                    custom_person_timezone = self.get_lti_param(table='LTIExternalCourseEnrollment', key='custom_person_timezone'),
+                    ext_roles = self.get_lti_param(table='LTIExternalCourseEnrollment', key='ext_roles'),
+                    ext_wl_privacy_mode = self.get_lti_param(table='LTIExternalCourseEnrollment', key='ext_wl_privacy_mode'),
+                    lis_person_contact_email_primary = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_contact_email_primary'),
+                    lis_person_name_family = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_name_family'),
+                    lis_person_name_full = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_name_full'),
+                    lis_person_name_given = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_name_given'),
                 )
             else:
                 enrollment = LTIExternalCourseEnrollment(
@@ -505,6 +491,47 @@ class LTISession(object):
     #=========================================================================================================
     #                                       PROPERTIES SETTERS & GETTERS
     #=========================================================================================================
+    def get_lti_param(self, table, key):
+        """Locates the cache_config.ini field mapping for 'key'. 
+        Then retrieves the corresponding value from self.lti_params
+        
+        Arguments:
+            table {string} -- the case-sensitive name of an LTI cache table.
+            key {string} -- the lower case name of a field in an LTI cache table.
+        
+        Returns:
+            [string] or None
+        """
+        if not self.lti_params:
+            return None
+            
+        VALID_TABLES = [
+            'LTIExternalCourse', 
+            'LTIExternalCourseEnrollment', 
+            'LTIExternalCourseEnrollmentGrades',
+            'LTIExternalCourseAssignments',
+            'LTIExternalCourseAssignmentProblems'
+            ]
+        if not isinstance(table, str):
+            raise ValidationError('Expecting a string value for table but received object of type {dtype}.'.format(
+                dtype=type(key)
+            ))
+        
+        if not isinstance(key, str):
+            raise ValidationError('Expecting a string value for key but received object of type {dtype}.'.format(
+                dtype=type(key)
+            ))
+
+        if not table in VALID_TABLES:
+            raise ValidationError('Received table {table} but was expecting table to be any of {tables}'.format(
+                table=table,
+                tables=VALID_TABLES
+            ))
+
+        param_key = parser.get(table, key)
+        return self.lti_params(param_key)
+
+
 
     def get_course_assignment_grade(self, usage_key):
         """
@@ -703,6 +730,11 @@ class LTISession(object):
         if value is not None and not is_willo_lti(value):
             raise LTIBusinessRuleError("Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
                 "that did not originate from Willo Labs: '%s'." % value)
+
+        if not isinstance(value, dict):
+            raise LTIBusinessRuleError("Was expecting a dict object but received an object of type {dtype}".format(
+                dtype=type(value)
+            ))
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
         # currently present in the cache.
