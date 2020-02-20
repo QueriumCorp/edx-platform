@@ -32,7 +32,7 @@ class LTIExternalCourse(TimeStampedModel):
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
     """
     context_id = models.CharField(
-        verbose_name="Context ID",
+        #verbose_name="Context ID",
         help_text="This is the unique identifier of the Willo Labs integration, passed via" \
             "from tpa-lti-params. Course runs from external LMS' are intended to be unique." \
             "Example: e14751571da04dd3a2c71a311dda2e1b",
@@ -43,7 +43,7 @@ class LTIExternalCourse(TimeStampedModel):
     course_id = CourseKeyField(
         max_length=255, 
         db_index=True,
-        verbose_name="Course Id",
+        #verbose_name="Course Id",
         help_text="Rover Course Key (Opaque Key). " \
             "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
         default=None, 
@@ -52,7 +52,7 @@ class LTIExternalCourse(TimeStampedModel):
         )
 
     context_title = models.CharField(
-        verbose_name="Context Title",
+        #verbose_name="Context Title",
         help_text="Name of the Willo Lab integration. Example: Rover by Openstax Gradesync Testing",
         max_length=50,
         default=None, 
@@ -61,116 +61,116 @@ class LTIExternalCourse(TimeStampedModel):
         )
 
     context_label = models.CharField(
-        verbose_name="Context Label",
+        #verbose_name="Context Label",
         help_text="Example: Rover",
         max_length=50,
         null=True,
         )
 
     ext_wl_launch_key = models.CharField(
-        verbose_name="External WilloLab Launch Key",
+        #verbose_name="External WilloLab Launch Key",
         help_text="Example: QcTz6q",
         max_length=50,
         null=True,
         )
         
     ext_wl_launch_url = models.URLField(
-        verbose_name="External WilloLab Launch URL",
+        #verbose_name="External WilloLab Launch URL",
         help_text="Example: https://stage.willolabs.com/launch/QcTz6q/8cmzcd",
         null=True
         )
 
     ext_wl_version = models.CharField(
-        verbose_name="External WilloLab Version",
+        #verbose_name="External WilloLab Version",
         help_text="Example: 1.0",
         max_length=25,
         null=True,
         )
 
     ext_wl_outcome_service_url = models.URLField(
-        verbose_name="External  Outcome Service URL",
+        #verbose_name="External  Outcome Service URL",
         help_text="Example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/",
         null=True,
         )
 
     custom_tpa_next = models.URLField(
-        verbose_name="LTI Params - custom_tpa_next",
+        #verbose_name="LTI Params - custom_tpa_next",
         help_text="/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false",
         max_length=255,
         null=True,
         )
 
     custom_orig_context_id = models.CharField(
-        verbose_name="custom_orig_context_id",
+        #verbose_name="custom_orig_context_id",
         help_text="Context_id from the original source system (ie Canvas, Blackboard). Example: 9caf71ef12da4d2993f8929242d93922",
         max_length=50,
         null=True,
         )
 
     custom_profile_url = models.URLField(
-        verbose_name="custom_profile_url",
+        #verbose_name="custom_profile_url",
         help_text="URL pointing to user profile in the original source system. Example: https://courseware.ku.edu/learn/api/v1/lti/profile?lti_version=LTI-1p0",
         max_length=50,
         null=True,
         )
 
     tool_consumer_instance_description = models.CharField(
-        verbose_name="tool_consumer_instance_description",
+        #verbose_name="tool_consumer_instance_description",
         help_text="Example: The University of Kansas",
         max_length=50,
         null=True,
         )
 
     custom_api_domain = models.CharField(
-        verbose_name="Custom Canvas API Domain",
+        #verbose_name="Custom Canvas API Domain",
         help_text="Example: willowlabs.instructure.com",
         max_length=255,
         null=True,
         )
 
     custom_course_id = models.CharField(
-        verbose_name="Custom Canvas Course ID",
+        #verbose_name="Custom Course ID",
         help_text="Example: 421",
         max_length=50,
         null=True,
         )
 
     custom_course_startat = models.DateTimeField(
-        verbose_name="Custom Canvas Course Start At",
+        #verbose_name="Custom Canvas Course Start At",
         help_text="Example: 2019-12-11 16:18:01 -0500",
         db_index=False,
         null=True,
         )
 
     tool_consumer_info_product_family_code = models.CharField(
-        verbose_name="Tool Consumer - Product Family Code",
+        #verbose_name="Tool Consumer - Product Family Code",
         help_text="Example: canvas",
         max_length=50,
         null=True,
         )
 
     tool_consumer_info_version = models.CharField(
-        verbose_name="Tool Consumer - Version",
+        #verbose_name="Tool Consumer - Version",
         help_text="Example: cloud",
         max_length=50,
         null=True,
         )
 
     tool_consumer_instance_contact_email = models.EmailField(
-        verbose_name="Tool Consumer - Contact Email Address",
+        #verbose_name="Tool Consumer - Contact Email Address",
         help_text="Example: notifications@instructure.com",
         null=True,
     )
 
     tool_consumer_instance_guid = models.CharField(
-        verbose_name="Tool Consumer - Instance GUID",
+        #verbose_name="Tool Consumer - Instance GUID",
         help_text="Example: 7M58pE4F4Y56gZHUe6jaxhQ1csaktjA00ZiVNQb7:canvas-lms",
         max_length=100,
         null=True,
         )
 
     tool_consumer_instance_name = models.CharField(
-        verbose_name="Tool Consumer - Instance Name",
+        #verbose_name="Tool Consumer - Instance Name",
         help_text="Example: Willo Labs",
         max_length=50,
         null=True,
@@ -180,8 +180,8 @@ class LTIExternalCourse(TimeStampedModel):
         return self.course_id.html_id()
 
     class Meta(object):
-        verbose_name = "LTI External Course"
-        verbose_name_plural = verbose_name
+        #verbose_name = "LTI External Course"
+        verbose_name_plural = #verbose_name
         unique_together = [['context_id', 'course_id']]
         #ordering = ('-fetched_at', )
 
@@ -189,19 +189,19 @@ class LTIExternalCourse(TimeStampedModel):
 class LTIExternalCourseAssignments(TimeStampedModel):
     course = models.ForeignKey(LTIExternalCourse, on_delete=models.CASCADE)
     url = models.URLField(
-        verbose_name="Homework Section URL",
+        #verbose_name="Homework Section URL",
         help_text="Open edX Course Assignment",
         max_length=255
     )
     display_name = models.CharField(
-        verbose_name="Display Name",
+        #verbose_name="Display Name",
         help_text="Title text of the Rover assignment. Example: Chapter 5 Section 1 Quadratic Functions Sample Homework",
         max_length=255,
         )
 
     class Meta(object):
-        verbose_name = "LTI External Course Assignments"
-        verbose_name_plural = verbose_name
+        #verbose_name = "LTI External Course Assignments"
+        verbose_name_plural = #verbose_name
         unique_together = [['course', 'url']]
         #ordering = ('-fetched_at', )
 
@@ -212,14 +212,14 @@ class LTIExternalCourseAssignments(TimeStampedModel):
 class LTIExternalCourseAssignmentProblems(TimeStampedModel):
     course_assignment = models.ForeignKey(LTIExternalCourseAssignments, on_delete=models.CASCADE)
     usage_key = UsageKeyField(
-        verbose_name="Usage Key",
+        #verbose_name="Usage Key",
         help_text="Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api. Example: block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163",
         blank=False, 
         max_length=255,
         )
     class Meta(object):
-        verbose_name = "LTI External Course Assignment Problems"
-        verbose_name_plural = verbose_name
+        #verbose_name = "LTI External Course Assignment Problems"
+        verbose_name_plural = #verbose_name
         unique_together = [['usage_key']]
         #ordering = ('-fetched_at', )
 
@@ -237,14 +237,14 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
     user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     lti_user_id = models.CharField(
-        verbose_name="User ID",
+        #verbose_name="User ID",
         help_text="User ID provided by . Example: ab3e190fae668d925d007d79219fbfce90afba6d",
         max_length=255,
         )
 
     custom_user_id = models.CharField(
-        verbose_name="Canvas User ID",
-        help_text="Canvas User ID provided to . Example: 394",
+        #verbose_name="Canvas User ID",
+        help_text="User ID provided to Willo Labs. Example: 394",
         max_length=25,
         default=None, 
         blank=True, 
@@ -252,8 +252,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     custom_user_login_id = models.CharField(
-        verbose_name="Canvas Username",
-        help_text="Canvas Username provided to . Example: rover_student",
+        #verbose_name="Canvas Username",
+        help_text="Login ID provided to Willo Labs. Example: rover_student",
         max_length=50,
         default=None, 
         blank=True, 
@@ -261,8 +261,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     custom_person_timezone = models.CharField(
-        verbose_name="Canvas user time zone",
-        help_text="Canvas time zone from user's profile, provided to Willo Labs. Example: America/New_York",
+        #verbose_name="Canvas user time zone",
+        help_text="Source system time zone from user's profile, provided to Willo Labs. Example: America/New_York",
         max_length=50,
         default=None, 
         blank=True, 
@@ -270,7 +270,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     ext_roles = models.CharField(
-        verbose_name="External System Roles",
+        #verbose_name="External System Roles",
         help_text="User permitted roles in external system. Example: urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
         max_length=255,
         default=None, 
@@ -279,7 +279,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     ext_wl_privacy_mode = models.CharField(
-        verbose_name="External WilloLab Privacy Mode",
+        #verbose_name="External WilloLab Privacy Mode",
         help_text="Privacy settings from external system, provided to Willo Lab. Example: allow-pii-all",
         max_length=50,
         default=None, 
@@ -288,13 +288,13 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     lis_person_contact_email_primary = models.EmailField(
-        verbose_name="User - Primary Email Address",
+        #verbose_name="User - Primary Email Address",
         help_text="Example: rover_student@willolabs.com",
         null=True,
         )
 
     lis_person_name_family = models.CharField(
-        verbose_name="User Family Name",
+        #verbose_name="User Family Name",
         help_text="Example: Thornton",
         max_length=50,
         default=None, 
@@ -303,7 +303,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     lis_person_name_full = models.CharField(
-        verbose_name="User Family Name",
+        #verbose_name="User Family Name",
         help_text="Example: Billy Bob Thornton",
         max_length=255,
         default=None, 
@@ -312,7 +312,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     lis_person_name_given = models.CharField(
-        verbose_name="User Given Name",
+        #verbose_name="User Given Name",
         help_text="Example: Billy Bob",
         max_length=255,
         default=None, 
@@ -321,7 +321,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     lis_person_sourcedid = models.CharField(
-        verbose_name="Source system Username",
+        #verbose_name="Source system Username",
         help_text="Example: _tonn_test5",
         max_length=255,
         default=None, 
@@ -330,8 +330,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     class Meta(object):
-        verbose_name = "LTI External Course Enrollment"
-        verbose_name_plural = verbose_name
+        #verbose_name = "LTI External Course Enrollment"
+        verbose_name_plural = #verbose_name
         unique_together = [['course', 'user']]
         #ordering = ('-fetched_at', )
 
@@ -351,7 +351,7 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
 
     # First, insert the record. If we get a 200 response then update the record with the posting date.
     synched = models.DateTimeField(
-        verbose_name="Willo Posting Date",
+        #verbose_name="Willo Posting Date",
         help_text="The timestamp when this grade record was successfully posted to Willo Grade Sync.",
         null=True, 
         blank=True,
@@ -362,13 +362,13 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     #user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     section_url = models.URLField(
-        verbose_name="Homework Section URL",
+        #verbose_name="Homework Section URL",
         help_text="Open edX Course Assignment",
         max_length=255
     )
 
     usage_key = UsageKeyField(
-        verbose_name="Usage Key",
+        #verbose_name="Usage Key",
         help_text="Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api.",
         blank=False, 
         max_length=255,
@@ -381,8 +381,8 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     earned_graded = models.FloatField(blank=False)
     possible_graded = models.FloatField(blank=False)
     class Meta(object):
-        verbose_name = "LTI External Course Enrollment Grades"
-        verbose_name_plural = verbose_name
+        #verbose_name = "LTI External Course Enrollment Grades"
+        verbose_name_plural = #verbose_name
 
     def __str__(self):
         return self.course_enrollment.course.course_id.html_id() + ' - ' + self.course_assignment.display_name
