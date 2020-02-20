@@ -148,3 +148,10 @@ web-fragments                       # Provides the ability to render fragments o
 XBlock                              # Courseware component architecture
 xblock-review                       # XBlock which displays problems from earlier in the course for ungraded retries
 zendesk                             # Python API for the Zendesk customer support system
+
+#-------------------------------------------------------------------------------                                    
+                                    # mcdaniel feb-2020
+                                    # moved from testing.txt and development.txt
+                                    # we're using this with LTI Grade Sync
+configparser==3.5.0                 # via flake8, pylint
+#-------------------------------------------------------------------------------                                    
