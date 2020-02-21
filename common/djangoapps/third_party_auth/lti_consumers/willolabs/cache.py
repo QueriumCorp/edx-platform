@@ -416,12 +416,12 @@ class LTISession(object):
                 if isinstance(usage_key, UsageKey) or isinstance(usage_key, BlockUsageLocator):
                     pass
                 else:
-                    raise LTIBusinessRuleError("Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+                    raise LTIBusinessRuleError("post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
                             key_type=type(usage_key),
                             usage_key=usage_key
                         ))
         except:
-            raise LTIBusinessRuleError("Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+            raise LTIBusinessRuleError("post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
                     key_type=type(usage_key),
                     usage_key=usage_key
                 ))
@@ -699,7 +699,7 @@ class LTISession(object):
         # check for integrity between context_id and the current contents of lti_params
         lti_params_context_id = self.lti_params.get('context_id')
         if lti_params_context_id is not None and value != lti_params_context_id:
-            raise LTIBusinessRuleError("Tried to set context_id to {value}, which is inconsistent with the " \
+            raise LTIBusinessRuleError("set_context_id() - Tried to set context_id to {value}, which is inconsistent with the " \
                 "current value of lti_params['context_id']: {lti_params}.".format(
                     value=value,
                     lti_params=self.lti_params.get('context_id')
@@ -727,14 +727,14 @@ class LTISession(object):
             
         # ensure that this object is being instantiated with data that originated
         # from an LTI authentication from Willo Labs.
-        if value is not None and not is_willo_lti(value):
-            raise LTIBusinessRuleError("Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
-                "that did not originate from Willo Labs: '%s'." % value)
-
-        if not isinstance(value, dict):
-            raise LTIBusinessRuleError("Was expecting a dict object but received an object of type {dtype}".format(
+        if value is not None and not isinstance(value, dict):
+            raise LTIBusinessRuleError("set_lti_params() - Was expecting a dict object but received an object of type {dtype}".format(
                 dtype=type(value)
             ))
+
+        if value is not None and not is_willo_lti(value):
+            raise LTIBusinessRuleError("set_lti_params() - Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
+                "that did not originate from Willo Labs: '%s'." % value)
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
         # currently present in the cache.
@@ -796,7 +796,7 @@ class LTISession(object):
             if isinstance(value, str) or isinstance(value, unicode):
                 self._course_id = CourseKey.from_string(value)
             else:
-                raise LTIBusinessRuleError("Course_key provided is not a valid object type"\
+                raise LTIBusinessRuleError("set_course_id() - Course_key provided is not a valid object type"\
                     " ({}). Must be either CourseKey or String.".format(
                     type(value)
             ))
@@ -828,7 +828,7 @@ class LTISession(object):
             return 
 
         if not isinstance(value, LTIExternalCourse):
-            raise LTIBusinessRuleError("Tried to assign object {dtype} {obj} to course property that is not" \
+            raise LTIBusinessRuleError("set_course() - Tried to assign object {dtype} {obj} to course property that is not" \
                 " an instance of third_party_auth.models.LTIExternalCourse.".format(
                     dtype=type(value),
                     obj=value
