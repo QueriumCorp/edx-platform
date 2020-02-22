@@ -3,8 +3,15 @@
   lpm0073@gmail.com
   https://lawrencemcdaniel.com
 """
-from configparser import SafeConfigParser
-import json
+from configparser import ConfigParser
+import os
+import logging
+
+log = logging.getLogger(__name__)
+
+CONFIG_FILENAME = 'cache_config.ini'
+WORKING_PATH = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(WORKING_PATH, CONFIG_FILENAME)
 
 """
   The provisioner.config file should be in the same folder as this Python module.
@@ -40,5 +47,5 @@ default_values = {
     "lis_person_name_given": "lis_person_name_given"
 }
 
-parser = SafeConfigParser(json.load(default_values))
-parser.read('./cache_config.ini')
+parser = ConfigParser(default_values)
+parser.read(CONFIG_PATH)

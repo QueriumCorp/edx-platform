@@ -15,6 +15,8 @@ import json
 from django.utils.dateparse import parse_date
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+
 import traceback
 
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.cache_config import parser
@@ -27,6 +29,7 @@ from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
     LTIExternalCourseAssignments,
     )
 from student.models import is_faculty, CourseEnrollment
+from django.contrib.auth.models import AnonymousUser
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
 from opaque_keys.edx.keys import CourseKey, UsageKey
@@ -34,6 +37,7 @@ from opaque_keys.edx.locator import BlockUsageLocator
 
 #from django.db.models import Sum
 
+User = get_user_model()
 log = logging.getLogger(__name__)
 #DEBUG = settings.DEBUG
 DEBUG = True
@@ -72,7 +76,7 @@ class LTISession(object):
 
     """
     def __init__(self, lti_params=None, user=None, course_id=None, clear_cache=False):
-        if DEBUG: log.info('LTISession.__init__() user: {user}, course_id: {course_id}, lti_params: {lti_params}'.format(
+        if DEBUG: log.info('LTISession.__init__() - initializing. user: {user}, course_id: {course_id}, lti_params: {lti_params}'.format(
             user=user,
             course_id=course_id,
             lti_params='yes' if lti_params is not None else 'no'
@@ -93,9 +97,36 @@ class LTISession(object):
         self.lti_params = lti_params        # this needs to initialized first bc it resets all
                                             # other class properties.
 
-        self.user = user                    # Rover (django) user object
+        # we might need to intercept and null the 'AnonymousUser', which is used sometimes during
+        # LTI authentication. not sure why.
+        if isinstance(user, AnonymousUser):
+            user = None
+
+        if user is None and lti_params is not None:
+            # try to set the user object from tpa_lti_params info.
+            username = self.lti_param.get('user_id')
+            if username is not None:
+                if DEBUG: log.info('LTISession.__init__() - trying to assign user from tpi_param data. username: {username}'.format(
+                    username=username
+                ))
+                self.user = User.objects.get(username=username)
+        else:
+            self.user = user                    # Rover (django) user object
         
-        self.course_id = course_id          # Rover (Open edX) course_id (aka Opaque Key)
+        if course_id is None and self.user is not None:
+            # if self.user is set, and we are lacking a course_id
+            # then try to find the course in which the user is currently enrolled.
+            #
+            # FIX NOTE: this does not address a student enrollment in more than one course.
+            # we need to parse the course name from custom_tpa_next to verify that we have the correct course.
+            enrollments = CourseEnrollment.enrollments_for_user(self.user)
+            if enrollments is not None and len(enrollments) == 1:
+                self.course_id = enrollments[0].course_id
+                if DEBUG: log.info('LTISession.__init__() - located user enrollment. course: {course}'.format(
+                    course=self.course_id
+                ))
+        else:
+            self.course_id = course_id          # Rover (Open edX) course_id (aka Opaque Key)
                                             # this MUST be initialized after self.lti_params
 
         # removes any cache data that is persisted to MySQL
@@ -104,6 +135,13 @@ class LTISession(object):
 
         # retrieve cache data from MySQL
         self.refresh()
+        if DEBUG: log.info('LTISession.__init__() - initialized. user: {user}, course: {course}, enrollment: {enrollment}, course_id: {course_id}, context_id: {context_id}'.format(
+            user=self.user,
+            course=self.course,
+            enrollment=self.course_enrollment,
+            course_id=self.course_id,
+            context_id=self.context_id
+        ))
 
     def init(self):
         """ Initialize class variables """
@@ -128,8 +166,9 @@ class LTISession(object):
             if self._course is None:
                 self.register_course()
 
-            if self._course_enrollment is None:
-                self.register_enrollment()
+            # mcdaniel: i think we want to only call this explicitly.
+            #if self._course_enrollment is None:
+            #    self.register_enrollment()
 
             return None
 
@@ -150,11 +189,10 @@ class LTISession(object):
                     #self._context_id = course.context_id       # handled inside set_course()
             
             if self.course_enrollment is None:
-                course_enrollment = LTIExternalCourseEnrollment.objects.filter(
+                self.course_enrollment = LTIExternalCourseEnrollment.objects.filter(
                     course = course, 
                     user = self._user
                     ).first()
-                self.course_enrollment = course_enrollment
 
 
 
@@ -387,7 +425,7 @@ class LTISession(object):
                     }
 
         """
-        if DEBUG: log.info('LTISession - post_grades() - usage_key: {usage_key}, grades: {grades_dict}'.format(
+        if DEBUG: log.info('LTISession.post_grades() - usage_key: {usage_key}, grades: {grades_dict}'.format(
             usage_key=usage_key,
             grades_dict=grades_dict
         ))
@@ -416,12 +454,12 @@ class LTISession(object):
                 if isinstance(usage_key, UsageKey) or isinstance(usage_key, BlockUsageLocator):
                     pass
                 else:
-                    raise LTIBusinessRuleError("post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+                    raise LTIBusinessRuleError("LTISession.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
                             key_type=type(usage_key),
                             usage_key=usage_key
                         ))
         except:
-            raise LTIBusinessRuleError("post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+            raise LTIBusinessRuleError("LTISession.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
                     key_type=type(usage_key),
                     usage_key=usage_key
                 ))
@@ -475,7 +513,7 @@ class LTISession(object):
                 log.error(msg)
                 return False
 
-            if DEBUG: log.info('LTISession - post_grades() saved new cache record - username: {username}, '\
+            if DEBUG: log.info('LTISession.post_grades() saved new cache record - username: {username}, '\
                 'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}, grades: {grades}'.format(
                 username = self.user.username,
                 usage_key = usage_key,
@@ -485,7 +523,7 @@ class LTISession(object):
             ))
             return True
         else:
-            if DEBUG: log.info('LTISession - post_grades() nothing new to record. exiting')
+            if DEBUG: log.info('LTISession.post_grades() nothing new to record. exiting')
             return False
 
     #=========================================================================================================
@@ -529,7 +567,14 @@ class LTISession(object):
             ))
 
         param_key = parser.get(table, key)
-        return self.lti_params(param_key)
+        value = self.lti_params.get(param_key)
+        #log.info('get_lti_param() - table: {table}, key: {key}, param_key: {param_key}, value: {value}'.format(
+        #    table=table,
+        #    key=key,
+        #    param_key=param_key,
+        #    value = value
+        #))
+        return value
 
 
 
@@ -723,17 +768,17 @@ class LTISession(object):
         lti_params json object changed, so clear course and course_enrollment
         also need to initialize any property values that are sourced from lti_params
         """
-        if DEBUG: log.info('set_lti_params()')
+        if DEBUG: log.info('LTISession.set_lti_params()')
             
         # ensure that this object is being instantiated with data that originated
         # from an LTI authentication from Willo Labs.
         if value is not None and not isinstance(value, dict):
-            raise LTIBusinessRuleError("set_lti_params() - Was expecting a dict object but received an object of type {dtype}".format(
+            raise LTIBusinessRuleError("LTISession.set_lti_params() - Was expecting a dict object but received an object of type {dtype}".format(
                 dtype=type(value)
             ))
 
         if value is not None and not is_willo_lti(value):
-            raise LTIBusinessRuleError("set_lti_params() - Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
+            raise LTIBusinessRuleError("LTISession.set_lti_params() - Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
                 "that did not originate from Willo Labs: '%s'." % value)
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
@@ -774,20 +819,20 @@ class LTISession(object):
         self._course_enrollment = None
 
     def get_course_id(self):
-        if DEBUG: log.info('get_course_id() - {val}, {obj_type}'.format(
+        if DEBUG: log.info('LTISession.get_course_id() - {val}, {obj_type}'.format(
             val = self._course_id,
             obj_type = type(self._course_id)
         ))
         return self._course_id
 
     def set_course_id(self, value):
-        if DEBUG: log.info('set_course_id() - {value}, {obj_type}'.format(
+        if DEBUG: log.info('LTISession.set_course_id() - {value}, {obj_type}'.format(
             value=value,
             obj_type=type(value)
         ))
 
         if value == self._course_id:
-            if DEBUG: log.info('set_course_id() - no changes. Exiting.')
+            if DEBUG: log.info('LTISession.set_course_id() - no changes. Exiting.')
             return 
 
         if isinstance(value, CourseKey):
@@ -796,14 +841,13 @@ class LTISession(object):
             if isinstance(value, str) or isinstance(value, unicode):
                 self._course_id = CourseKey.from_string(value)
             else:
-                raise LTIBusinessRuleError("set_course_id() - Course_key provided is not a valid object type"\
+                raise LTIBusinessRuleError("LTISession.set_course_id() - Course_key provided is not a valid object type"\
                     " ({}). Must be either CourseKey or String.".format(
                     type(value)
             ))
 
-        self._course = None
+        self._course = LTIExternalCourse.objects.filter(course_id=self._course_id).first()
         self._course_enrollment = None
-        self.register_course()
 
     def get_course(self):
         """

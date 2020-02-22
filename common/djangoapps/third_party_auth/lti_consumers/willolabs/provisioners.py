@@ -55,7 +55,7 @@ from .utils import is_willo_lti, is_valid_course_id
 
 import logging
 log = logging.getLogger(__name__)
-DEBUG = settings.DEBUG
+DEBUG = True
 
 
 class CourseProvisioner():
@@ -81,10 +81,16 @@ class CourseProvisioner():
 
         # constructor intializations ...
         # ----------------------------------------------------
+        log.info('CourseProvisioner.__init__() initializing. user: {user}, '\
+            ' course_id: {course_id}'.format(
+                user=user,
+                course_id=course_id
+            ))
+
         self.set_lti_params(lti_params)         # originates from the http response body from LTI auth
         self.set_user(user)
         self.set_course_id(course_id)
-        log.info('CourseProvisioner.__init__() user: {user}, context_id: {context_id}, '\
+        log.info('CourseProvisioner.__init__() initialized. user: {user}, context_id: {context_id}, '\
             ' course_id: {course_id}'.format(
                 user=self.get_user(),
                 context_id=self.get_context_id(),
@@ -166,7 +172,7 @@ class CourseProvisioner():
         return self._user
 
     def set_user(self, value):
-        if DEBUG: log.info('set_user()')
+        if DEBUG: log.info('CourseProvisioner.set_user()')
         self._user = value
 
         # initialize properties that depend on user
@@ -185,25 +191,21 @@ class CourseProvisioner():
         if self._course_id is not None:
             return self._course_id 
 
-        if DEBUG: log.info('get_course_id() -- looking for a course_id')
+        if DEBUG: log.info('CourseProvisioner.get_course_id() -- trying to self-initialize...')
 
-        # first we'll look in the persisted Willo Labs LTI course enrollments table to see if 
-        # a record exists for this user.
-        try:
-            self._course_id = self.get_session().course_enrollment.course_id
-            if self._course_id is not None:
-                return self._course_id
-        except:
-            pass
-
-        # if no record exists then we'll next look at this user's active Rover enrollments
+        # if no record exists then we'll look at this user's active Rover enrollments
         # and we'll potentially pull a course_id if there's exactly one active course for the
         # student.
         enrollments = self.get_enrollments()
         if enrollments is not None:
             if len(enrollments) == 1:
+                if DEBUG: log.info('CourseProvisioner.get_course_id() -- found a course_id from self.get_enrollments()')
                 self._course_id = enrollments[0].course_id
                 return self._course_id
+            else:
+                log.error('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses. cannot continue. user: {user}'.format(
+                    user=self.user
+                ))
 
         # we struck out. didn't find a course_id from any of our possible sources
         return None
@@ -213,7 +215,7 @@ class CourseProvisioner():
         Alternatively, we could simply set the course_id corresponding to this instances
         context_id, and in this case we only need to validate the course_id passed.
         """
-        if DEBUG: log.info('set_course_id()')
+        if DEBUG: log.info('CourseProvisioner.set_course_id()')
         if value is None:
             self._course_id = None 
             self._session = None
@@ -236,7 +238,7 @@ class CourseProvisioner():
         if self._enrollments is not None:
             return self._enrollments 
 
-        if DEBUG: log.info('get_enrollments() -- looking for a new value')
+        if DEBUG: log.info('CourseProvisioner.get_enrollments() -- trying to self-initialize...')
 
         # if user is not yet logged in then we'll receive an Anonymous user object type
         # that is not iterable and has no enrollments.
@@ -245,9 +247,10 @@ class CourseProvisioner():
 
         try:
             self._enrollments = CourseEnrollment.enrollments_for_user(self.user)
+            if DEBUG: log.info('CourseProvisioner.get_enrollments() -- returning Open edX CourseEnrollment.enrollments_for_user()')
             return self._enrollments
         except Exception as e:
-            log.error('get_enrollments() -- could not get enrolled. Encountered the following error: {err}'.format(
+            log.error('CourseProvisioner.get_enrollments() -- could not get enrollments. Encountered the following error: {err}'.format(
                 err=e.description
             ))
             pass
@@ -255,7 +258,7 @@ class CourseProvisioner():
         return None
 
     def set_enrollments(self, value):
-        raise LTIBusinessRuleError("enrollments is a read-only property.")
+        raise LTIBusinessRuleError("CourseProvisioner.set_enrollments(). - enrollments is a read-only property.")
 
     def get_session(self):
         """
@@ -268,7 +271,7 @@ class CourseProvisioner():
         if self._session is not None:
             return self._session
 
-        if DEBUG: log.info('get_session() -- creating a new session')
+        if DEBUG: log.info('CourseProvisioner.get_session() -- creating a new LTISession')
         # otherwise try to instantiate a new Willow Session
         self._session = LTISession(
             lti_params = self.get_lti_params(), 
@@ -278,7 +281,7 @@ class CourseProvisioner():
         return self._session
 
     def set_session(self, value):
-        raise LTIBusinessRuleError("session is a read-only property.")
+        raise LTIBusinessRuleError("CourseProvisioner.set_session() - session is a read-only property.")
 
     lti_params = property(get_lti_params, set_lti_params)
     context_id = property(get_context_id, set_context_id)
