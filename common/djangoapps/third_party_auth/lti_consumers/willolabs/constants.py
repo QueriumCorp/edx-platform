@@ -10,6 +10,9 @@
 
 """
 from __future__ import absolute_import
+import os
+
+WORKING_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # from the LTI role vocabulary
 # https://www.imsglobal.org/specs/ltiv1p1/implementation-guide#toc-8
@@ -46,4 +49,12 @@ WILLO_DOMAINS = (
     'test.willolabs.com', 
     'stage.willolabs.com', 
     'app.willolabs.com'
+)
+
+LTI_CACHE_TABLES = (
+    'LTIExternalCourse', 
+    'LTIExternalCourseEnrollment', 
+    'LTIExternalCourseEnrollmentGrades',
+    'LTIExternalCourseAssignments',
+    'LTIExternalCourseAssignmentProblems'
 )

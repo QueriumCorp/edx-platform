@@ -36,29 +36,24 @@
     example source: ./sample_data/tpa_lti_params.json
 """
 from __future__ import absolute_import
-from django.core.management.base import CommandError
-from django.conf import settings
+import logging
+
+from django.contrib.auth import get_user_model
 
 from student.models import is_faculty, CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
-from opaque_keys import InvalidKeyError
 
-from .models import LTIExternalCourse
 from .exceptions import LTIBusinessRuleError
 from .cache import LTISession
-from .utils import is_willo_lti, is_valid_course_id
+from .lti_params import is_willo_lti
 
-#from cms.djangoapps.contentstore.views.course import (
-#    get_courses_accessible_to_user, 
-#    _process_courses_list
-#    )
 
-import logging
+User = get_user_model()
 log = logging.getLogger(__name__)
 DEBUG = True
 
 
-class CourseProvisioner():
+class CourseProvisioner(object):
     """
     Instantiated during LTI authentication. Try to enroll user in a Rover course
     based on information received in the lti_params object from LTI authentication http response.
@@ -87,14 +82,15 @@ class CourseProvisioner():
                 course_id=course_id
             ))
 
-        self.set_lti_params(lti_params)         # originates from the http response body from LTI auth
-        self.set_user(user)
-        self.set_course_id(course_id)
+        self.lti_params = lti_params         # originates from the http response body from LTI auth
+        self.user = user
+        self.course_id = course_id
+
         log.info('CourseProvisioner.__init__() initialized. user: {user}, context_id: {context_id}, '\
             ' course_id: {course_id}'.format(
-                user=self.get_user(),
-                context_id=self.get_context_id(),
-                course_id=self.get_course_id()
+                user=self.user,
+                context_id=self.context_id,
+                course_id=self.course_id
             ))
 
     def init(self):
@@ -128,18 +124,23 @@ class CourseProvisioner():
             log.info('CourseProvisioner.check_enrollment() automatically enrolled'\
                 ' user: {user}, context_id: {context_id}, '\
                 ' course_id: {course_id}'.format(
-                    user=self.get_user(),
-                    context_id=self.get_context_id(),
-                    course_id=self.get_course_id()
+                    user=self.user,
+                    context_id=self.context_id,
+                    course_id=self.course_id
                 ))
 
         # cache our mappings between 
         #   Rover course_id and the LTI context_id
         #   Rover username and LTI user_id
-        self.get_session().register_enrollment()
+        self.session.register_enrollment()
 
         return True
 
+    #------------------------------------------------------------------------------------------
+    #
+    # Property setters & getters
+    #
+    #------------------------------------------------------------------------------------------
     def get_lti_params(self):
         """
         json object of LTI parameters passed from the external system
@@ -163,7 +164,7 @@ class CourseProvisioner():
         return self._context_id
 
     def set_context_id(self, value):
-        raise LTIBusinessRuleError("context_id is a read-only field.")
+        raise LTIBusinessRuleError("CourseProvisioner.set_context_id() context_id is a read-only field.")
 
     def get_user(self):
         """
@@ -173,6 +174,12 @@ class CourseProvisioner():
 
     def set_user(self, value):
         if DEBUG: log.info('CourseProvisioner.set_user()')
+
+        if value is not None and not isinstance(value, User):
+            raise LTIBusinessRuleError('CourseProvisioner.set_user() was expecting a User object but received an object of type {dtype}'.format(
+                dtype=type(value)
+            ))
+
         self._user = value
 
         # initialize properties that depend on user
@@ -196,10 +203,10 @@ class CourseProvisioner():
         # if no record exists then we'll look at this user's active Rover enrollments
         # and we'll potentially pull a course_id if there's exactly one active course for the
         # student.
-        enrollments = self.get_enrollments()
+        enrollments = self.enrollments
         if enrollments is not None:
             if len(enrollments) == 1:
-                if DEBUG: log.info('CourseProvisioner.get_course_id() -- found a course_id from self.get_enrollments()')
+                if DEBUG: log.info('CourseProvisioner.get_course_id() -- found a course_id from self.enrollments')
                 self._course_id = enrollments[0].course_id
                 return self._course_id
             else:
@@ -274,8 +281,8 @@ class CourseProvisioner():
         if DEBUG: log.info('CourseProvisioner.get_session() -- creating a new LTISession')
         # otherwise try to instantiate a new Willow Session
         self._session = LTISession(
-            lti_params = self.get_lti_params(), 
-            user = self.get_user(), 
+            lti_params = self.lti_params,
+            user = self.user, 
             course_id = self._course_id
             )
         return self._session
@@ -289,4 +296,3 @@ class CourseProvisioner():
     course_id = property(get_course_id, set_course_id)
     enrollments = property(get_enrollments, set_enrollments)
     session = property(get_session, set_session)
-

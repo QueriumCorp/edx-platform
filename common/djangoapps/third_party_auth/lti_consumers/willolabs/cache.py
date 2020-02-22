@@ -12,30 +12,27 @@ and External platforms like Canvas, Blackboard and Moodle.
 from __future__ import absolute_import
 import logging
 import json
+import traceback
+
 from django.utils.dateparse import parse_date
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 
-import traceback
+from student.models import is_faculty, CourseEnrollment
+from opaque_keys.edx.keys import CourseKey, UsageKey
+from opaque_keys.edx.locator import BlockUsageLocator
 
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.cache_config import parser
-
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import (
+from .exceptions import LTIBusinessRuleError
+from .lti_params import LTIParamsFieldMap, is_willo_lti
+from .models import (
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
     LTIExternalCourseEnrollmentGrades,
     LTIExternalCourseAssignmentProblems,
     LTIExternalCourseAssignments,
     )
-from student.models import is_faculty, CourseEnrollment
-from django.contrib.auth.models import AnonymousUser
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_willo_lti, is_valid_course_id
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
-from opaque_keys.edx.keys import CourseKey, UsageKey
-from opaque_keys.edx.locator import BlockUsageLocator
-
-#from django.db.models import Sum
 
 User = get_user_model()
 log = logging.getLogger(__name__)
@@ -72,7 +69,6 @@ class LTISession(object):
         register_course()
         register_enrollment()
         post_grades()
-        get_lti_param()
 
     """
     def __init__(self, lti_params=None, user=None, course_id=None, clear_cache=False):
@@ -98,8 +94,8 @@ class LTISession(object):
                                             # other class properties.
 
         # we might need to intercept and null the 'AnonymousUser', which is used sometimes during
-        # LTI authentication. not sure why.
-        if isinstance(user, AnonymousUser):
+        # LTI authentication of if the user is not actually logged in. not sure why.
+        if self.user.is_anonymous:
             user = None
 
         if user is None and lti_params is not None:
@@ -117,17 +113,22 @@ class LTISession(object):
             # if self.user is set, and we are lacking a course_id
             # then try to find the course in which the user is currently enrolled.
             #
-            # FIX NOTE: this does not address a student enrollment in more than one course.
-            # we need to parse the course name from custom_tpa_next to verify that we have the correct course.
+            # note that this breaks if a student is enrolled in more than one course.
+            # so we'll only use this in cases where only 1 course enrollment record is returned.
             enrollments = CourseEnrollment.enrollments_for_user(self.user)
             if enrollments is not None and len(enrollments) == 1:
                 self.course_id = enrollments[0].course_id
                 if DEBUG: log.info('LTISession.__init__() - located user enrollment. course: {course}'.format(
                     course=self.course_id
                 ))
+            else:
+                # we'll arrive here if a) the student is enrolled in multiple courses, 
+                # or b) the student is not enrolled in any courses.
+                self.course_id =  self.get_cached_course_id()
         else:
-            self.course_id = course_id          # Rover (Open edX) course_id (aka Opaque Key)
-                                            # this MUST be initialized after self.lti_params
+            # assign the course_id passed to __init__()
+            self.course_id = course_id              # Rover (Open edX) course_id (aka Opaque Key)
+                                                    # this MUST be initialized after self.lti_params
 
         # removes any cache data that is persisted to MySQL
         if clear_cache:
@@ -142,6 +143,20 @@ class LTISession(object):
             course_id=self.course_id,
             context_id=self.context_id
         ))
+
+    def get_cached_course_id(self):
+        """Queries the cache and returns the course_id associated
+        with a context_id
+        
+        Returns:
+            course_id -- 
+        """
+        course = LTIExternalCourse.objects.filter(context_id=self.context_id).first()
+
+        if course:
+            return course.course_id
+
+        return None
 
     def init(self):
         """ Initialize class variables """
@@ -286,7 +301,9 @@ class LTISession(object):
             if DEBUG: log.info('LTISession.register_course() - course_id is not set. cannot cache. exiting.')
             return None
 
-        date_str = self._lti_params.get('custom_course_startat')
+        params = LTIParamsFieldMap(lti_params=self.lti_params, table='LTIExternalCourse')
+        date_str = params.custom_course_startat
+
         # FIX NOTE: this is a complete kluge. need to learn more about custom_course_startat
         # and then change this logic accordingly.
         if date_str is not None:
@@ -300,20 +317,20 @@ class LTISession(object):
             course = LTIExternalCourse(
                 context_id = self.context_id,
                 course_id = self.course_id,
-                context_title = self.get_lti_param(table='LTIExternalCourse', key='context_title'),
-                context_label = self.get_lti_param(table='LTIExternalCourse', key='context_label'),
-                ext_wl_launch_key = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_launch_key'),
-                ext_wl_launch_url = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_launch_url'),
-                ext_wl_version = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_version'),
-                ext_wl_outcome_service_url = self.get_lti_param(table='LTIExternalCourse', key='ext_wl_outcome_service_url'),
-                custom_api_domain = self.get_lti_param(table='LTIExternalCourse', key='custom_api_domain'),
-                custom_course_id = self.get_lti_param(table='LTIExternalCourse', key='custom_course_id'),
+                context_title = params.context_title,
+                context_label = params.context_label,
+                ext_wl_launch_key = params.ext_wl_launch_key,
+                ext_wl_launch_url = params.ext_wl_launch_url,
+                ext_wl_version = params.ext_wl_version,
+                ext_wl_outcome_service_url = params.ext_wl_outcome_service_url,
+                custom_api_domain = params.custom_api_domain,
+                custom_course_id = params.custom_course_id,
                 custom_course_startat = custom_course_startat,
-                tool_consumer_info_product_family_code = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_info_product_family_code'),
-                tool_consumer_info_version = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_info_version'),
-                tool_consumer_instance_contact_email = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_instance_contact_email'),
-                tool_consumer_instance_guid = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_instance_guid'),
-                tool_consumer_instance_name = self.get_lti_param(table='LTIExternalCourse', key='tool_consumer_instance_name'),
+                tool_consumer_info_product_family_code = params.tool_consumer_info_product_family_code,
+                tool_consumer_info_version = params.tool_consumer_info_version,
+                tool_consumer_instance_contact_email = params.tool_consumer_instance_contact_email,
+                tool_consumer_instance_guid = params.tool_consumer_instance_guid,
+                tool_consumer_instance_name = params.tool_consumer_instance_name,
             )
             
             course.save()
@@ -369,20 +386,21 @@ class LTISession(object):
 
         try:
             if self._lti_params:
+                params = LTIParamsFieldMap(lti_params=self.lti_params, table='LTIExternalCourseEnrollment')
                 enrollment = LTIExternalCourseEnrollment(
                     course = self.course,
                     user = self.user,
                     lti_user_id = self.user_id,
 
-                    custom_user_id = self.get_lti_param(table='LTIExternalCourseEnrollment', key='custom_user_id'),
-                    custom_user_login_id = self.get_lti_param(table='LTIExternalCourseEnrollment', key='custom_user_login_id'),
-                    custom_person_timezone = self.get_lti_param(table='LTIExternalCourseEnrollment', key='custom_person_timezone'),
-                    ext_roles = self.get_lti_param(table='LTIExternalCourseEnrollment', key='ext_roles'),
-                    ext_wl_privacy_mode = self.get_lti_param(table='LTIExternalCourseEnrollment', key='ext_wl_privacy_mode'),
-                    lis_person_contact_email_primary = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_contact_email_primary'),
-                    lis_person_name_family = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_name_family'),
-                    lis_person_name_full = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_name_full'),
-                    lis_person_name_given = self.get_lti_param(table='LTIExternalCourseEnrollment', key='lis_person_name_given'),
+                    custom_user_id = params.custom_user_id,
+                    custom_user_login_id = params.custom_user_login_id,
+                    custom_person_timezone = params.custom_person_timezone,
+                    ext_roles = params.ext_roles,
+                    ext_wl_privacy_mode = params.ext_wl_privacy_mode,
+                    lis_person_contact_email_primary = params.lis_person_contact_email_primary,
+                    lis_person_name_family = params.lis_person_name_family,
+                    lis_person_name_full = params.lis_person_name_full,
+                    lis_person_name_given = params.lis_person_name_given,
                 )
             else:
                 enrollment = LTIExternalCourseEnrollment(
@@ -529,55 +547,6 @@ class LTISession(object):
     #=========================================================================================================
     #                                       PROPERTIES SETTERS & GETTERS
     #=========================================================================================================
-    def get_lti_param(self, table, key):
-        """Locates the cache_config.ini field mapping for 'key'. 
-        Then retrieves the corresponding value from self.lti_params
-        
-        Arguments:
-            table {string} -- the case-sensitive name of an LTI cache table.
-            key {string} -- the lower case name of a field in an LTI cache table.
-        
-        Returns:
-            [string] or None
-        """
-        if not self.lti_params:
-            return None
-            
-        VALID_TABLES = [
-            'LTIExternalCourse', 
-            'LTIExternalCourseEnrollment', 
-            'LTIExternalCourseEnrollmentGrades',
-            'LTIExternalCourseAssignments',
-            'LTIExternalCourseAssignmentProblems'
-            ]
-        if not isinstance(table, str):
-            raise ValidationError('Expecting a string value for table but received object of type {dtype}.'.format(
-                dtype=type(key)
-            ))
-        
-        if not isinstance(key, str):
-            raise ValidationError('Expecting a string value for key but received object of type {dtype}.'.format(
-                dtype=type(key)
-            ))
-
-        if not table in VALID_TABLES:
-            raise ValidationError('Received table {table} but was expecting table to be any of {tables}'.format(
-                table=table,
-                tables=VALID_TABLES
-            ))
-
-        param_key = parser.get(table, key)
-        value = self.lti_params.get(param_key)
-        #log.info('get_lti_param() - table: {table}, key: {key}, param_key: {param_key}, value: {value}'.format(
-        #    table=table,
-        #    key=key,
-        #    param_key=param_key,
-        #    value = value
-        #))
-        return value
-
-
-
     def get_course_assignment_grade(self, usage_key):
         """
         Try to retrieve a cached course assignment grade object for the given usage_key (Opaque Key).

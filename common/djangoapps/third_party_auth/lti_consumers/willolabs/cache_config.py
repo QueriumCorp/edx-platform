@@ -1,51 +1,46 @@
-"""
-  McDaniel Jul-2019
-  lpm0073@gmail.com
-  https://lawrencemcdaniel.com
-"""
+"""Manager for cache_config.ini cache field mapping configuration file."""
+
 from configparser import ConfigParser
 import os
-import logging
-
-log = logging.getLogger(__name__)
+from .constants import WORKING_PATH
 
 CONFIG_FILENAME = 'cache_config.ini'
-WORKING_PATH = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(WORKING_PATH, CONFIG_FILENAME)
 
+"""these are fallback field mapping settings
+in case config.ini is missing or corrupted.
 """
-  The provisioner.config file should be in the same folder as this Python module.
-  Build a full absolute path to this file, then strip off the file name, leaving just the path.
-"""
-
-# these are fallback field mapping settings in case config.ini is missing or corrupted.
 default_values = {
     "context_id": "context_id",
     "course_id": "course_id",
     "context_title": "context_title",
     "context_label": "context_label",
+
+    "ext_roles": "ext_roles",
+
     "ext_wl_launch_key": "ext_wl_launch_key",
     "ext_wl_launch_url": "ext_wl_launch_url",
     "ext_wl_version": "ext_wl_version",
     "ext_wl_outcome_service_url": "ext_wl_outcome_service_url",
-    "custom_api_domain": "custom_canvas_api_domain",
-    "custom_course_id": "custom_canvas_course_id",
-    "custom_course_startat": "custom_canvas_course_startat",
+    "ext_wl_privacy_mode": "ext_wl_privacy_mode",
+
     "tool_consumer_info_product_family_code": "tool_consumer_info_product_family_code",
     "tool_consumer_info_version": "tool_consumer_info_version",
     "tool_consumer_instance_contact_email": "tool_consumer_instance_contact_email",
     "tool_consumer_instance_guid": "tool_consumer_instance_guid",
     "tool_consumer_instance_name": "tool_consumer_instance_name",
-    "custom_user_id": "custom_canvas_user_id",
-    "custom_user_login_id": "custom_canvas_user_login_id",
-    "custom_person_timezone": "custom_canvas_person_timezone",
-    "ext_roles": "ext_roles",
-    "ext_wl_privacy_mode": "ext_wl_privacy_mode",
+
     "lis_person_contact_email_primary": "lis_person_contact_email_primary",
     "lis_person_name_family": "lis_person_name_family",
     "lis_person_name_full": "lis_person_name_full",
-    "lis_person_name_given": "lis_person_name_given"
+    "lis_person_name_given": "lis_person_name_given",
+
+    "custom_api_domain": "NO_DEFAULT_PARAMETER",
+    "custom_course_id": "NO_DEFAULT_PARAMETER",
+    "custom_course_startat": "NO_DEFAULT_PARAMETER",
+    "custom_user_id": "NO_DEFAULT_PARAMETER",
+    "custom_user_login_id": "NO_DEFAULT_PARAMETER",
+    "custom_person_timezone": "NO_DEFAULT_PARAMETER"
 }
 
 parser = ConfigParser(default_values)
-parser.read(CONFIG_PATH)
+parser.read(os.path.join(WORKING_PATH, CONFIG_FILENAME))

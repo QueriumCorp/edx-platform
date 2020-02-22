@@ -9,6 +9,14 @@ Written by: mcdaniel
 Date:       jan-2020
 """
 
+import logging
+from datetime import datetime
+import pytz
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+
 from celery.task import task
 from celery.exceptions import SoftTimeLimitExceeded
 from celery_utils.persist_on_failure import LoggedPersistOnFailureTask
@@ -18,17 +26,14 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import DatabaseNotReadyError
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.cache import LTISession
 from lms.djangoapps.grades.api.v2.utils import parent_usagekey
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
 # for Willo api
-from datetime import datetime
-import pytz
-from exceptions import LTIBusinessRuleError
-from .utils import (
+from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
+from .cache import LTISession
+from .api import (
     willo_api_post_grade,
     willo_api_create_column,
     willo_activity_id_from_string,
@@ -36,13 +41,7 @@ from .utils import (
     willo_date
     )
 
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 
-
-import logging
 log = logging.getLogger(__name__)
 #log = get_task_logger(__name__)
 

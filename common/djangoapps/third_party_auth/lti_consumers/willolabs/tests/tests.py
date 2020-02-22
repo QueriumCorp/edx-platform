@@ -18,7 +18,7 @@ from third_party_auth.tests.testutil import ThirdPartyAuthTestMixin
 from django.contrib.auth import get_user_model
 from third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
 from third_party_auth.lti_consumers.willolabs.tasks import post_grades
-from third_party_auth.lti_consumers.willolabs.utils import is_willo_lti
+from third_party_auth.lti_consumers.willolabs.lti_params import is_willo_lti
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
 LTI_PARAMS_KEY = 'tpa-lti-params'

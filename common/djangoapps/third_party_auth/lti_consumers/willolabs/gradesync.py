@@ -9,25 +9,30 @@ from __future__ import absolute_import
 import traceback
 import datetime
 import pytz
+
 from django.conf import settings
+
 from student.models import CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
 from lms.djangoapps.grades.api.v2.views import InternalCourseGradeView
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.models import LTIExternalCourse
 
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import (
-    get_ext_wl_outcome_service_url,
-    get_lti_user_id,
-    get_lti_cached_result_date,
+from .exceptions import LTIBusinessRuleError
+from .models import LTIExternalCourse
+from .utils import is_valid_course_id
+from .api import (
     willo_activity_id_from_string,
     willo_id_from_url,
-    is_lti_cached_user,
-    is_valid_course_id,
     willo_date,
     willo_api_post_grade,
     willo_api_create_column
+)
+from .lti_params import (
+    get_ext_wl_outcome_service_url,
+    get_lti_user_id,
+    get_lti_cached_result_date,
+    is_lti_cached_user
     )
+
 
 utc=pytz.UTC
 VERBOSE=False
@@ -324,7 +329,7 @@ class LTIGradeSync:
           Verify that the course supports Willo Labs LTI Grade Sync.
         """
         # validate the course_id provided
-        if not is_valid_course_id(self.course_id):
+        if not is_valid_course_id(course_id=self.course_id):
             msg = u'get_validated_coursekey() - Not a valid course_id: {course_id}'.format(
                 course_id=self.course_id
             )
