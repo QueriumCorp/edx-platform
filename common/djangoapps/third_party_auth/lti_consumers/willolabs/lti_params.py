@@ -17,6 +17,8 @@ from .models import (
     LTIExternalCourseEnrollmentGrades,
     )
 
+DEBUG = True
+
 class LTIParamsFieldMap(object):
     """Provides a means of dynamically mapping LTI cache field names
     to cache_config.ini field mapping parameters.
@@ -84,14 +86,28 @@ class LTIParamsFieldMap(object):
 
         param_key = parser.get(self.table, key)
         value = self.lti_params.get(param_key)
-        #log.info('get_lti_param() - table: {table}, key: {key}, param_key: {param_key}, value: {value}'.format(
-        #    table=table,
-        #    key=key,
-        #    param_key=param_key,
-        #    value = value
-        #))
+        if DEBUG:
+            log.info('get_lti_param() - table: {table}, key: {key}, param_key: {param_key}, value: {value}'.format(
+                table=table,
+                key=key,
+                param_key=param_key,
+                value = value
+            ))
         return value
 
+def get_cached_course_id(context_id):
+    """Queries the cache and returns the course_id associated
+    with a context_id
+    
+    Returns:
+        course_id -- 
+    """
+    course = LTIExternalCourse.objects.filter(context_id=context_id).first()
+
+    if course:
+        return course.course_id
+
+    return None
 
 
 def get_lti_faculty_status(lti_params):
