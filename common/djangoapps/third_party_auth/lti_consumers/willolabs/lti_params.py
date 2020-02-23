@@ -49,6 +49,11 @@ class LTIParams(object):
                 lti_params=lti_params
             ))
 
+        log.info('initialized. sample values: context_id: {context_id}, user_id: {user_id}, lis_person_name_full: {lis_person_name_full}'.format(
+            context_id=self.context_id,
+            user_id=self.user_id,
+            lis_person_name_full=self.lis_person_name_full
+        ))
 
     @property
     def dictionary(self):
@@ -69,9 +74,6 @@ class LTIParams(object):
         Arguments:
             attr {string} -- a lti_params element
         """
-        if DEBUG: log.info('LTIParams.__getattr__({attr})'.format(
-            attr=attr
-        ))
         return self.dictionary.get(attr)
 
     def __str__(self):
@@ -106,10 +108,11 @@ class LTIParams(object):
         """
 
         # 1. look for a roles_param tuple
-        roles_param = self.dictionary.get("roles_param", ())
-        if roles_param != ():
-            log.info('LTIParams.faculty_status() - found roles_param: {}'.format(roles_param))
-            for role_param in roles_param:
+        if self.roles_param:
+            log.info('LTIParams.faculty_status() - found roles_param: {roles_param}'.format(
+                roles_param=self.roles_param
+                ))
+            for role_param in self.roles_param:
                 # extract a list of the roles from lti_params
                 user_roles = {x.strip() for x in role_param.split(',')}
                 # check if the lti_params represent an instructor
@@ -124,10 +127,11 @@ class LTIParams(object):
         example from University of Kansas:
         "roles": "urn:lti:role:ims/lis/Instructor",
         """
-        roles = self.dictionary.get("roles", None)
-        if roles:
-            log.info('LTIParams.faculty_status - found roles: {}'.format(roles))
-            if roles in WILLO_INSTRUCTOR_ROLES:
+        if self.roles:
+            log.info('LTIParams.faculty_status - found roles: {roles}'.format(
+                roles=self.roles
+                ))
+            if self.roles in WILLO_INSTRUCTOR_ROLES:
                 return "confirmed_faculty"
 
 
@@ -137,10 +141,11 @@ class LTIParams(object):
         example from Willo Labs
         "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
         """
-        roles = self.dictionary.get("ext_roles", None)
-        if roles:
-            log.info('LTIParams.faculty_status - found ext_roles: {}'.format(roles))
-            if roles in WILLO_INSTRUCTOR_ROLES:
+        if self.ext_roles:
+            log.info('LTIParams.faculty_status - found ext_roles: {roles}'.format(
+                roles=self.ext_roles
+                ))
+            if self.ext_roles in WILLO_INSTRUCTOR_ROLES:
                 return "confirmed_faculty"
 
         return "no_faculty_info"
@@ -155,7 +160,7 @@ class LTIParams(object):
                          False otherwise.
         """
         try:
-            launch_url = self.dictionary.get("ext_wl_launch_url")
+            launch_url = self.ext_wl_launch_url
             if not launch_url:
                 if DEBUG: log.info('LTIParams.is_willolabs() - no ext_wl_launch_url. returning False')
                 return False
@@ -199,27 +204,27 @@ class LTIParams(object):
             if DEBUG: log.info('LTIParams.is_valid() - not a dict. returning False')
             return False
 
-        if not self.dictionary.get("context_id"):
+        if not self.context_id:
             if DEBUG: log.info('LTIParams.is_valid() - no context_id. returning False')
             return False
 
-        if not self.dictionary.get("user_id"):
+        if not self.user_id:
             if DEBUG: log.info('LTIParams.is_valid() - no user_id. returning False')
             return False
 
-        if not self.dictionary.get("lis_person_contact_email_primary"):
+        if not self.lis_person_contact_email_primary:
             if DEBUG: log.info('LTIParams.is_valid() - no lis_person_contact_email_primary. returning False')
             return False
 
-        if not self.dictionary.get("lis_person_name_full"):
+        if not self.lis_person_name_full:
             if DEBUG: log.info('LTIParams.is_valid() - no lis_person_name_full. returning False')
             return False
 
-        if not self.dictionary.get("lis_person_name_given"):
+        if not self.lis_person_name_given:
             if DEBUG: log.info('LTIParams.is_valid() - no . returning False')
             return False
 
-        if not self.dictionary.get("lis_person_name_family"):
+        if not self.lis_person_name_family:
             if DEBUG: log.info('LTIParams.is_valid() - no . returning False')
             return False
 
