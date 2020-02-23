@@ -5,9 +5,16 @@ Raises:
     ValidationError: [description]
     LTIBusinessRuleError: [description]
 """
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+import logging
+
 from django.core.exceptions import ValidationError
 from opaque_keys import InvalidKeyError
 
+from .exceptions import LTIBusinessRuleError
 from .constants import WILLO_INSTRUCTOR_ROLES, WILLO_DOMAINS, LTI_CACHE_TABLES
 from .cache_config import parser
 from .models import (
@@ -17,7 +24,208 @@ from .models import (
     LTIExternalCourseEnrollmentGrades,
     )
 
+log = logging.getLogger(__name__)
 DEBUG = True
+
+class LTIParams(object):
+    """Provides a means of dynamically mapping lti_params dictionary
+    elements to class property names. Also handles all lti_params
+    validations.
+    """
+    
+    def __init__(self, lti_params):
+        """Bootstrap this class. is_valid and set lti_params
+        
+        Arguments:
+            lti_params {dict} -- a Python dictionary provided in the 
+            http response body of LTI authentication request.
+        """
+        if DEBUG: log.info('LTIParams.__init__()')
+
+        self.dictionary = lti_params
+
+        if not self.is_valid:
+            log.error("LTIParams.__init__() - received invalid lti_params: {lti_params}".format(
+                lti_params=lti_params
+            ))
+
+
+    @property
+    def dictionary(self):
+        """a dump of the original lti_params dictionary
+        
+        Returns:
+            [dict] -- the lti_params dictionary passed to __init__()
+        """
+        return self._lti_params
+
+    @dictionary.setter
+    def dictionary(self, value):
+        self._lti_params = value
+
+    def __getattr__(self, attr):
+        """generic getter. Dynamic properties for lti_params elements.
+        
+        Arguments:
+            attr {string} -- a lti_params element
+        """
+        if DEBUG: log.info('LTIParams.__getattr__({attr})'.format(
+            attr=attr
+        ))
+        return self.dictionary.get(attr)
+
+    def __str__(self):
+        return 'LTIParams(context_id={context_id}, user_id={user_id})'.format(
+            context_id = self.dictionary.get('context_id'),
+            user_id = self.dictionary.get('user_id')
+        )
+
+    @property
+    def faculty_status(self):
+        """
+        Input parameters:
+        ===================
+        lti_params - a tpa_lti_params dictionary that is part of the http response body
+        in an LTI authentication. see ./sample_data/tpa_lti_params.json for an example.
+
+        Extract the LTI roles tuples parameter from lti_params, if it exists.
+        Example:
+        =======================
+        roles_param = (
+            'Learner',
+            'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
+            'Instructor',
+            'Instructor,urn:lti:sysrole:ims/lis/Administrator,urn:lti:instrole:ims/lis/Administrator',
+            'TeachingAssistant',
+            'urn:lti:instrole:ims/lis/Administrator'
+        )
+
+        "roles": "urn:lti:role:ims/lis/Learner"
+
+        "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User"
+        """
+
+        # 1. look for a roles_param tuple
+        roles_param = self.dictionary.get("roles_param", ())
+        if roles_param != ():
+            log.info('LTIParams.faculty_status() - found roles_param: {}'.format(roles_param))
+            for role_param in roles_param:
+                # extract a list of the roles from lti_params
+                user_roles = {x.strip() for x in role_param.split(',')}
+                # check if the lti_params represent an instructor
+                # use python set intersection operator "&" to simplify the check
+                is_instructor = bool(user_roles & WILLO_INSTRUCTOR_ROLES)
+                if is_instructor:
+                    return "confirmed_faculty"
+
+        # 2. check for roles list
+        """
+        mcdaniel oct-2019
+        example from University of Kansas:
+        "roles": "urn:lti:role:ims/lis/Instructor",
+        """
+        roles = self.dictionary.get("roles", None)
+        if roles:
+            log.info('LTIParams.faculty_status - found roles: {}'.format(roles))
+            if roles in WILLO_INSTRUCTOR_ROLES:
+                return "confirmed_faculty"
+
+
+        # 3. check for ext_roles list
+        """
+        mcdaniel feb-2020
+        example from Willo Labs
+        "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
+        """
+        roles = self.dictionary.get("ext_roles", None)
+        if roles:
+            log.info('LTIParams.faculty_status - found ext_roles: {}'.format(roles))
+            if roles in WILLO_INSTRUCTOR_ROLES:
+                return "confirmed_faculty"
+
+        return "no_faculty_info"
+
+    @property
+    def is_willolabs(self):
+        """Determine if the lti_params dictionary provided to __init__
+        came from Willo Labs.
+        
+        Returns:
+            [Boolean] -- True if the dictionary came from Willo Labs.
+                         False otherwise.
+        """
+        try:
+            launch_url = self.dictionary.get("ext_wl_launch_url")
+            if not launch_url:
+                if DEBUG: log.info('LTIParams.is_willolabs() - no ext_wl_launch_url. returning False')
+                return False
+
+            launch_domain = urlparse(launch_url).hostname
+            if not launch_domain:
+                if DEBUG: log.info('LTIParams.is_willolabs() - invalid launch_domain: {launch_domain}. returning False'.format(
+                    launch_domain=launch_domain
+                ))
+                return False
+
+        except Exception as e:
+            if DEBUG: log.info('LTIParams.is_willolabs() - exception: {exception}'.format(
+                Exception=e
+            ))
+            pass
+            return False
+
+        if not launch_domain in WILLO_DOMAINS:
+            if DEBUG: log.info('LTIParams.is_willolabs() - invalid launch_domain {launch_domain}. returning False'.format(
+                launch_domain=launch_domain
+            ))
+            return False
+
+        if DEBUG: log.info('LTIParams.is_willolabs() returning True')
+        return True       
+
+    @property
+    def is_valid(self):
+        """
+        Determine from data in the lti_params json object returns by LTI authentication
+        whether the session originated from Willo Labs.
+
+        True if there is a parameter named "ext_wl_launch_url" and the value is a 
+        valid URL, and the hostname of the URL is contained in the set WILLO_DOMAINS
+        """
+
+        if DEBUG: log.info('LTIParams.is_valid() - beginning validation')
+
+        if not isinstance(self.dictionary, dict):
+            if DEBUG: log.info('LTIParams.is_valid() - not a dict. returning False')
+            return False
+
+        if not self.dictionary.get("context_id"):
+            if DEBUG: log.info('LTIParams.is_valid() - no context_id. returning False')
+            return False
+
+        if not self.dictionary.get("user_id"):
+            if DEBUG: log.info('LTIParams.is_valid() - no user_id. returning False')
+            return False
+
+        if not self.dictionary.get("lis_person_contact_email_primary"):
+            if DEBUG: log.info('LTIParams.is_valid() - no lis_person_contact_email_primary. returning False')
+            return False
+
+        if not self.dictionary.get("lis_person_name_full"):
+            if DEBUG: log.info('LTIParams.is_valid() - no lis_person_name_full. returning False')
+            return False
+
+        if not self.dictionary.get("lis_person_name_given"):
+            if DEBUG: log.info('LTIParams.is_valid() - no . returning False')
+            return False
+
+        if not self.dictionary.get("lis_person_name_family"):
+            if DEBUG: log.info('LTIParams.is_valid() - no . returning False')
+            return False
+
+        if DEBUG: log.info('LTIParams.is_valid() - lti_params are validated.')
+        return True
+
 
 class LTIParamsFieldMap(object):
     """Provides a means of dynamically mapping LTI cache field names
@@ -30,21 +238,36 @@ class LTIParamsFieldMap(object):
     """
 
     def __init__(self, lti_params, table=None):
+        """Bootstrap this class
+        
+        Arguments:
+            lti_params {dict or LTIParams} -- a lti_params dictionary or object
+        
+        Keyword Arguments:
+            table {string} -- (default: {None}) a string representing an LTI cache table name
+        
+        Raises:
+            ValidationError: [description]
+            LTIBusinessRuleError: [description]
+        """
         if not table in LTI_CACHE_TABLES:
             raise ValidationError('LTIParamsFieldMap.__init__() - Received table {table} but was expecting table to be any of {tables}'.format(
                 table=table,
                 tables=LTI_CACHE_TABLES
             ))
 
-        if value is not None and not is_willo_lti(lti_params):
+        if isinstance(lti_params, LTIParams):
+            lti_params = lti_params.dictionary
+
+        if not is_willo_lti(lti_params):
             raise LTIBusinessRuleError("LTISession.set_lti_params() - Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
-                "that did not originate from Willo Labs: '%s'." % value)
+                "that did not originate from Willo Labs: '%s'." % lti_params)
 
         self.lti_params = lti_params
         self.table = table
 
     def __getattr__(self, attr):
-	    """Implement dynamic attributes. 
+        """Implement dynamic attributes. 
         
         Arguments:
             attr {string} -- string representation of a class attribute
@@ -66,6 +289,11 @@ class LTIParamsFieldMap(object):
         raise LTIBusinessRuleError('LTIParamsFieldMap.__setattr__() - {attr} is a read-only attribute.'.format(
             attr=attr
         ))
+
+    def __str__(self):
+        return 'LTIParamsFieldMap({table})'.format(
+            table=self.table
+        )
 
     def get_lti_param(self, key):
         """Locates the cache_config.ini field mapping for 'key'. 
@@ -110,103 +338,6 @@ def get_cached_course_id(context_id):
     return None
 
 
-def get_lti_faculty_status(lti_params):
-    """
-    Input parameters:
-    ===================
-    lti_params - a tpa_lti_params dictionary that is part of the http response body
-    in an LTI authentication. see ./sample_data/tpa_lti_params.json for an example.
-
-    Extract the LTI roles tuples parameter from lti_params, if it exists.
-    Example:
-    =======================
-    roles_param = (
-        'Learner',
-        'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
-        'Instructor',
-        'Instructor,urn:lti:sysrole:ims/lis/Administrator,urn:lti:instrole:ims/lis/Administrator',
-        'TeachingAssistant',
-        'urn:lti:instrole:ims/lis/Administrator'
-    )
-
-    "roles": "urn:lti:role:ims/lis/Learner"
-
-    "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User"
-    """
-
-    # 1. look for a roles_param tuple
-    roles_param = lti_params.get("roles_param", ())
-    if roles_param != ():
-        log.info('get_lti_faculty_status() - found roles_param: {}'.format(roles_param))
-        for role_param in roles_param:
-            # extract a list of the roles from lti_params
-            user_roles = {x.strip() for x in role_param.split(',')}
-            # check if the lti_params represent an instructor
-            # use python set intersection operator "&" to simplify the check
-            is_instructor = bool(user_roles & WILLO_INSTRUCTOR_ROLES)
-            if is_instructor:
-                return "confirmed_faculty"
-
-    # 2. check for roles list
-    """
-    mcdaniel oct-2019
-    example from University of Kansas:
-    "roles": "urn:lti:role:ims/lis/Instructor",
-    """
-    roles = lti_params.get("roles", None)
-    if roles:
-        log.info('get_lti_faculty_status() - found roles: {}'.format(roles))
-        if roles in WILLO_INSTRUCTOR_ROLES:
-            return "confirmed_faculty"
-
-
-    # 3. check for ext_roles list
-    """
-    mcdaniel feb-2020
-    example from Willo Labs
-    "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
-    """
-    roles = lti_params.get("ext_roles", None)
-    if roles:
-        log.info('get_lti_faculty_status() - found ext_roles: {}'.format(roles))
-        if roles in WILLO_INSTRUCTOR_ROLES:
-            return "confirmed_faculty"
-
-    return "no_faculty_info"
-
-
-def is_willo_lti(lti_params):
-    """
-    Determine from data in the lti_params json object returns by LTI authentication
-    whether the session originated from Willo Labs.
-
-    True if there is a parameter named "ext_wl_launch_url" and the value is a 
-    valid URL, and the hostname of the URL is contained in the set WILLO_DOMAINS
-    """
-
-    if not isinstance(lti_params, dict):
-        return False
-
-    try:
-        if not lti_params.get("context_id"):
-            return False
-
-        if not lti_params.get("user_id"):
-            return False
-
-        an_important_url = lti_params.get("ext_wl_launch_url")
-        if not an_important_url:
-            return False
-
-        launch_domain = urlparse(an_important_url).hostname
-        if not launch_domain:
-            return False
-
-    except Exception as e:
-        pass
-        return False
-
-    return launch_domain in WILLO_DOMAINS
 
 
 def get_lti_user_id(course_id, username, context_id=None):
@@ -236,7 +367,7 @@ def get_lti_user_id(course_id, username, context_id=None):
                 pass
         else: return None
 
-    # if there's not a context_id then we will still must 
+    # if there's not a context_id then we still must 
     # take into consideration that course_id may not be unique
     # for LTIExternalCourse given that multiple external LMS'
     # could potentially share a common Rover course.

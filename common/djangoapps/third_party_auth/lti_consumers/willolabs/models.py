@@ -181,7 +181,7 @@ class LTIExternalCourse(TimeStampedModel):
 
     class Meta(object):
         #verbose_name = "LTI External Course"
-        verbose_name_plural = #verbose_name
+        #verbose_name_plural = #verbose_name
         unique_together = [['context_id', 'course_id']]
         #ordering = ('-fetched_at', )
 
@@ -201,7 +201,7 @@ class LTIExternalCourseAssignments(TimeStampedModel):
 
     class Meta(object):
         #verbose_name = "LTI External Course Assignments"
-        verbose_name_plural = #verbose_name
+        #verbose_name_plural = #verbose_name
         unique_together = [['course', 'url']]
         #ordering = ('-fetched_at', )
 
@@ -219,7 +219,7 @@ class LTIExternalCourseAssignmentProblems(TimeStampedModel):
         )
     class Meta(object):
         #verbose_name = "LTI External Course Assignment Problems"
-        verbose_name_plural = #verbose_name
+        #verbose_name_plural = #verbose_name
         unique_together = [['usage_key']]
         #ordering = ('-fetched_at', )
 
@@ -331,7 +331,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     class Meta(object):
         #verbose_name = "LTI External Course Enrollment"
-        verbose_name_plural = #verbose_name
+        #verbose_name_plural = #verbose_name
         unique_together = [['course', 'user']]
         #ordering = ('-fetched_at', )
 
@@ -380,9 +380,10 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     possible_all = models.FloatField(blank=False)
     earned_graded = models.FloatField(blank=False)
     possible_graded = models.FloatField(blank=False)
-    class Meta(object):
+    
+    #class Meta(object):
         #verbose_name = "LTI External Course Enrollment Grades"
-        verbose_name_plural = #verbose_name
+        #verbose_name_plural = #verbose_name
 
     def __str__(self):
         return self.course_enrollment.course.course_id.html_id() + ' - ' + self.course_assignment.display_name

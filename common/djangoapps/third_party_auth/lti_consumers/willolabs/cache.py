@@ -21,7 +21,7 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
 
 from .exceptions import LTIBusinessRuleError
-from .lti_params import LTIParamsFieldMap, is_willo_lti, get_cached_course_id
+from .lti_params import LTIParamsFieldMap, LTIParams, get_cached_course_id
 from .models import (
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
@@ -56,7 +56,7 @@ class LTISession(object):
         Bootstrap sequence matters a lot.
         
         Keyword Arguments:
-            lti_params {dict} -- (default: {None}) Provided in http request body during 
+            lti_params {dict or LTIParams} -- (default: {None}) Provided in http request body during 
             authentication. contains extensive data on the student and the source system
             where authentication originated. 
 
@@ -96,7 +96,7 @@ class LTISession(object):
 
         if user is None and lti_params is not None:
             # try to set the user object from tpa_lti_params info.
-            username = self.lti_param.get('user_id')
+            username = self.lti_param.user_id
             if username is not None:
                 if DEBUG: log.info('LTISession.__init__() - trying to assign user from tpi_param data. username: {username}'.format(
                     username=username
@@ -720,7 +720,7 @@ class LTISession(object):
 
         # look for a context_id in lti_params, if its set.
         if self.lti_params is not None:
-            self._context_id = self.lti_params.get('context_id')
+            self._context_id = self.lti_params.context_id
             return self._context_id
 
         # try to find a context_id from the course object, if its set.
@@ -748,12 +748,12 @@ class LTISession(object):
             return 
 
         # check for integrity between context_id and the current contents of lti_params
-        lti_params_context_id = self.lti_params.get('context_id')
+        lti_params_context_id = self.lti_params.context_id
         if lti_params_context_id is not None and value != lti_params_context_id:
             raise LTIBusinessRuleError("set_context_id() - Tried to set context_id to {value}, which is inconsistent with the " \
                 "current value of lti_params['context_id']: {lti_params}.".format(
                     value=value,
-                    lti_params=self.lti_params.get('context_id')
+                    lti_params=self.lti_params.context_id
                 ))
 
         # check for integrity between context_id and course.context_id        
@@ -788,34 +788,34 @@ class LTISession(object):
         also need to initialize any property values that are sourced from lti_params
         
         Arguments:
-            value {dict} -- a lti_params dictionary
+            value {LTIParams} -- a lti_params helper class
         
         Raises:
             LTIBusinessRuleError: raises an exception if lti_params is invalid.
         """
         if DEBUG: log.info('LTISession.set_lti_params()')
-            
-        # ensure that this object is being instantiated with data that originated
-        # from an LTI authentication from Willo Labs.
-        if value is not None and not isinstance(value, dict):
-            raise LTIBusinessRuleError("LTISession.set_lti_params() - Was expecting a dict object but received an object of type {dtype}".format(
-                dtype=type(value)
-            ))
 
-        if value is not None and not is_willo_lti(value):
-            raise LTIBusinessRuleError("LTISession.set_lti_params() - Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
-                "that did not originate from Willo Labs: '%s'." % value)
+        if value is not None:
+            if isinstance(value, LTIParams):
+                if value == self._lti_params:
+                    return
+                self._lti_params = value
+            else:
+                if isinstance(value, dict):
+                    if self._lti_params is not None and value == self._lti_params.dictionary:
+                        return
+                    self._lti_params = LTIParams(LTIParams=value)
+        else:
+            self._lti_params = None
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
         # currently present in the cache.
         self.init()
 
-        self._lti_params = value
-
         # property initializations from lti_params
         if self._lti_params is not None:
-            self._context_id = value.get('context_id')          # uniquely identifies course in Willo
-            self.user_id = value.get('user_id')                 # uniquely identifies user in Willo
+            self._context_id = self._lti_params.context_id          # uniquely identifies course in Willo
+            self.user_id = self._lti_params.user_id                 # uniquely identifies user in Willo
 
 
     def get_user(self):

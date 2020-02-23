@@ -33,7 +33,7 @@ from opaque_keys.edx.keys import CourseKey
 
 from .exceptions import LTIBusinessRuleError
 from .cache import LTISession
-from .lti_params import is_willo_lti, get_cached_course_id
+from .lti_params import LTIParams, get_cached_course_id
 
 
 User = get_user_model()
@@ -161,21 +161,26 @@ class CourseProvisioner(object):
         from an LTI authentication from Willo Labs.
         
         Arguments:
-            value {dict}
+            value {dict or LTIParams}
         
         Raises:
             LTIBusinessRuleError
         """
-        if not is_willo_lti(value):
-            raise LTIBusinessRuleError("Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
-                "that did not originate from Willo Labs: '%s'." % value)
-
-        if value == self.lti_params:
-            return 
+        if value is not None:
+            if isinstance(value, LTIParams):
+                if value == self._lti_params:
+                    return
+                self._lti_params = value
+            else:
+                if isinstance(value, dict):
+                    if self._lti_params is not None and value == self._lti_params.dictionary:
+                        return
+                    self._lti_params = LTIParams(LTIParams=value)
+        else:
+            self._lti_params = None
 
         self.init()
-        self._lti_params = value
-        self._context_id = value.get('context_id')
+        self._context_id = self._lti_params.context_id
 
     def get_context_id(self):
         """read-only context_id
@@ -345,7 +350,7 @@ class CourseProvisioner(object):
             raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTISession but course_id is not set.')
 
         self._session = LTISession(
-            lti_params = self.lti_params,
+            lti_params = self.lti_params.dictionary,
             user = self.user, 
             course_id = self._course_id
             )

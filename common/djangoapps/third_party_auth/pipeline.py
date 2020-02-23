@@ -89,7 +89,7 @@ SERVICE_VARIANT = os.environ.get('SERVICE_VARIANT', None)
  mcdaniel jan-2020
  LTI consumer provisioner
 """
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.lti_params import is_willo_lti
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.lti_params import LTIParams
 from common.djangoapps.third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
 
 
@@ -822,7 +822,7 @@ def lti_consumer_provisioner(auth_entry, strategy, details, user=None, *args, **
     backend_name = strategy.request.backend.name
     if backend_name == "lti":
         lti_params = strategy.session_get('tpa-lti-params')
-        if is_willo_lti(lti_params):
+        if LTIParams(lti_params).is_willolabs:
             #----------------------------------------------------------------------
             # mcdaniel nov-2019
             # add auto-provisioning logic to

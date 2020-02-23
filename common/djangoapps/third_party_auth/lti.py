@@ -20,7 +20,7 @@ from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
 
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.lti_params import get_lti_faculty_status
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.lti_params import LTIParams
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -143,14 +143,7 @@ class LTIAuthBackend(BaseAuth):
         add_if_exists('lis_person_name_full', 'fullname')
         add_if_exists('lis_person_name_given', 'first_name')
         add_if_exists('lis_person_name_family', 'last_name')
-        details['faculty_status'] = get_lti_faculty_status(lti_params)
-        #log.info('lti.py - get_user_details() - {details}'.format(
-        #    details=json.dumps(details,
-        #            indent=4,
-        #            sort_keys=True,
-        #            default=default
-        #            )
-        #))
+        details['faculty_status'] = LTIParams(lti_params).faculty_status
 
         return details
 
