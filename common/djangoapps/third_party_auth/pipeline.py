@@ -821,8 +821,8 @@ def lti_consumer_provisioner(auth_entry, strategy, details, user=None, *args, **
     """
     backend_name = strategy.request.backend.name
     if backend_name == "lti":
-        lti_params = strategy.session_get('tpa-lti-params')
-        if LTIParams(lti_params).is_willolabs:
+        lti_params = LTIParams(strategy.session_get('tpa-lti-params'))
+        if lti_params.is_valid and lti_params.is_willolabs:
             #----------------------------------------------------------------------
             # mcdaniel nov-2019
             # add auto-provisioning logic to

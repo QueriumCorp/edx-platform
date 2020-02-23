@@ -175,7 +175,11 @@ class CourseProvisioner(object):
                 if isinstance(value, dict):
                     if self._lti_params is not None and value == self._lti_params.dictionary:
                         return
-                    self._lti_params = LTIParams(LTIParams=value)
+                    new_params = LTIParams(value)
+                    if new_params.is_valid:
+                        self._lti_params = new_params
+                    else:
+                        raise LTIBusinessRuleError('CourseProvisioner.set_lti_params() - received invalid lti_params.')
         else:
             self._lti_params = None
 
