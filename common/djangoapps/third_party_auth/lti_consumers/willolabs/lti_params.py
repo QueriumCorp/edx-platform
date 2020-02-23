@@ -49,10 +49,8 @@ class LTIParams(object):
                 lti_params=lti_params
             ))
 
-        log.info('initialized. sample values: context_id: {context_id}, user_id: {user_id}, lis_person_name_full: {lis_person_name_full}'.format(
-            context_id=self.context_id,
-            user_id=self.user_id,
-            lis_person_name_full=self.lis_person_name_full
+        if DEBUG: log.info('LTIParams.__init__() - initialized: {self}'.format(
+            self=self
         ))
 
     @property
@@ -78,8 +76,8 @@ class LTIParams(object):
 
     def __str__(self):
         return 'LTIParams(context_id={context_id}, user_id={user_id})'.format(
-            context_id = self.dictionary.get('context_id'),
-            user_id = self.dictionary.get('user_id')
+            context_id = self.context_id,
+            user_id = self.user_id
         )
 
     @property
@@ -281,19 +279,6 @@ class LTIParamsFieldMap(object):
             String -- Returns corresponding cache_config value, if it exists.
         """
         return self.get_lti_param(key=attr)
-
-    def __setattr__(self, attr):
-        """Make all dynamic attributes read-only
-        
-        Arguments:
-            attr {string} -- string representation of a dynamic attribute
-        
-        Raises:
-            LTIBusinessRuleError:
-        """
-        raise LTIBusinessRuleError('LTIParamsFieldMap.__setattr__() - {attr} is a read-only attribute.'.format(
-            attr=attr
-        ))
 
     def __str__(self):
         return 'LTIParamsFieldMap({table})'.format(
