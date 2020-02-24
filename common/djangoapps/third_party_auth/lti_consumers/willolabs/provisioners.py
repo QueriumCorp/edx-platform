@@ -148,15 +148,16 @@ class CourseProvisioner(object):
     # Property setters & getters
     #
     #------------------------------------------------------------------------------------------
-    def get_lti_params(self):
+    @property
+    def lti_params(self):
         """
         json object of LTI parameters passed from the external system
         connecting to Rover via LTI
         """
         return self._lti_params
 
-
-    def set_lti_params(self, value):
+    @lti_params.setter
+    def lti_params(self, value):
         """ensure that this object is being instantiated with data that originated
         from an LTI authentication from Willo Labs.
         
@@ -166,27 +167,32 @@ class CourseProvisioner(object):
         Raises:
             LTIBusinessRuleError
         """
+        if DEBUG: log.info('CourseProvisioner.lti_params() - setter: {value}'.format(
+            value=value
+        ))
+        self.init()
         if value is not None:
             if isinstance(value, LTIParams):
-                if value == self._lti_params:
-                    return
                 self._lti_params = value
             else:
                 if isinstance(value, dict):
-                    if self._lti_params is not None and value == self._lti_params.dictionary:
-                        return
                     new_params = LTIParams(value)
                     if new_params.is_valid:
                         self._lti_params = new_params
                     else:
-                        raise LTIBusinessRuleError('CourseProvisioner.set_lti_params() - received invalid lti_params.')
+                        raise LTIBusinessRuleError('CourseProvisioner.lti_params() - received invalid lti_params.')
+                else:
+                    raise LTIBusinessRuleError('CourseProvisioner.lti_params() - receive object of type {dtype}.'.format(
+                        dtype=type(value)
+                    ))
         else:
             self._lti_params = None
 
-        self.init()
-        self._context_id = self._lti_params.context_id
+        if self.lti_params:
+            self._context_id = self.lti_params.context_id
 
-    def get_context_id(self):
+    @property
+    def context_id(self):
         """read-only context_id
         
         Returns:
@@ -194,7 +200,8 @@ class CourseProvisioner(object):
         """
         return self._context_id
 
-    def set_context_id(self, value):
+    @context_id.setter
+    def context_id(self, value):
         """read-only context_id
         
         Arguments:
@@ -205,11 +212,13 @@ class CourseProvisioner(object):
         """
         raise LTIBusinessRuleError("CourseProvisioner.set_context_id() context_id is a read-only field.")
 
-    def get_user(self):
+    @property
+    def user(self):
         """Rover django user object"""
         return self._user
 
-    def set_user(self, value):
+    @user.setter
+    def user(self, value):
         """Verify that value passed is an instace of the User class. The set the value.
         
         Arguments:
@@ -233,12 +242,12 @@ class CourseProvisioner(object):
         # initialize properties that depend on user
         self.is_faculty = is_faculty(self.user)
 
-        # clearn enrollments and the session cache.
+        # clear enrollments and the session cache.
         self._enrollments = None
         self._session = None
 
-    
-    def get_course_id(self):
+    @property
+    def course_id(self):
         """Lazy-reader implementation. Try to find course_id from the
         student's enrollment information; but only if the student is currently
         enrolled in exactly 1 course. Otherwise look for the course in the LTI cache
@@ -265,7 +274,8 @@ class CourseProvisioner(object):
         # we struck out. didn't find a course_id from any of our possible sources
         return None
 
-    def set_course_id(self, value):
+    @course_id.setter
+    def course_id(self, value):
         """Alternatively, we can simply set the course_id corresponding to this instances
         context_id, and in this case we only need to validate the course_id passed. Also
         set the LTISession object to None.
@@ -296,7 +306,8 @@ class CourseProvisioner(object):
         self._session = None
         self.check_enrollment()
 
-    def get_enrollments(self):
+    @property
+    def enrollments(self):
         """a list of active Rover courses which the user is currently enrolled.
         Uses common.student.models.CourseEnrollment 
 
@@ -325,10 +336,12 @@ class CourseProvisioner(object):
         
         return None
 
-    def set_enrollments(self, value):
+    @enrollments.setter
+    def enrollments(self, value):
         raise LTIBusinessRuleError("CourseProvisioner.set_enrollments(). - enrollments is a read-only property.")
 
-    def get_session(self):
+    @property
+    def session(self):
         """Cache manager for Willo Lab LTI cache.
         
         Raises:
@@ -360,7 +373,8 @@ class CourseProvisioner(object):
             )
         return self._session
 
-    def set_session(self, value):
+    @session.setter
+    def session(self, value):
         """Make session a read-only property
         
         Arguments:
@@ -370,10 +384,3 @@ class CourseProvisioner(object):
             LTIBusinessRuleError: raises exception if called.
         """
         raise LTIBusinessRuleError("CourseProvisioner.set_session() - session is a read-only property.")
-
-    lti_params = property(get_lti_params, set_lti_params)
-    context_id = property(get_context_id, set_context_id)
-    user = property(get_user, set_user)
-    course_id = property(get_course_id, set_course_id)
-    enrollments = property(get_enrollments, set_enrollments)
-    session = property(get_session, set_session)

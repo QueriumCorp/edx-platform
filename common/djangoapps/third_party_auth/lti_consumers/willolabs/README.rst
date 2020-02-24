@@ -1,7 +1,23 @@
-# LTI Integration for Willo Labs
+LTI Integration for Willo Labs
+==============================
 
-Canvas via Willo Integration:
-===================
+
+LTI test tool:
+---------------------
+https://lti.tools/test/tc.php
+
+1.	Plug in URL, key, secret.
+	Url: https://try.roverbyopenstax.org/auth/login/lti/
+	key: app.willolabs.com
+	secret: 72c15fe82f452bd2998bbebcf353cf3966178015
+
+2.	Click “Save Data”
+3.	Click “Launch TP in new window”
+4.	You’ll arrive at a page like the following screenshot:
+
+
+Canvas via Willo Integration
+----------------------------
 https://willowlabs.instructure.com/
 un: rover_teach
 pw: WilloTest1

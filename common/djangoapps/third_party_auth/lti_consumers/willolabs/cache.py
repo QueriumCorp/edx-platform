@@ -89,42 +89,40 @@ class LTISession(object):
         self.lti_params = lti_params        # this needs to initialized first bc it resets all
                                             # other class properties.
 
-        # we might need to intercept and null the 'AnonymousUser', which is used sometimes during
-        # LTI authentication of if the user is not actually logged in. not sure why.
-        if self.user.is_anonymous:
-            user = None
 
-        if user is None and lti_params is not None:
-            # try to set the user object from tpa_lti_params info.
-            username = self.lti_param.user_id
-            if username is not None:
-                if DEBUG: log.info('LTISession.__init__() - trying to assign user from tpi_param data. username: {username}'.format(
-                    username=username
-                ))
-                self.user = User.objects.get(username=username)
-        else:
+        if user:
             self.user = user                    # Rover (django) user object
+        else:
+            # try to set the user object from tpa_lti_params info.
+            if lti_params is not None:
+                username = self.lti_param.user_id
+                if username is not None:
+                    if DEBUG: log.info('LTISession.__init__() - trying to assign user from tpi_param data. username: {username}'.format(
+                        username=username
+                    ))
+                    self.user = User.objects.get(username=username)
         
-        if course_id is None and self.user is not None:
+        if course_id:
+            # assign the course_id passed to __init__()
+            self.course_id = course_id              # Rover (Open edX) course_id (aka Opaque Key)
+                                                    # this MUST be initialized after self.lti_params
+        else:
             # if self.user is set, and we are lacking a course_id
             # then try to find the course in which the user is currently enrolled.
             #
             # note that this breaks if a student is enrolled in more than one course.
             # so we'll only use this in cases where only 1 course enrollment record is returned.
-            enrollments = CourseEnrollment.enrollments_for_user(self.user)
-            if enrollments is not None and len(enrollments) == 1:
-                self.course_id = enrollments[0].course_id
-                if DEBUG: log.info('LTISession.__init__() - located user enrollment. course: {course}'.format(
-                    course=self.course_id
-                ))
-            else:
-                # we'll arrive here if a) the student is enrolled in multiple courses, 
-                # or b) the student is not enrolled in any courses.
-                self.course_id =  self.get_cached_course_id(context_id=self.context_id)
-        else:
-            # assign the course_id passed to __init__()
-            self.course_id = course_id              # Rover (Open edX) course_id (aka Opaque Key)
-                                                    # this MUST be initialized after self.lti_params
+            if self.user is not None:
+                enrollments = CourseEnrollment.enrollments_for_user(self.user)
+                if enrollments is not None and len(enrollments) == 1:
+                    self.course_id = enrollments[0].course_id
+                    if DEBUG: log.info('LTISession.__init__() - located user enrollment. course: {course}'.format(
+                        course=self.course_id
+                    ))
+                else:
+                    # we'll arrive here if a) the student is enrolled in multiple courses, 
+                    # or b) the student is not enrolled in any courses.
+                    self.course_id =  self.get_cached_course_id(context_id=self.context_id)
 
         # removes any cache data that is persisted to MySQL
         if clear_cache:
@@ -795,7 +793,9 @@ class LTISession(object):
         """
         if DEBUG: log.info('LTISession.set_lti_params()')
 
-        if value is not None:
+        if value is None:
+            self._lti_params = None
+        else:
             if isinstance(value, LTIParams):
                 if value == self._lti_params:
                     return
@@ -810,8 +810,6 @@ class LTISession(object):
                     else:
                         raise LTIBusinessRuleError('LTISession.set_lti_params() - received invalid lti_params.')
 
-        else:
-            self._lti_params = None
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
         # currently present in the cache.
