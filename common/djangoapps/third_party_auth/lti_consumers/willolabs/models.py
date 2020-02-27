@@ -53,8 +53,8 @@ class LTIExternalCourse(TimeStampedModel):
 
     context_title = models.CharField(
         #verbose_name="Context Title",
-        help_text="Name of the Willo Lab integration. Example: Rover by Openstax Gradesync Testing",
-        max_length=50,
+        help_text="Name of the Willo Lab integration. Example: Willo Labs Test Launch for KU Blackboard Rover Grade Testing",
+        max_length=255,
         default=None, 
         blank=True, 
         null=True
@@ -62,8 +62,8 @@ class LTIExternalCourse(TimeStampedModel):
 
     context_label = models.CharField(
         #verbose_name="Context Label",
-        help_text="Example: Rover",
-        max_length=50,
+        help_text="Example: willolabs-launch-test-ku-blackboard-rover-grade-testing",
+        max_length=255,
         null=True,
         )
 
@@ -180,8 +180,7 @@ class LTIExternalCourse(TimeStampedModel):
         return self.course_id.html_id()
 
     class Meta(object):
-        #verbose_name = "LTI External Course"
-        #verbose_name_plural = #verbose_name
+        verbose_name = "LTI External Course"
         unique_together = [['context_id', 'course_id']]
         #ordering = ('-fetched_at', )
 
@@ -200,8 +199,8 @@ class LTIExternalCourseAssignments(TimeStampedModel):
         )
 
     class Meta(object):
-        #verbose_name = "LTI External Course Assignments"
-        #verbose_name_plural = #verbose_name
+        verbose_name = "LTI External Course Assignments"
+        verbose_name_plural = verbose_name
         unique_together = [['course', 'url']]
         #ordering = ('-fetched_at', )
 
@@ -218,8 +217,8 @@ class LTIExternalCourseAssignmentProblems(TimeStampedModel):
         max_length=255,
         )
     class Meta(object):
-        #verbose_name = "LTI External Course Assignment Problems"
-        #verbose_name_plural = #verbose_name
+        verbose_name = "LTI External Course Assignment Problems"
+        verbose_name_plural = verbose_name
         unique_together = [['usage_key']]
         #ordering = ('-fetched_at', )
 
@@ -330,8 +329,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         )
 
     class Meta(object):
-        #verbose_name = "LTI External Course Enrollment"
-        #verbose_name_plural = #verbose_name
+        verbose_name = "LTI External Course Enrollment"
         unique_together = [['course', 'user']]
         #ordering = ('-fetched_at', )
 
@@ -381,9 +379,8 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     earned_graded = models.FloatField(blank=False)
     possible_graded = models.FloatField(blank=False)
     
-    #class Meta(object):
-        #verbose_name = "LTI External Course Enrollment Grades"
-        #verbose_name_plural = #verbose_name
+    class Meta(object):
+        verbose_name = "LTI External Course Enrollment Grades"
 
     def __str__(self):
         return self.course_enrollment.course.course_id.html_id() + ' - ' + self.course_assignment.display_name
