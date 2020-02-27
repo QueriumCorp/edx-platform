@@ -1,4 +1,4 @@
- # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Willo Labs real-time Grade Sync
 
@@ -50,12 +50,12 @@ KNOWN_RETRY_ERRORS = (  # Errors we expect occasionally, should be resolved on r
     ValidationError,
     DatabaseNotReadyError,
 )
-RECALCULATE_GRADE_DELAY_SECONDS = 2  # to prevent excessive _has_db_updated failures. See TNL-6424.
+RECALCULATE_GRADE_DELAY_SECONDS = 5  # to prevent excessive _has_db_updated failures. See TNL-6424.
 RETRY_DELAY_SECONDS = 40
 TIMEOUT_SECONDS = 300
 TASK_TIME_LIMIT = 60
 TASK_SOFT_TIME_LIMIT = 50
-MAX_RETRIES = 5
+MAX_RETRIES = 1
 
 
 @task(
@@ -123,7 +123,7 @@ def _post_grades(self, username, course_id, usage_id):
         if lti_cached_course is None:
             raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. course property is not set.')
 
-        #lti_cached_assignment = session.get_course_assignment(problem_usage_key)
+        lti_cached_assignment = session.get_course_assignment(problem_usage_key)
 
         # Note: this is scaffolding that will
         # facilitate a faster, cached grade post operation
@@ -135,18 +135,12 @@ def _post_grades(self, username, course_id, usage_id):
             usage_key = problem_usage_key
             )
 
-        #if lti_cached_assignment is None:
-        #    log.info('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
+        if lti_cached_assignment is None:
+            log.error('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
 
-        #lti_cached_enrollment = session.get_course_enrollment()
-        #if lti_cached_enrollment is None:
-        #    log.info('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
-
-        #lti_cached_grade = session.get_course_assignment_grade(problem_usage_key)
-        #if lti_cached_grade is None:
-        #    log.info('Tried to call Willo api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}.'.format(
-        #        usage_key=problem_usage_key
-        #    ))
+        lti_cached_enrollment = session.get_course_enrollment()
+        if lti_cached_enrollment is None:
+            log.error('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
 
         # Cache the grade data
         session.post_grades(
@@ -154,11 +148,17 @@ def _post_grades(self, username, course_id, usage_id):
             grades_dict=homework_assignment_dict
             )
 
+        lti_cached_grade = session.get_course_assignment_grade(problem_usage_key)
+        if lti_cached_grade is None:
+            log.error('Tried to call Willo api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}.'.format(
+                usage_key=problem_usage_key
+            ))
+
         # Push grades to Willo grade sync
         #retval = create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_grade)
         #if retval:
         #    retval = post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade)
-
+        #
         #return retval
         return True
 
@@ -191,9 +191,6 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
      
      returns True if the return code is 200 or 201, False otherwise.
     """
-    log.debug('create_column() - assignment: {assignment}'.format(
-        assignment=lti_cached_assignment.display_name
-    ))
 
     # FIX ME!!!!
     due_date = datetime.now(tz=pytz.utc).isoformat()
@@ -207,6 +204,12 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
         "due_date": due_date,                                   ## FIX ME!!!!!
         "points_possible": lti_cached_grade.possible_graded     ## int. example: 11
     }
+
+    log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
+        assignment=lti_cached_assignment.display_name,
+        data=data
+    ))
+
     return willo_api_create_column(
         lti_cached_course.ext_wl_outcome_service_url, 
         data
@@ -224,7 +227,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         Example: 'https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/'
 
     """
-    log.debug('post_grade()')
+    log.info('post_grade()')
 
     data = {
         "type": "result",
@@ -235,6 +238,10 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         "score": lti_cached_grade.earned_graded,
         "points_possible": lti_cached_grade.possible_graded
     }
+
+    log.info('post_grade() - data: {data}'.format(
+        data=data
+    ))
 
     return willo_api_post_grade(
         lti_cached_course.ext_wl_outcome_service_url,

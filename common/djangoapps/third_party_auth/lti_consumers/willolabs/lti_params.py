@@ -42,6 +42,10 @@ class LTIParams(object):
         """
         if DEBUG: log.info('LTIParams.__init__()')
 
+        # recursion buster        
+        if attr == '_lti_params':
+            return
+
         self.dictionary = lti_params
 
         if not self.is_valid:
@@ -240,7 +244,7 @@ class LTIParamsFieldMap(object):
     Returns: {string} the field mapping corresponding to the attribute name accessed.
     """
 
-    def __init__(self, lti_params, table=None):
+    def __init__(self, lti_params, table):
         """Bootstrap this class
         
         Arguments:
@@ -259,15 +263,39 @@ class LTIParamsFieldMap(object):
                 tables=LTI_CACHE_TABLES
             ))
 
-        if isinstance(lti_params, LTIParams):
-            lti_params = lti_params.dictionary
+        if not isinstance(lti_params, LTIParams):
+            lti_params = LTIParams(lti_params)
 
-        if not is_willo_lti(lti_params):
-            raise LTIBusinessRuleError("LTISession.set_lti_params() - Tried to instantiate Willo Labs CourseProvisioner with lti_params " \
-                "that did not originate from Willo Labs: '%s'." % lti_params)
+        if not lti_params.is_valid:
+            raise ValidationError('LTIParamsFieldMap.__init__() - lti_params is not a valid LTI dictionary.')
 
-        self.lti_params = lti_params
+        if not lti_params.is_willolabs:
+            raise ValidationError('LTIParamsFieldMap.__init__() - lti_params dict did not originate from Willo Labs.')
+
+        self.dictionary = lti_params.dictionary
         self.table = table
+
+
+    @property
+    def table(self):
+        return self._table
+    
+    @table.setter
+    def table(self, value):
+        self._table = value
+
+    @property
+    def dictionary(self):
+        """a dump of the original lti_params dictionary
+        
+        Returns:
+            [dict] -- the lti_params dictionary passed to __init__()
+        """
+        return self._lti_params
+
+    @dictionary.setter
+    def dictionary(self, value):
+        self._lti_params = value
 
     def __getattr__(self, attr):
         """Implement dynamic attributes. 
@@ -278,40 +306,30 @@ class LTIParamsFieldMap(object):
         Returns:
             String -- Returns corresponding cache_config value, if it exists.
         """
-        return self.get_lti_param(key=attr)
+
+        # recursion buster        
+        if attr in ['_lti_params', '_table']:
+            return
+
+        if not self.dictionary:
+            return None
+        
+        param_key = parser.get(self.table, attr)
+        value = self.dictionary.get(param_key)
+        if DEBUG:
+            log.info('get_lti_param() - table: {table}, attr: {attr}, param_key: {param_key}, value: {value}'.format(
+                table=self.table,
+                attr=attr,
+                param_key=param_key,
+                value = value
+            ))
+        return value
+
 
     def __str__(self):
         return 'LTIParamsFieldMap({table})'.format(
             table=self.table
         )
-
-    def get_lti_param(self, key):
-        """Locates the cache_config.ini field mapping for 'key'. 
-        Then retrieves the corresponding value from self.lti_params
-        
-        Arguments:
-            table {string} -- the case-sensitive name of an LTI cache table.
-            key {string} -- the lower case name of a field in an LTI cache table.
-        
-        Returns:
-            [string] or None
-        """
-        if not self.lti_params:
-            return None
-        
-        if not isinstance(key, str):
-            raise LTIBusinessRuleError('LTIParamsFieldMap.get_lti_param() - was expecting a string value for key.')
-
-        param_key = parser.get(self.table, key)
-        value = self.lti_params.get(param_key)
-        if DEBUG:
-            log.info('get_lti_param() - table: {table}, key: {key}, param_key: {param_key}, value: {value}'.format(
-                table=table,
-                key=key,
-                param_key=param_key,
-                value = value
-            ))
-        return value
 
 def get_cached_course_id(context_id):
     """Queries the cache and returns the course_id associated
@@ -332,8 +350,8 @@ def get_cached_course_id(context_id):
 
 def get_lti_user_id(course_id, username, context_id=None):
     """
-     Retrieve the Willo Labs user_id assigned to Rover username for course_id.
-     This is passed in tpa_params during LTI authentication and cached.
+    Retrieve the Willo Labs user_id assigned to Rover username for course_id.
+    This is passed in tpa_params during LTI authentication and cached.
     """
 
     #msg='get_lti_user_id() - course_id: {course_id}, username: {username}'.format(
@@ -376,8 +394,8 @@ def get_lti_user_id(course_id, username, context_id=None):
 
 def get_ext_wl_outcome_service_url(course_id, context_id=None):
     """
-     Retrieve a Willo Labs outcome service URL from the LTI cache.
-     This is passed in tpa_params during LTI authentication and cached.
+    Retrieve a Willo Labs outcome service URL from the LTI cache.
+    This is passed in tpa_params during LTI authentication and cached.
     """
     if context_id is not None:
         course = LTIExternalCourse.objects.get(context_id=context_id)
@@ -397,13 +415,13 @@ def get_lti_cached_result_date(
             section_due_date=None
             ):
     """
-      Try to retrieve an assignment completion date from the LTI cache.
+    Try to retrieve an assignment completion date from the LTI cache.
 
-      course_id: course key that contains the assignment
-      username: Rover user who completed the assignment
-      lti_id: the LTI unique identifier for the assignment, created from the Rover resource key (right-most segment of URL path)
-      section_completed_date: an alternative date that is potentially supplied by the Rover grades api.
-      section_due_date: ditto.
+    course_id: course key that contains the assignment
+    username: Rover user who completed the assignment
+    lti_id: the LTI unique identifier for the assignment, created from the Rover resource key (right-most segment of URL path)
+    section_completed_date: an alternative date that is potentially supplied by the Rover grades api.
+    section_due_date: ditto.
     """
 
     # need to consider that there might be more than one course with this course_id 
@@ -439,10 +457,10 @@ def get_lti_cached_result_date(
 
 def is_lti_cached_user(user, context_id):
     """
-     Test to see if there is cached LTI enrollment data for this user.
+    Test to see if there is cached LTI enrollment data for this user.
 
-     user: a Django user model
-     course_id: a Opaque Key object.
+    user: a Django user model
+    course_id: a Opaque Key object.
     """
     try:
         ret = LTIExternalCourseEnrollment.objects.get(

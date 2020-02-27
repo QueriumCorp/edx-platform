@@ -162,7 +162,7 @@ class LTISession(object):
         # refresh during LTI authentication
         if self.lti_params is not None:
             if self._course is None:
-                self.register_course()
+                self.course = self.register_course()
 
             return None
 
@@ -187,7 +187,7 @@ class LTISession(object):
                 # this only covers cases where cache data exists. if user is student
                 # entering Rover for the first time then we'll still be None
                 self.course_enrollment = LTIExternalCourseEnrollment.objects.filter(
-                    course = course, 
+                    course = self.course,
                     user = self._user
                     ).first()
 
@@ -548,14 +548,15 @@ class LTISession(object):
         Returns:
             [LTIExternalCourseEnrollmentGrades] -- the cache record corresponding to the usage_key
         """
-        if DEBUG: log.info('LTISession.get_course_assignment_grade() - usage_key: {usage_key} {key_type}'.format(
-            usage_key=usage_key,
-            key_type=type(usage_key)
-        ))
         grade = LTIExternalCourseEnrollmentGrades.objects.filter(
             course_enrollment = self.course_enrollment,
             course_assignment = self.get_course_assignment(usage_key)
         ).order_by('-created').first()
+        if DEBUG: log.info('LTISession.get_course_assignment_grade() - usage_key: {usage_key} {key_type} {grade}'.format(
+            usage_key=usage_key,
+            key_type=type(usage_key),
+            grade=grade
+        ))
         return grade
 
     def get_course_assignment(self, usage_key):
@@ -765,7 +766,12 @@ class LTISession(object):
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
         # currently present in the cache.
-        self.init()
+        # mcdaniel feb-2020: FIX NOTE: do we need these??
+        #self._course = None
+        #self._course_enrollment = None
+        #self._course_enrollment_grades = None
+        #self._course_id = None
+
 
         self._context_id = value
     
@@ -813,7 +819,12 @@ class LTISession(object):
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
         # currently present in the cache.
-        self.init()
+        #self.init()
+        self._course = None
+        self._course_enrollment = None
+        self._course_enrollment_grades = None
+        self._user = None
+        self._course_id = None
 
         # property initializations from lti_params
         if self._lti_params is not None:

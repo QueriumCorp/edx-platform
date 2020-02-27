@@ -268,8 +268,14 @@ class CourseProvisioner(object):
                 self._course_id = enrollments[0].course_id
                 return self._course_id
             else:
-                if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses, so looking in the LTI cache.')
-                self._course_id = get_cached_course_id(context_id=self.context_id)
+                if len(enrollments) == 0:
+                    if DEBUG: log.error('CourseProvisioner.get_course_id() -- internal error. self.enrollments reports zero enrollments')
+
+                if len(enrollments) > 1:
+                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses, so looking in the LTI cache. Enrollments: {enrollments}'.format(
+                        enrollments=enrollments
+                        ))
+                    self._course_id = get_cached_course_id(context_id=self.context_id)
 
         # we struck out. didn't find a course_id from any of our possible sources
         return None

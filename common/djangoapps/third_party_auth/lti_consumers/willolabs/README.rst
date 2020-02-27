@@ -3,7 +3,9 @@ LTI Integration for Willo Labs
 
 
 LTI test tool:
----------------------
+--------------
+To test LTI authentication
+
 https://lti.tools/test/tc.php
 
 1.	Plug in URL, key, secret.
@@ -13,11 +15,10 @@ https://lti.tools/test/tc.php
 
 2.	Click “Save Data”
 3.	Click “Launch TP in new window”
-4.	You’ll arrive at a page like the following screenshot:
 
 
-Canvas via Willo Integration
-----------------------------
+LTI Test: Canvas via Willo Integration
+--------------------------------------
 https://willowlabs.instructure.com/
 un: rover_teach
 pw: WilloTest1
@@ -26,6 +27,8 @@ https://willowlabs.instructure.com/
 un: rover_learner
 pw: WilloTest1
 
+About This Module
+-----------------
 Provides enhanced integration capabilities to WilloLab-connected external systems like Canvas, Blackboard, Moodle. Facilitates grade exports to the external system by building a map between LTI tpa_lti_params data passed to Rover during LTI authentication. This module infers and caches relationships between the tpa_lti_params data and Rover course_id, username, subsection.
 
 Makes copious use of Opaque keys. Read more here: https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
