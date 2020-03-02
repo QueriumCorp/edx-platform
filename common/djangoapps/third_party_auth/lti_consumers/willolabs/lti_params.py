@@ -42,10 +42,6 @@ class LTIParams(object):
         """
         if DEBUG: log.info('LTIParams.__init__()')
 
-        # recursion buster        
-        if attr == '_lti_params':
-            return
-
         self.dictionary = lti_params
 
         if not self.is_valid:
@@ -76,6 +72,10 @@ class LTIParams(object):
         Arguments:
             attr {string} -- a lti_params element
         """
+        # recursion buster        
+        if attr == '_lti_params':
+            return
+
         return self.dictionary.get(attr)
 
     def __str__(self):
