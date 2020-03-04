@@ -37,8 +37,7 @@ from .models import (
 
 User = get_user_model()
 log = logging.getLogger(__name__)
-#DEBUG = settings.DEBUG
-DEBUG = True
+DEBUG = settings.ROVER_DEBUG
 
 class LTISession(object):
     """Used during LTI authentication from external platforms connecting to Rover via

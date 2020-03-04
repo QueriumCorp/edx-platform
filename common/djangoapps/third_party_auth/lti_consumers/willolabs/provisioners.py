@@ -27,6 +27,7 @@ from __future__ import absolute_import
 import logging
 
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from student.models import is_faculty, CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
@@ -38,7 +39,7 @@ from .lti_params import LTIParams, get_cached_course_id
 
 User = get_user_model()
 log = logging.getLogger(__name__)
-DEBUG = True
+DEBUG = settings.ROVER_DEBUG
 
 
 class CourseProvisioner(object):

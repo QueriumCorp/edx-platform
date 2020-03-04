@@ -27,13 +27,14 @@ from xmodule.modulestore.modulestore_settings import convert_module_store_settin
 # McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
 # feb-2020: wrap this in a try/except so that we have a stop-gap default without crashing the platform
 try:
-
     with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
         ROVER_TOKENS = json.load(rover_env_file)
+        ROVER_DEBUG = ROVER_TOKENS.get('DEBUG', False)
         ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
 
 except IOError:
         ROVER_TOKENS = {}
+        ROVER_DEBUG = False
         ROVER_CLIENT_CODE = 'MISSING'
 
 # mcdaniel feb-2020: feature settings for custom Rover modules.

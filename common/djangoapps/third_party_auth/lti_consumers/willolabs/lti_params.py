@@ -12,6 +12,8 @@ except ImportError:
 import logging
 
 from django.core.exceptions import ValidationError
+from django.conf import settings
+
 from opaque_keys import InvalidKeyError
 
 from .exceptions import LTIBusinessRuleError
@@ -25,7 +27,7 @@ from .models import (
     )
 
 log = logging.getLogger(__name__)
-DEBUG = True
+DEBUG = settings.ROVER_DEBUG
 
 class LTIParams(object):
     """Provides a means of dynamically mapping lti_params dictionary

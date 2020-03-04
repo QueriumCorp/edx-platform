@@ -46,6 +46,7 @@ from .api import (
 
 log = logging.getLogger(__name__)
 #log = get_task_logger(__name__)
+DEBUG = settings.ROVER_DEBUG
 
 KNOWN_RETRY_ERRORS = (  # Errors we expect occasionally, should be resolved on retry
     DatabaseError,
@@ -228,10 +229,10 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
         ))
         return False
 
-    log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
-        assignment=lti_cached_assignment.display_name,
-        data=data
-    ))
+    if DEBUG: log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
+            assignment=lti_cached_assignment.display_name,
+            data=data
+        ))
 
     return willo_api_create_column(
         lti_cached_course.ext_wl_outcome_service_url, 
@@ -264,7 +265,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     Returns:
         [Boolean] -- returns True if the return code is 200, False otherwise.
     """
-    log.info('willolabs.tasks.post_grade()')
+    if DEBUG: log.info('willolabs.tasks.post_grade()')
 
     try:
 
@@ -285,9 +286,9 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         return False
 
 
-    log.info('willolabs.tasks.post_grade() - data: {data}'.format(
-        data=data
-    ))
+    if DEBUG: log.info('willolabs.tasks.post_grade() - data: {data}'.format(
+            data=data
+        ))
 
     return willo_api_post_grade(
         lti_cached_course.ext_wl_outcome_service_url,

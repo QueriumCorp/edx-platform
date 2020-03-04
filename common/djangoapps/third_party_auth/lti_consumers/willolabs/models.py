@@ -24,6 +24,7 @@ from openedx.core.djangoapps.content.course_overviews.models import CourseOvervi
 
 import logging
 log = logging.getLogger(__name__)
+DEBUG = settings.ROVER_DEBUG
 
 
 class LTIExternalCourse(TimeStampedModel):

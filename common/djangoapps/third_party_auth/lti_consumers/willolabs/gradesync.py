@@ -35,6 +35,7 @@ from .lti_params import (
 
 utc=pytz.UTC
 VERBOSE=False
+DEBUG = settings.ROVER_DEBUG
 
 class color:
    PURPLE = '\033[95m'

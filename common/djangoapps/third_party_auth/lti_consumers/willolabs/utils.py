@@ -5,6 +5,8 @@ from __future__ import absolute_import
 
 import logging
 
+from django.conf import settings
+
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from .models import LTIExternalCourse
@@ -16,8 +18,7 @@ except ImportError:
     from urlparse import urlparse
 
 log = logging.getLogger(__name__)
-#DEBUG = settings.DEBUG
-DEBUG = True
+DEBUG = settings.ROVER_DEBUG
 
 
 def willo_id_from_url(url):
@@ -113,9 +114,9 @@ def find_course_unit(course, url):
         """
         location = willo_id_from_url(node.location)
         if location == url:
-            log.info('lti_consumers.willolabs.utils.find() - found course unit: {unit}'.format(
-                unit=node
-            ))
+            if DEBUG: log.info('lti_consumers.willolabs.utils.find() - found course unit: {unit}'.format(
+                    unit=node
+                ))
             return node
         for child in node.get_children():
             found = find(child, url)
