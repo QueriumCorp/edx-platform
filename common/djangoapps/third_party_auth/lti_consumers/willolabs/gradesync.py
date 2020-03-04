@@ -18,10 +18,9 @@ from lms.djangoapps.grades.api.v2.views import InternalCourseGradeView
 
 from .exceptions import LTIBusinessRuleError
 from .models import LTIExternalCourse
-from .utils import is_valid_course_id
+from .utils import is_valid_course_id, willo_id_from_url
 from .api import (
     willo_activity_id_from_string,
-    willo_id_from_url,
     willo_date,
     willo_api_post_grade,
     willo_api_create_column

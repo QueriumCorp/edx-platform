@@ -197,6 +197,12 @@ class LTIExternalCourseAssignments(TimeStampedModel):
         help_text="Title text of the Rover assignment. Example: Chapter 5 Section 1 Quadratic Functions Sample Homework",
         max_length=255,
         )
+    due_date = models.DateTimeField(
+        #verbose_name="Due Date",
+        help_text="The Rover assignment due date.",
+        null=True, 
+        blank=True,
+        )
 
     class Meta(object):
         verbose_name = "LTI External Course Assignments"

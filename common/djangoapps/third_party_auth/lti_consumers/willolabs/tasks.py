@@ -12,6 +12,8 @@ Date:       jan-2020
 import logging
 from datetime import datetime
 import pytz
+import traceback
+
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -33,11 +35,11 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 # for Willo api
 from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
 from .cache import LTISession
+from .utils import willo_id_from_url
 from .api import (
     willo_api_post_grade,
     willo_api_create_column,
     willo_activity_id_from_string,
-    willo_id_from_url,
     willo_date
     )
 
@@ -155,12 +157,11 @@ def _post_grades(self, username, course_id, usage_id):
             ))
 
         # Push grades to Willo grade sync
-        #retval = create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_grade)
-        #if retval:
-        #    retval = post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade)
-        #
-        #return retval
-        return True
+        retval = create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_grade)
+        if retval:
+            retval = post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade)
+        
+        return retval
 
     except Exception as exc:
         if not isinstance(exc, KNOWN_RETRY_ERRORS):
@@ -185,25 +186,47 @@ def recover_from_exceeded_time_limit(self):
     return None
 
 def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_grade):
-    """
-     Willo Grade Sync api - Add a new grade column to the LMS grade book. 
+    """Willo Grade Sync api - Add a new grade column to the LMS grade book. 
      Prepare and send a data payload to post to the Willo Labs Grade Sync api.
-     
-     returns True if the return code is 200 or 201, False otherwise.
+     Read more: https://readthedocs.roverbyopenstax.org/en/latest/developer_zone/edx-platform/willo_gradesync.html
+    
+    Arguments:
+        lti_cached_course {[LTIExternalCourse]} -- The Rover course that is linked
+        via LTI authentication using the lti_params dict. LTIExternalCourse
+        records the 1:1 relationship between LTI context_id and Rover course_key.
+        Also stores the URL pointing to the Willo Labs grade sync endpoint for
+        grade data for the course. See ext_wl_outcome_service_url. Example: 
+        https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
+
+        lti_cached_assignment {[LTIExternalCourseAssignments]} -- assignment records
+        are created automatically in real-time, as students submit answers to homework
+        problems. LTIExternalCourseAssignments stores the assignment URL and Display
+        name, along with the parent relationship back to LTIExternalCourse.
+
+        lti_cached_grade {[LTIExternalCourseEnrollmentGrades]} -- records the
+        grade dict data for one student response to one assignment problem.
+    
+    Returns:
+        [Boolean] -- returns True if the return code is 200 or 201, False otherwise.
     """
 
-    # FIX ME!!!!
-    due_date = datetime.now(tz=pytz.utc).isoformat()
-    #due_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S%Z")   # https://docs.python.org/3/library/datetime.html
-    
-    data = {
-        "type": "activity",				
-        "id": str(lti_cached_assignment.id),	                ## bigint. example: 1234567890
-        "title": lti_cached_assignment.display_name,	        ## example: Getting to Know Rover Review Assignment
-        "description": lti_cached_assignment.display_name,	    ## example: Getting to Know Rover Review Assignment
-        "due_date": due_date,                                   ## FIX ME!!!!!
-        "points_possible": lti_cached_grade.possible_graded     ## int. example: 11
-    }
+    try:
+        
+        data = {
+            "type": "activity",				
+            "id": str(lti_cached_assignment.id),	                ## bigint. example: 1234567890
+            "title": lti_cached_assignment.display_name,	        ## example: Getting to Know Rover Review Assignment
+            "description": lti_cached_assignment.display_name,	    ## example: Getting to Know Rover Review Assignment
+            "due_date": lti_cached_assignment.due_date.isoformat(), ## Rover assignment due_date in ISO string format: 2019-06-01T00:00:00+04:00
+            "points_possible": lti_cached_grade.possible_graded     ## int. example: 11
+        }
+
+    except Exception as err:
+        log.error('willolabs.tasks.create_column() - error preparing grade column data for Willo Labs api:\r\n{err}.\r\n{traceback}'.format(
+            err=err,
+            traceback=traceback.format_exc()
+        ))
+        return False
 
     log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
         assignment=lti_cached_assignment.display_name,
@@ -217,29 +240,52 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
 
 
 def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade):
+    """Willo Grade Sync api. Post grade scored for one student, for one homework assignment.
+    Willo api returns 200 if the grade was posted. Example ext_wl_outcome_service_url:
+    'https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/'
+    Read more: https://readthedocs.roverbyopenstax.org/en/latest/developer_zone/edx-platform/willo_gradesync.html
+
+    
+    Arguments:
+        lti_cached_course {[LTIExternalCourse]} -- The Rover course that is linked
+        via LTI authentication using the lti_params dict. LTIExternalCourse
+        records the 1:1 relationship between LTI context_id and Rover course_key.
+
+        lti_cached_enrollment {[type]} -- [description]
+
+        lti_cached_assignment {[LTIExternalCourseAssignments]} -- assignment records
+        are created automatically in real-time, as students submit answers to homework
+        problems. LTIExternalCourseAssignments stores the assignment URL and Display
+        name, along with the parent relationship back to LTIExternalCourse.
+
+        lti_cached_grade {[LTIExternalCourseEnrollmentGrades]} -- records the
+        grade dict data for one student response to one assignment problem.
+    
+    Returns:
+        [Boolean] -- returns True if the return code is 200, False otherwise.
     """
-     Willo Grade Sync api.
-     post grade scored for one student, for one homework assignment.
-     Willo api returns 200 if the grade was posted.
-     returns True if the return code is 200, False otherwise.
+    log.info('willolabs.tasks.post_grade()')
 
-    ext_wl_outcome_service_url:
-        Example: 'https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/'
+    try:
 
-    """
-    log.info('post_grade()')
+        data = {
+            "type": "result",
+            "id": willo_id_from_url(lti_cached_assignment.url),
+            "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
+            "user_id": lti_cached_enrollment.lti_user_id,
+            "result_date": willo_date(lti_cached_grade.created),
+            "score": lti_cached_grade.earned_graded,
+            "points_possible": lti_cached_grade.possible_graded
+        }
 
-    data = {
-        "type": "result",
-        "id": willo_id_from_url(lti_cached_assignment.url),
-        "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
-        "user_id": lti_cached_enrollment.lti_user_id,
-        "result_date": willo_date(lti_cached_grade.created),
-        "score": lti_cached_grade.earned_graded,
-        "points_possible": lti_cached_grade.possible_graded
-    }
+    except Exception as e:
+        log.error('willolabs.tasks.post_grade() - error preparing grade data for Willo Labs api: {err}'.format(
+            err=e
+        ))
+        return False
 
-    log.info('post_grade() - data: {data}'.format(
+
+    log.info('willolabs.tasks.post_grade() - data: {data}'.format(
         data=data
     ))
 

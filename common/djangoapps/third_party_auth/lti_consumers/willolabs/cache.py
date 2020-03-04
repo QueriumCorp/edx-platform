@@ -6,6 +6,7 @@ Raises:
     LTIBusinessRuleError
 """
 from __future__ import absolute_import
+import datetime
 import logging
 import json
 import traceback
@@ -19,6 +20,10 @@ from django.contrib.auth.models import AnonymousUser
 from student.models import is_faculty, CourseEnrollment
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
+
+# for locating a course assignment by its URL.
+from lms.djangoapps.courseware.courses import get_course_by_id
+from .utils import find_course_unit
 
 from .exceptions import LTIBusinessRuleError
 from .lti_params import LTIParamsFieldMap, LTIParams, get_cached_course_id
@@ -623,11 +628,35 @@ class LTISession(object):
             if DEBUG: log.info('LTISession.set_course_assignment() - self.course() returned None. Exiting.')
             return None
 
+        # get the due_date for the assignment
+        try:
+            rover_course = get_course_by_id(self.course_id)
+            unit = find_course_unit(rover_course, url)
+            log.debug('LTISession.set_course_assignment() - found course unit: {unit}, due date: {due_date}'.format(
+                unit=unit,
+                due_date=unit.due
+            ))
+            due_date = unit.due
+            if not due_date:
+                log.info('LTISession.set_course_assignment() - WARNING: no due date for this assignment. Setting to far future.')
+                due_date = datetime.datetime.now() + datetime.timedelta(days=365.25/2)
+
+        except Exception as err:
+            msg='LTISession.set_course_assignment() - error getting due date for display_name {display_name}, url {url}. Error: {err}.\r\n{traceback}'.format(
+                display_name=display_name,
+                url=url,
+                err=err,
+                traceback=traceback.format_exc()
+            )
+            log.error(msg)
+            return None
+
         try:
             assignment = LTIExternalCourseAssignments(
                 course = self.course,
                 url = url,
-                display_name = display_name
+                display_name = display_name,
+                due_date = due_date
             )
             assignment.save()
 

@@ -7,10 +7,6 @@ import re
 import datetime
 import json
 import requests
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
 
 from django.conf import settings
 from .models import LTIExternalCourse
@@ -37,20 +33,6 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
     ))
     return None
 
-
-
-def willo_id_from_url(url):
-    """
-     Strip right-most segment of a URL path to use as a unique id for 
-     Willo Labs api grades posts.
-
-     Example:
-     url = https://dev.roverbyopenstax.org/courses/course-v1:OpenStax+PCL101+2020_Tmpl_RevY/courseware/aa342d9db424426f8c6c550935e8716a/249dfef365fd434c9f5b98754f2e2cb3
-     path = /courses/course-v1:OpenStax+PCL101+2020_Tmpl_RevY/courseware/aa342d9db424426f8c6c550935e8716a/249dfef365fd434c9f5b98754f2e2cb3
-     return value = '249dfef365fd434c9f5b98754f2e2cb3'
-    """
-    parsed_url = urlparse(url)
-    return parsed_url.path.rsplit('/', 1)[-1]
 
 def willo_activity_id_from_string(activity_string):
     """
@@ -98,7 +80,7 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     }'
 
     """
-    log.debug('willo_api_create_column() - assignment: {assignment}'.format(
+    log.info('lti_consumers.willolabs.api.willo_api_create_column() - assignment: {assignment}'.format(
         assignment=data.get('title')
     ))
 
@@ -110,15 +92,15 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
         if response.status_code == 200:
-            log.debug('willo_api_create_column() - successfully created grade column: {grade_column_data}'.format(
+            log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully created grade column: {grade_column_data}'.format(
                 grade_column_data = data_json
             ))
         if response.status_code == 201:
-            log.debug('willo_api_create_column() - successfully updated grade column: {grade_column_data}'.format(
+            log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully updated grade column: {grade_column_data}'.format(
                 grade_column_data = data_json
             ))
     else:
-        log.error('willo_api_create_column() - encountered an error while attempting to create a new grade column: {grade_column_data}, which generated the following response: {response}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column: {grade_column_data}, which generated the following response: {response}'.format(
             grade_column_data = data_json,
             response = response.status_code
         ))
@@ -168,6 +150,8 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
             "points_possible": 100
         }'
     """
+    log.info('lti_consumers.willolabs.api.willo_api_post_grade()')
+
     headers = willo_api_headers(
         key='Content-Type',
         value='application/vnd.willolabs.outcome.result+json'
@@ -175,11 +159,11 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
     data_json = json.dumps(data)
     response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
-        log.debug('willo_api_post_grade() - successfully posted grade data: {grade_data}'.format(
+        log.info('lti_consumers.willolabs.api.willo_api_post_grade() - successfully posted grade data: {grade_data}'.format(
             grade_data = data_json
         ))
     else:
-        log.error('willo_api_post_grade() - encountered an error while attempting to post the following grade: {grade_data} which generated the following response: {response}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post the following grade: {grade_data} which generated the following response: {response}'.format(
             grade_data = data_json,
             response = response.status_code
         ))
@@ -200,7 +184,7 @@ def willo_api_get(url, assignment_id, user_id):
         -H "Authorization: Token YOURSUPERDUPERENCRYPTEDTOKEN"
 
     """
-    log.debug('willo_api_get()')
+    log.info('lti_consumers.willolabs.api.willo_api_get()')
 
     params = {
         'id' : assignment_id,
@@ -213,7 +197,7 @@ def willo_api_get(url, assignment_id, user_id):
 
     response = requests.get(url=url, params=params, headers=headers)
     if response.status_code == 200:
-        log.debug('willo_api_get() - successfully retrieved grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}'.format(
+        log.info('willo_api_get() - successfully retrieved grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}'.format(
             assignment_id = assignment_id,
             user_id = user_id,
             response = response.json()
@@ -233,7 +217,7 @@ def willo_api_authorization_token():
      Returns a Willo Labs api authentication token
      example: qHT28EAgrxa1234567890abcdefghij2eRC8hdua
     """
-    log.debug('willo_api_authorization_token()')
+    log.info('willo_api_authorization_token()')
 
     token = settings.WILLO_API_AUTHORIZATION_TOKEN
     return token
@@ -248,7 +232,7 @@ def willo_api_headers(key, value):
         )
     headers[key] = value
 
-    log.debug('willo_api_headers() - {headers}'.format(
+    log.info('willo_api_headers() - {headers}'.format(
         headers = json.dumps(headers)
     ))
 
