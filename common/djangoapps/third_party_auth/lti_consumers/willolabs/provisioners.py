@@ -85,7 +85,12 @@ class CourseProvisioner(object):
         self.lti_params = lti_params         # originates from the http response body from LTI auth
         self.user = user
         if course_id:
+            lti_params_course_id = get_course_id_from_tpa_next(self.lti_params)
+            if lti_params_course_id and course_id and lti_params_course_id != course_id:
+                raise LTIBusinessRuleError('CourseProvisioner.__init__() - internal error: course_id provided does not equal course_id found in lti_params.')
             self.course_id = course_id
+        else:
+            self.course_id = get_course_id_from_tpa_next(self.lti_params)
 
         log.info('CourseProvisioner.__init__() initialized. user: {user}, context_id: {context_id}, '\
             ' course_id: {course_id}'.format(
@@ -267,8 +272,30 @@ class CourseProvisioner(object):
         if self._course_id is not None:
             return self._course_id 
 
+        # NOTE: in a normal use case none of these initialization methods will be utilized.
+        # course_id is set in __init__() from lti_params. thus, if we find ourselves here
+        # then course_id has somehow been set to null since class initialization.
         if DEBUG: log.info('CourseProvisioner.get_course_id() -- trying to self-initialize...')
 
+        # 1.) try to pull a course_id from tpi_params
+        if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in lti_params.custom_tpa_next: {custom_tpa_next}'.format(
+            custom_tpa_next=self.lti_params.custom_tpa_next
+            ))
+        self._course_id = get_course_id_from_tpa_next(self.lti_params)
+        if self._course_id:
+            return self._course_id
+
+
+        # 2.) try to pull a cached course record based on the context_id from the lti_params.
+        if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in the LTI cache. context_id: {context_id}'.format(
+            context_id=self.context_id
+            ))
+        self._course_id = get_cached_course_id(context_id=self.context_id)
+        if self._course_id:
+            return self._course_id
+
+
+        # 3.) this is a fallback option: check student's enrollment data
         enrollments = self.enrollments
         if enrollments is not None:
             if len(enrollments) == 1:
@@ -282,29 +309,10 @@ class CourseProvisioner(object):
                     if DEBUG: log.error('CourseProvisioner.get_course_id() -- internal error. self.enrollments reports zero enrollments')
 
                 if len(enrollments) > 1:
-                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses')
-
-                    # alternative #1: try to pull a cached course record based on the
-                    # context_id from the lti_params.
-                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in the LTI cache. context_id: {context_id}'.format(
-                        context_id=self.context_id
-                        ))
-                    self._course_id = get_cached_course_id(context_id=self.context_id)
-                    if self._course_id:
-                        return self._course_id
-
-                    # alternative #2: try to pull a course_id from the url
-                    # in the tpa_next lti parameter.
-                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in lti_params.custom_tpa_next: {custom_tpa_next}'.format(
-                        custom_tpa_next=self.lti_params.custom_tpa_next
-                        ))
-                    self._course_id = get_course_id_from_tpa_next(self.lti_params)
-                    if self._course_id:
-                        return self._course_id
-
+                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses. no way to disambiguate.')
 
         # we struck out. didn't find a course_id from any of our possible sources
-        return None
+        return self._course_id
 
     @course_id.setter
     def course_id(self, value):
