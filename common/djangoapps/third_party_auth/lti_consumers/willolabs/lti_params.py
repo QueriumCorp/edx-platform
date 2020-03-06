@@ -6,15 +6,17 @@ Raises:
     LTIBusinessRuleError: [description]
 """
 try:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, parse_qs
 except ImportError:
-    from urlparse import urlparse
+    from urlparse import urlparse, parse_qs
 import logging
+import traceback
 
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
 from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
 
 from .exceptions import LTIBusinessRuleError
 from .constants import WILLO_INSTRUCTOR_ROLES, WILLO_DOMAINS, LTI_CACHE_TABLES
@@ -352,7 +354,48 @@ def get_cached_course_id(context_id):
     return None
 
 
+def get_course_id_from_tpa_next(lti_params):
+    """attempt to extract a course_id parameter from tpa_next
+    in the lti_params dict, if it exists.
 
+    example: "custom_tpa_next": "/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false"
+    
+    Arguments:
+        lti_params {[LTIParams] or [dict]}
+    
+    Returns:
+        [CourseKey]
+    """
+    if isinstance(lti_params, dict):
+        lti_params = LTIParams(lti_params)
+
+    if not isinstance(lti_params, LTIParams):
+        raise LTIBusinessRuleError('get_course_id_from_tpa_next() lti_params: expected LTIParams or dict but received: {otype}'.format(
+                otype=type(lti_params)
+            ))
+
+    try:
+
+        url = urlparse(url=lti_params.custom_tpa_next)
+        query_dict = parse_qs(url.query)
+        course_id = query_dict.get('course_id')[0]
+        course_key = CourseKey.from_string(course_id)
+
+        if DEBUG:
+            log.info('get_course_id_from_tpa_next() - found course_id: {course_id}'.format(
+                course_id=course_id
+            ))
+
+        return course_key
+
+    except Exception as err:
+        msg='LTIParams.get_course_id_from_tpa_next() - Exception encountered while extracting course_id from lti_params: \r\nError: {err}.\r\n{traceback}'.format(
+            err=err,
+            traceback=traceback.format_exc()
+        )
+        log.error(msg)
+
+    return None
 
 def get_lti_user_id(course_id, username, context_id=None):
     """
@@ -360,11 +403,12 @@ def get_lti_user_id(course_id, username, context_id=None):
     This is passed in tpa_params during LTI authentication and cached.
     """
 
-    #msg='get_lti_user_id() - course_id: {course_id}, username: {username}'.format(
-    #    course_id=course_id,
-    #    username=username
-    #)
-    #print(msg)
+    if DEBUG:
+        log.info('get_lti_user_id() - course_id: {course_id}, username: {username}'.format(
+            course_id=course_id,
+            username=username
+        ))
+    
 
     user = USER_MODEL.objects.get(username=username)
     course_key = CourseKey.from_string(course_id)

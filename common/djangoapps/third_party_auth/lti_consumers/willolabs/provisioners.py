@@ -24,6 +24,12 @@ check_enrollment()
 
 """
 from __future__ import absolute_import
+
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
+
 import logging
 
 from django.contrib.auth import get_user_model
@@ -34,7 +40,7 @@ from opaque_keys.edx.keys import CourseKey
 
 from .exceptions import LTIBusinessRuleError
 from .cache import LTISession
-from .lti_params import LTIParams, get_cached_course_id
+from .lti_params import LTIParams, get_cached_course_id, get_course_id_from_tpa_next
 
 
 User = get_user_model()
@@ -266,6 +272,8 @@ class CourseProvisioner(object):
         enrollments = self.enrollments
         if enrollments is not None:
             if len(enrollments) == 1:
+                # student is enrolled in exactly one course (the most common case).
+                # return the course_id for this course.
                 if DEBUG: log.info('CourseProvisioner.get_course_id() -- found a course_id from self.enrollments')
                 self._course_id = enrollments[0].course_id
                 return self._course_id
@@ -274,12 +282,26 @@ class CourseProvisioner(object):
                     if DEBUG: log.error('CourseProvisioner.get_course_id() -- internal error. self.enrollments reports zero enrollments')
 
                 if len(enrollments) > 1:
-                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses, so looking in the LTI cache. context_id: {context_id}, Enrollments: {enrollments}'.format(
-                        enrollments=enrollments,
+                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses')
+
+                    # alternative #1: try to pull a cached course record based on the
+                    # context_id from the lti_params.
+                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in the LTI cache. context_id: {context_id}'.format(
                         context_id=self.context_id
                         ))
                     self._course_id = get_cached_course_id(context_id=self.context_id)
-                    return self._course_id
+                    if self._course_id:
+                        return self._course_id
+
+                    # alternative #2: try to pull a course_id from the url
+                    # in the tpa_next lti parameter.
+                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in lti_params.custom_tpa_next: {custom_tpa_next}'.format(
+                        custom_tpa_next=self.lti_params.custom_tpa_next
+                        ))
+                    self._course_id = get_course_id_from_tpa_next(self.lti_params)
+                    if self._course_id:
+                        return self._course_id
+
 
         # we struck out. didn't find a course_id from any of our possible sources
         return None
