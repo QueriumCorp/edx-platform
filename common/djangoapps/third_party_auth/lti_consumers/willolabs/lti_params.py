@@ -343,8 +343,12 @@ def get_cached_course_id(context_id):
     course = LTIExternalCourse.objects.filter(context_id=context_id).first()
 
     if course:
+        log.info('LTIParams.get_cached_course_id() - found course_id: {course_id}'.format(
+            course_id=course.course_id
+        ))        
         return course.course_id
 
+    log.info('LTIParams.get_cached_course_id() - did not find a course_id.')
     return None
 
 

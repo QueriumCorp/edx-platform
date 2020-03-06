@@ -78,7 +78,8 @@ class CourseProvisioner(object):
 
         self.lti_params = lti_params         # originates from the http response body from LTI auth
         self.user = user
-        self.course_id = course_id
+        if course_id:
+            self.course_id = course_id
 
         log.info('CourseProvisioner.__init__() initialized. user: {user}, context_id: {context_id}, '\
             ' course_id: {course_id}'.format(
@@ -273,10 +274,12 @@ class CourseProvisioner(object):
                     if DEBUG: log.error('CourseProvisioner.get_course_id() -- internal error. self.enrollments reports zero enrollments')
 
                 if len(enrollments) > 1:
-                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses, so looking in the LTI cache. Enrollments: {enrollments}'.format(
-                        enrollments=enrollments
+                    if DEBUG: log.info('CourseProvisioner.get_course_id() -- student is enrolled in multiple courses, so looking in the LTI cache. context_id: {context_id}, Enrollments: {enrollments}'.format(
+                        enrollments=enrollments,
+                        context_id=self.context_id
                         ))
                     self._course_id = get_cached_course_id(context_id=self.context_id)
+                    return self._course_id
 
         # we struck out. didn't find a course_id from any of our possible sources
         return None
@@ -311,7 +314,11 @@ class CourseProvisioner(object):
                 raise LTIBusinessRuleError("Course_key provided is not a valid object type. Must be either CourseKey or String.")
 
         self._session = None
-        self.check_enrollment()
+        if self._course_id:
+            # since we now have a course_id we want to run through check_enrollment()
+            # and, if we also have user_id and context_id, then we'll (if necessary) automatically
+            # enroll the student in the course.
+            self.check_enrollment()
 
     @property
     def enrollments(self):
