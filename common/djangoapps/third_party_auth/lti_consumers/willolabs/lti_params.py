@@ -43,6 +43,8 @@ class LTIParams(object):
         Arguments:
             lti_params {dict} -- a Python dictionary provided in the 
             http response body of LTI authentication request.
+            see https://readthedocs.roverbyopenstax.org/en/latest/how_to/lti.html#tpa-lti-params
+
         """
         if DEBUG: log.info('LTIParams.__init__()')
 

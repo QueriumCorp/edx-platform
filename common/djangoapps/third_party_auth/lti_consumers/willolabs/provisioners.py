@@ -4,10 +4,11 @@ which contains the value "context_id", that uniquely identifies the course from 
 session originated.
 
 1. The LTI consumer is not assumed to have any knowledge of the courseware available on Rover, which presents a
-conundrum with respect to establishing a map of context_id's to Rover's corresponding course_id's. The only
-real-world independent connection between a context_id and a course_id is the instructor teaching the course.
-Therefore, when this instructor authenticates via LTI we can poll for the instructor's course(s) in Rover and
-then draw some logical conclusions about what do about mapping the instructor's context_id to a course_id in Rover.
+conundrum with respect to establishing a map of context_id's to Rover's corresponding course_id's. The LTI
+course relationship to Rover is weak, but can be established by any of the following:
+    a.) the course_id query parameter that MIGHT BE embedded in tpa_params.custom_tpa_next URL
+    b.) a LTI cache entry, if it exists
+    c.) an analysis of the student's enrollment data in Rover, if it exists.
 
 2. Moreover, students authenticating via LTI will need to be automatically enrolled in the Rover course
 corresponding to the context_id contained in the tpa_lti_params dictionary of their authentication http
@@ -69,6 +70,7 @@ class CourseProvisioner(object):
             assigned. 
 
             lti_params {dict} -- received during LTI authentication.
+            see https://readthedocs.roverbyopenstax.org/en/latest/how_to/lti.html#tpa-lti-params
         
         Keyword Arguments:
             course_id {string} - (default: {None}). course_id can usually be retrieved from the LTI cache
@@ -195,7 +197,8 @@ class CourseProvisioner(object):
                     else:
                         raise LTIBusinessRuleError('CourseProvisioner.lti_params() - received invalid lti_params.')
                 else:
-                    raise LTIBusinessRuleError('CourseProvisioner.lti_params() - receive object of type {dtype}.'.format(
+                    raise LTIBusinessRuleError('CourseProvisioner.lti_params() - expected LTIParams but received'\
+                        ' object of type {dtype}.'.format(
                         dtype=type(value)
                     ))
         else:
