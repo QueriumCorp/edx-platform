@@ -25,12 +25,6 @@ check_enrollment()
 
 """
 from __future__ import absolute_import
-
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
-
 import logging
 
 from django.contrib.auth import get_user_model
@@ -84,15 +78,29 @@ class CourseProvisioner(object):
                 course_id=course_id
             ))
 
-        self.lti_params = lti_params         # originates from the http response body from LTI auth
+        # originates from the http response body from LTI auth.
+        # the lti_params setter also sets self.context_id and self.course_id
+        self.lti_params = lti_params
+
+
         self.user = user
+
+        # if user is not yet logged in then we'll receive an Anonymous user object type
+        # that is not iterable and has no enrollments.
+        if self.user.is_anonymous:
+            log.error('CourseProvisioner.__init__() - internal error. received an anonymous user object.')
+
         if course_id:
+            # ensure agreement between data inside of lti_params vs whatever
+            # we received.
             lti_params_course_id = get_course_id_from_tpa_next(self.lti_params)
             if lti_params_course_id and course_id and lti_params_course_id != course_id:
                 raise LTIBusinessRuleError('CourseProvisioner.__init__() - internal error: course_id provided does not equal course_id found in lti_params.')
             self.course_id = course_id
         else:
-            self.course_id = get_course_id_from_tpa_next(self.lti_params)
+            # course_id was probably initialized automatically by the lti_params setter.
+            if not self.course_id:
+                self.course_id = get_course_id_from_tpa_next(self.lti_params)
 
         log.info('CourseProvisioner.__init__() initialized. user: {user}, context_id: {context_id}, '\
             ' course_id: {course_id}'.format(
@@ -187,25 +195,29 @@ class CourseProvisioner(object):
         ))
         self.init()
         if value is not None:
-            if isinstance(value, LTIParams):
-                self._lti_params = value
-            else:
-                if isinstance(value, dict):
-                    new_params = LTIParams(value)
-                    if new_params.is_valid:
-                        self._lti_params = new_params
-                    else:
-                        raise LTIBusinessRuleError('CourseProvisioner.lti_params() - received invalid lti_params.')
-                else:
-                    raise LTIBusinessRuleError('CourseProvisioner.lti_params() - expected LTIParams but received'\
-                        ' object of type {dtype}.'.format(
-                        dtype=type(value)
-                    ))
+            if isinstance(value, dict):
+                value = LTIParams(value)
+
+            if not isinstance(value, LTIParams):
+                raise LTIBusinessRuleError('CourseProvisioner.lti_params() - expected LTIParams but received'\
+                    ' object of type {dtype}.'.format(
+                    dtype=type(value)
+                ))
+
+            if not value.is_valid:
+                raise LTIBusinessRuleError('CourseProvisioner.lti_params() - received invalid lti_params.')
+            if not value.is_willolabs:
+                raise LTIBusinessRuleError('CourseProvisioner.lti_params() - lti_params did not originate from Willo Labs.')
+
+            self._lti_params = value
         else:
             self._lti_params = None
 
+        # if we're initialized then pre-populate anything that can 
+        # originate from the lti_params dictionary
         if self.lti_params:
             self._context_id = self.lti_params.context_id
+            self.course_id = get_course_id_from_tpa_next(self._lti_params)
 
     @property
     def context_id(self):
@@ -347,11 +359,7 @@ class CourseProvisioner(object):
                 raise LTIBusinessRuleError("Course_key provided is not a valid object type. Must be either CourseKey or String.")
 
         self._session = None
-        if self._course_id:
-            # since we now have a course_id we want to run through check_enrollment()
-            # and, if we also have user_id and context_id, then we'll (if necessary) automatically
-            # enroll the student in the course.
-            self.check_enrollment()
+        return None
 
     @property
     def enrollments(self):
@@ -416,7 +424,7 @@ class CourseProvisioner(object):
         self._session = LTISession(
             lti_params = self.lti_params.dictionary,
             user = self.user, 
-            course_id = self._course_id
+            course_id = self.course_id
             )
         return self._session
 
