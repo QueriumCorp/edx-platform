@@ -78,29 +78,12 @@ class CourseProvisioner(object):
                 course_id=course_id
             ))
 
-        # originates from the http response body from LTI auth.
+        # Note: lti_params originates from the http response body from LTI auth.
         # the lti_params setter also sets self.context_id and self.course_id
         self.lti_params = lti_params
-
-
         self.user = user
-
-        # if user is not yet logged in then we'll receive an Anonymous user object type
-        # that is not iterable and has no enrollments.
-        if self.user.is_anonymous:
-            log.error('CourseProvisioner.__init__() - internal error. received an anonymous user object.')
-
         if course_id:
-            # ensure agreement between data inside of lti_params vs whatever
-            # we received.
-            lti_params_course_id = get_course_id_from_tpa_next(self.lti_params)
-            if lti_params_course_id and course_id and lti_params_course_id != course_id:
-                raise LTIBusinessRuleError('CourseProvisioner.__init__() - internal error: course_id provided does not equal course_id found in lti_params.')
             self.course_id = course_id
-        else:
-            # course_id was probably initialized automatically by the lti_params setter.
-            if not self.course_id:
-                self.course_id = get_course_id_from_tpa_next(self.lti_params)
 
         log.info('CourseProvisioner.__init__() initialized. user: {user}, context_id: {context_id}, '\
             ' course_id: {course_id}'.format(
@@ -214,10 +197,12 @@ class CourseProvisioner(object):
             self._lti_params = None
 
         # if we're initialized then pre-populate anything that can 
-        # originate from the lti_params dictionary
+        # originate from the lti_params dictionary. note that 
+        # we we're not calling the setters in order to avoid
+        # potential thrashing.
         if self.lti_params:
             self._context_id = self.lti_params.context_id
-            self.course_id = get_course_id_from_tpa_next(self._lti_params)
+            self._course_id = get_course_id_from_tpa_next(self._lti_params)
 
     @property
     def context_id(self):
@@ -265,6 +250,11 @@ class CourseProvisioner(object):
                 dtype=type(value)
             ))
             
+        # if user is not yet logged in then we'll receive an Anonymous user object type
+        # that is not iterable and has no enrollments.
+        if value.is_anonymous:
+            log.info('CourseProvisioner.user.setter() - received an anonymous user object.')
+
         self._user = value
 
         # initialize properties that depend on user
@@ -350,14 +340,19 @@ class CourseProvisioner(object):
         if value == self._course_id:
             return
 
-        if isinstance(value, CourseKey):
-            self._course_id = value
-        else:
-            if isinstance(value, str):
-                self._course_id = CourseKey.from_string(value)
-            else:
-                raise LTIBusinessRuleError("Course_key provided is not a valid object type. Must be either CourseKey or String.")
+        if isinstance(value, str):
+            value = CourseKey.from_string(value)
 
+        if not isinstance(value, CourseKey):
+            raise LTIBusinessRuleError("Course_key provided is not a valid object type. Must be either CourseKey or String.")
+
+        # ensure agreement between data inside of lti_params vs whatever
+        # we received.
+        lti_params_course_id = get_course_id_from_tpa_next(self.lti_params)
+        if lti_params_course_id and lti_params_course_id != value:
+            raise LTIBusinessRuleError('CourseProvisioner.__init__() - internal error: course_id provided does not equal course_id found in lti_params.')
+
+        self._course_id = value
         self._session = None
         return None
 
