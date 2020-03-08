@@ -582,7 +582,10 @@ class LTISession(object):
             usage_key=usage_key
         ).first()
         if problem:
-            if DEBUG: log.info('LTISession.get_course_assignment() - returning the cached parent assignment object.')
+            if DEBUG: log.info('LTISession.get_course_assignment() - returning the cached parent assignment object.\n\rproblem: {problem}\n\rassignment: {course_assignment}'.format(
+                problem=problem,
+                course_assignment=problem.course_assignment
+            ))
             return problem.course_assignment
 
         # no problem record found, so look for the most recently-added assignment and

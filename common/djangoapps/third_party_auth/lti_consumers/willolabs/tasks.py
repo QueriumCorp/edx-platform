@@ -55,7 +55,7 @@ KNOWN_RETRY_ERRORS = (  # Errors we expect occasionally, should be resolved on r
 )
 RECALCULATE_GRADE_DELAY_SECONDS = 5  # to prevent excessive _has_db_updated failures. See TNL-6424.
 RETRY_DELAY_SECONDS = 40
-TIMEOUT_SECONDS = 300
+TIMEOUT_SECONDS = 600
 TASK_TIME_LIMIT = 60
 TASK_SOFT_TIME_LIMIT = 50
 MAX_RETRIES = 1

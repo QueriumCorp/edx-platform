@@ -11,6 +11,8 @@ import requests
 from django.conf import settings
 from .models import LTIExternalCourse
 
+from .exceptions import LTIBusinessRuleError
+
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
@@ -84,6 +86,12 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - assignment: {assignment}'.format(
             assignment=data.get('title')
         ))
+
+    if not ext_wl_outcome_service_url:
+        raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: ext_wl_outcome_service_url has not been set for this course. Cannot continue.')
+    
+    if not data:
+        raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing or null. Cannot continue.')
 
     headers = willo_api_headers(
         key = 'Content-Type',
