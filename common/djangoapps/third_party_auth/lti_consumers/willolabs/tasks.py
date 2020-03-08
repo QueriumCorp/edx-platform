@@ -158,9 +158,20 @@ def _post_grades(self, username, course_id, usage_id):
             ))
 
         # Push grades to Willo grade sync
-        retval = create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_grade)
+        retval = create_column(
+            self,
+            lti_cached_course=lti_cached_course, 
+            lti_cached_assignment=lti_cached_assignment, 
+            lti_cached_grade=lti_cached_grade
+            )
         if retval:
-            retval = post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade)
+            retval = post_grade(
+                self,
+                lti_cached_course=lti_cached_course, 
+                lti_cached_enrollment=lti_cached_enrollment, 
+                lti_cached_assignment=lti_cached_assignment, 
+                lti_cached_grade=lti_cached_grade
+                )
         
         return retval
 
