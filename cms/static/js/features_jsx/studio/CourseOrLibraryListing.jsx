@@ -6,14 +6,15 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 export function CourseOrLibraryListing(props) {
-  console.info('props',props);
+  console.info('CourseOrLibraryListing props:',props);
   const allowReruns = props.allowReruns;
   const linkClass = props.linkClass;
   const idBase = props.idBase;
+  const isSuperuser = props.isSuperuser;
+  console.info( 'isSuperuser:',isSuperuser);
 
   console.info( ( props.idBase==="course") ? "ACTIVE COURSES===" : "")
   console.info( ( props.idBase==="archived") ? "ARCHIVED COURSES===" : "")
-  console.info( props );
 
   const templates = props.items.filter( (item)=>item.run==='Template');
   const sections = props.items.filter( (item)=>item.run!='Template');
@@ -75,7 +76,7 @@ export function CourseOrLibraryListing(props) {
                 }
               </div>
             </a>
-            { allowReruns && item.lms_link && item.rerun_link &&
+            { isSuperuser && allowReruns && item.lms_link && item.rerun_link &&
             <ul className="item-actions course-actions">
               <li className="action action-edit">
                 <a
@@ -168,4 +169,5 @@ CourseOrLibraryListing.propTypes = {
   idBase: PropTypes.string.isRequired,
   items: PropTypes.arrayOf(PropTypes.object).isRequired,
   linkClass: PropTypes.string.isRequired,
+  isSuperuser: PropTypes.bool.isRequired,
 };
