@@ -20,6 +20,25 @@ except ImportError:
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
+def chapter_from_url(url):
+    """
+     Strip right-most segment of a URL path to use as a unique id for 
+     Willo Labs api grades posts.
+
+     Example - fully-qualified URL:
+     url = https://dev.roverbyopenstax.org/courses/course-v1:OpenStax+PCL101+2020_Tmpl_RevY/courseware/aa342d9db424426f8c6c550935e8716a/249dfef365fd434c9f5b98754f2e2cb3
+     path = /courses/course-v1:OpenStax+PCL101+2020_Tmpl_RevY/courseware/aa342d9db424426f8c6c550935e8716a/249dfef365fd434c9f5b98754f2e2cb3
+     return value = 'aa342d9db424426f8c6c550935e8716a'
+
+    """
+
+    # a "url" from within an open edx course object
+    if not isinstance(url, str):
+        raise Exception('chapter_from_url() was expecting a string.')
+    else:
+        # a valid fully-qualified URL
+        parsed_url = urlparse(url)
+        return parsed_url.path.rsplit('/')[-2]
 
 def willo_id_from_url(url):
     """

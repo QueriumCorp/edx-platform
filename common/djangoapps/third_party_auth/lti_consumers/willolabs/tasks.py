@@ -10,7 +10,7 @@ Date:       jan-2020
 """
 
 import logging
-from datetime import datetime
+import datetime
 import pytz
 import traceback
 
@@ -28,7 +28,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
-from lms.djangoapps.grades.api.v2.utils import parent_usagekey
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
@@ -42,6 +41,12 @@ from .api import (
     willo_activity_id_from_string,
     willo_date
     )
+
+# to retrieve assignment grade
+from xmodule.modulestore.django import modulestore
+from lms.djangoapps.course_blocks.api import get_course_blocks
+from lms.djangoapps.grades.transformer import GradesTransformer
+from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
 
 
 log = logging.getLogger(__name__)
@@ -85,9 +90,10 @@ def post_grades(self, username, course_id, usage_id):
 
 def _post_grades(self, username, course_id, usage_id):
     """
-        username: a string
-        course_id: a string identifier for a CourseKey
-        usage_id: a string identifier for a UsageKey
+    username: a string representing the User.username of the student
+    course_id: a string identifier for a CourseKey
+    usage_id: a string identifier for a UsageKey. Identifies the problem that was just submitted and graded.
+
 
     Post Rover grade data to a Willo Labs external platform via LTI integration.
     This task is called from lms/djangoapps/grades/tasks.py
@@ -95,55 +101,39 @@ def _post_grades(self, username, course_id, usage_id):
     The grading process is executed real-time, each time a learner submits a problem.
 
     Note: the grader program sends us a usage_id corresponding to the problem that was just graded.
-    But we need to use this usage_id to locate the UsageKey corresponding to the homework exercise in 
+    But we need to use this usage_id to locate the UsageKey corresponding to the assignment in 
     which this problem is contained. 
-
-
-    @task:
-    ------
-    bind: 
-    retry_limit: post_grades will be attempted this many time before failing.
-    default_retry_delay: wait interval between attempts, in seconds.
-    acks_late: 
 
     Return value:
         failure_messages: List of error messages for the providers that could not be updated
     """
     try:
-        log.debug('_post_grades() - username: {username}, course_id: {course_id}, usage_id: {usage_id}'.format(
+        if DEBUG: log.info('_post_grades() - username: {username}, course_id: {course_id}, usage_id: {usage_id}'.format(
             username=username,
             course_id=course_id,
             usage_id=usage_id
         ))
 
-        # reinstantiate our local class variables
-        user = get_user_model().objects.get(username=username)
+        # re-instantiate our class objects
+        student = get_user_model().objects.get(username=username)
         course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
-        session = LTISession(user=user, course_id=course_id)
+        session = LTISession(user=student, course_id=course_id)
 
         lti_cached_course = session.course
         if lti_cached_course is None:
             raise LTIBusinessRuleError('Tried to call Willo api with partially initialized LTI session object. course property is not set.')
 
         lti_cached_assignment = session.get_course_assignment(problem_usage_key)
-
-        # Note: this is scaffolding that will
-        # facilitate a faster, cached grade post operation
-        # once we learn more about how to pull cached
-        # grade data from Block Store structures.
-        homework_assignment_dict = parent_usagekey(
-            user,
-            course_key = course_key,
-            usage_key = problem_usage_key
-            )
-
         if lti_cached_assignment is None:
             log.error('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
 
         lti_cached_enrollment = session.get_course_enrollment()
         if lti_cached_enrollment is None:
             log.error('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
+
+        subsection_grade = get_subsection_grade(student, course_key, problem_usage_key)
+        homework_assignment_dict = get_assignment_grade(course_key=course_key, subsection_grade=subsection_grade)
 
         # Cache the grade data
         session.post_grades(
@@ -156,22 +146,24 @@ def _post_grades(self, username, course_id, usage_id):
             log.error('Tried to call Willo api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}.'.format(
                 usage_key=problem_usage_key
             ))
+            return False
+        else:
 
-        # Push grades to Willo grade sync
-        retval = create_column(
-            self,
-            lti_cached_course=lti_cached_course, 
-            lti_cached_assignment=lti_cached_assignment, 
-            lti_cached_grade=lti_cached_grade
-            )
-        if retval:
-            retval = post_grade(
+            # Push grades to Willo grade sync
+            retval = create_column(
                 self,
                 lti_cached_course=lti_cached_course, 
-                lti_cached_enrollment=lti_cached_enrollment, 
                 lti_cached_assignment=lti_cached_assignment, 
                 lti_cached_grade=lti_cached_grade
                 )
+            if retval:
+                retval = post_grade(
+                    self,
+                    lti_cached_course=lti_cached_course, 
+                    lti_cached_enrollment=lti_cached_enrollment, 
+                    lti_cached_assignment=lti_cached_assignment, 
+                    lti_cached_grade=lti_cached_grade
+                    )
         
         return retval
 
@@ -188,6 +180,60 @@ def _post_grades(self, username, course_id, usage_id):
     except SoftTimeLimitExceeded:
         self.recover_from_exceeded_time_limit()
 
+def get_subsection_grade(student, course_key, problem_usage_key):
+    """the code pattern that follow originates from lms.djangoapps.grades.tasks._update_subsection_grades()
+    the object we need -- subsection_grade -- is recreated here rather than passed from _update_subsection_grades()
+    in order to avoid passing a potentially large chunky object thru Celery.
+
+    notes:
+    subsection_grade.graded_total: <common.lib.xmodule.xmodule.graders.AggregatedScore>
+    from xmodule.graders import AggregatedScore
+    
+    AggregatedScore({'first_attempted': datetime.datetime(2020, 1, 17, 20, 33, 14, 114130, tzinfo=<UTC>), 'graded': True, 'possible': 11.0, 'earned': 11.0})
+    subsection_grade.graded_total.__dict__: {'first_attempted': datetime.datetime(2020, 1, 17, 20, 33, 14, 114130, tzinfo=<UTC>), 'graded': True, 'possible': 11.0, 'earned': 11.0}
+
+
+    Parameters:
+        student = User
+        course_key = CourseKey
+        problem_usage_key = UsageKey
+    
+    Returns:
+        subsection_grade: lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
+    """
+    if DEBUG: log.info('get_subsection_grade() student: {student}, '\
+        'course_key: {course_key}, problem_usage_key: {problem_usage_key}'.format(
+        student=student,
+        course_key=course_key,
+        problem_usage_key=problem_usage_key
+    ))
+
+    subsection_grade = None
+    store = modulestore()
+    with store.bulk_operations(course_key):
+        course_structure = get_course_blocks(student, store.make_course_usage_key(course_key))
+        subsections_to_update = course_structure.get_transformer_block_field(
+            problem_usage_key,
+            GradesTransformer,
+            'subsections',
+            set(),
+        )
+        course = store.get_course(course_key, depth=0)
+        subsection_grade_factory = SubsectionGradeFactory(student, course, course_structure)
+        for subsection_usage_key in subsections_to_update:
+            if subsection_usage_key in course_structure:
+                subsection_grade = subsection_grade_factory.update(
+                    course_structure[subsection_usage_key]
+                )
+
+    if not subsection_grade:
+        log.error('get_subsection_grade() - did not find a grade object for student: {student}, '\
+            'course_key: {course_key}, problem_usage_key: {problem_usage_key}'.format(
+            student=student,
+            course_key=course_key,
+            problem_usage_key=problem_usage_key
+        ))
+    return subsection_grade
 
 def recover_from_exceeded_time_limit(self):
     """
@@ -246,13 +292,14 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
         ))
 
     return willo_api_create_column(
-        lti_cached_course.ext_wl_outcome_service_url, 
-        data
+        ext_wl_outcome_service_url=lti_cached_course.ext_wl_outcome_service_url,
+        data=data
         )
 
 
 def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade):
-    """Willo Grade Sync api. Post grade scored for one student, for one homework assignment.
+    """
+    Willo Grade Sync api. Post grade scored for one student, for one homework assignment.
     Willo api returns 200 if the grade was posted. Example ext_wl_outcome_service_url:
     'https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/'
     Read more: https://readthedocs.roverbyopenstax.org/en/latest/developer_zone/edx-platform/willo_gradesync.html
@@ -302,6 +349,87 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         ))
 
     return willo_api_post_grade(
-        lti_cached_course.ext_wl_outcome_service_url,
-        data
-    )
+        ext_wl_outcome_service_url=lti_cached_course.ext_wl_outcome_service_url,
+        data=data
+        )
+
+
+
+
+def get_assignment_grade(course_key, subsection_grade):
+    """
+    Extract assignment grade data and compose into a dict, along with the URL
+    for the assignment. 
+
+    Arguments:
+    course_key: CourseKey
+    subsection_grade: 
+        lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
+        this contains a private __dict__ object along w dynamic getters
+        allowing references such as "subsection_grade.display_name"
+
+    subsection_grade.graded_total: 
+        <common.lib.xmodule.xmodule.graders.AggregatedScore>
+        from xmodule.graders import AggregatedScore
+        also uses a private __dict__ and dynamic getters
+    
+        AggregatedScore({'first_attempted': datetime.datetime(2020, 1, 17, 20, 33, 14, 114130, tzinfo=<UTC>), 'graded': True, 'possible': 11.0, 'earned': 11.0})
+        subsection_grade.graded_total.__dict__: {'first_attempted': datetime.datetime(2020, 1, 17, 20, 33, 14, 114130, tzinfo=<UTC>), 'graded': True, 'possible': 11.0, 'earned': 11.0}
+
+    Returns: dict
+        - the url of the homework assignment containing the usage_key that was passed.
+        - a grade dictionary for the homework assignment
+    This method assumes that the usage_key passed points to a homework problem.
+
+    example return:
+    {
+        'grades': {
+            'section_display_name': "Getting to Know Rover Review Assignment",
+            'section_due': datetime.datetime(2020, 1, 17, 20, 33, 14, 114130, tzinfo=<UTC>)
+            'section_attempted_graded': True, 
+            'section_earned_all': 11,
+            'section_possible_all': 17,
+            'section_earned_graded': 11,
+            'section_possible_graded': 11,
+            'section_grade_percent': 100,
+            },
+        'url': u'https://dev.roverbyopenstax.org/courses/course-v1:ABC+OS9471721_9626+01/courseware/c0a9afb73af311e98367b7d76f928163/c8bc91313af211e98026b7d76f928163'
+    }
+    """
+
+    grades = {
+        'section_display_name': subsection_grade.display_name,
+        'section_due': subsection_grade.due or (datetime.datetime.now() + datetime.timedelta(days=365.25/2)),
+        'section_attempted_graded': subsection_grade.attempted_graded,
+        'section_earned_all': subsection_grade.all_total.earned,
+        'section_possible_all': subsection_grade.all_total.possible,
+        'section_earned_graded': subsection_grade.graded_total.earned,
+        'section_possible_graded': subsection_grade.graded_total.possible,
+        'section_grade_percent': _calc_grade_percentage(subsection_grade.graded_total.earned, subsection_grade.graded_total.possible),
+        }
+
+    section_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter}/{section}'.format(
+            scheme = u"https" if settings.HTTPS == "on" else u"http",
+            host = settings.SITE_NAME,
+            url_prefix='courses',
+            course_id=course_key.html_id(),
+            chapter='CHAPTER_URL',
+            section=subsection_grade.url_name
+            )
+
+    retval = {
+        'grades':  grades,
+        'url': section_url
+    }
+    return retval
+
+def _calc_grade_percentage(earned, possible):
+    """
+        calculate the floating point percentage grade score based on the
+        integer parameters "earned" and "possible"
+    """
+    f_grade = float(0)
+    if possible != 0:
+        f_grade = float(earned) / float(possible)
+    return f_grade
+
