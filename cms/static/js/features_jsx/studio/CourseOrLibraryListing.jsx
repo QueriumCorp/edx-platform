@@ -11,7 +11,6 @@ export function CourseOrLibraryListing(props) {
   const linkClass = props.linkClass;
   const idBase = props.idBase;
   const isSuperuser = props.isSuperuser;
-  console.info( 'isSuperuser:',isSuperuser);
 
   console.info( ( props.idBase==="course") ? "ACTIVE COURSES===" : "")
   console.info( ( props.idBase==="archived") ? "ARCHIVED COURSES===" : "")
