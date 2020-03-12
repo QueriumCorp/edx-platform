@@ -48,7 +48,9 @@ WILLO_ROLES_PARAM_EXAMPLES = (
 WILLO_DOMAINS = (
     'test.willolabs.com', 
     'stage.willolabs.com', 
-    'app.willolabs.com'
+    'app.willolabs.com',
+    'ca.willolabs.com',
+    'ca-stage.willolabs.com'
 )
 
 LTI_CACHE_TABLES = (
