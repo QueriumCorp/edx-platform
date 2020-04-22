@@ -34,6 +34,16 @@ from xmodule.mongo_utils import connect_to_mongodb, create_collection_index
 new_contract('BlockData', BlockData)
 log = logging.getLogger(__name__)
 
+DEBUG = False
+
+
+# mcdaniel apr-2020 
+# Memcached object splitter: a workaround to the 1mb object limit in Memcached.
+
+# reduce default max value of 1024*1024 by the length of our hash
+# less another 7 characters to allow for the pattern: ###  (ie where 001 means "chunk one")
+MEMCACHED_MAX_VALUE_LENGTH = ((1024*1024)-3)
+
 
 def get_cache(alias):
     """
@@ -176,23 +186,28 @@ def structure_from_mongo(structure, course_context=None):
         course_context (CourseKey): For metrics gathering, the CourseKey
             for the course that this data is being processed for.
     """
+    if DEBUG: log.info('mcdaniel apr-2020: mongo_connection.py structure_from_mongo() - begin')
     with TIMER.timer('structure_from_mongo', course_context) as tagger:
         tagger.measure('blocks', len(structure['blocks']))
 
         check('seq[2]', structure['root'])
         check('list(dict)', structure['blocks'])
+        if DEBUG: log.info('mcdaniel apr-2020: mongo_connection.py structure_from_mongo() - 1')
         for block in structure['blocks']:
             if 'children' in block['fields']:
                 check('list(list[2])', block['fields']['children'])
 
+        if DEBUG: log.info('mcdaniel apr-2020: mongo_connection.py structure_from_mongo() - 2')
         structure['root'] = BlockKey(*structure['root'])
         new_blocks = {}
+        if DEBUG: log.info('mcdaniel apr-2020: mongo_connection.py structure_from_mongo() - 3')
         for block in structure['blocks']:
             if 'children' in block['fields']:
                 block['fields']['children'] = [BlockKey(*child) for child in block['fields']['children']]
             new_blocks[BlockKey(block['block_type'], block.pop('block_id'))] = BlockData(**block)
         structure['blocks'] = new_blocks
 
+        if DEBUG: log.info('mcdaniel apr-2020: mongo_connection.py structure_from_mongo() - end')
         return structure
 
 
@@ -234,37 +249,141 @@ class CourseStructureCache(object):
     for set and get.
     """
     def __init__(self):
+        if DEBUG: log.info('mcdaniel apr-2020: CourseStructureCache.__init__() - begin')
         self.cache = None
         if DJANGO_AVAILABLE:
             try:
                 self.cache = get_cache('course_structure_cache')
+                if DEBUG: log.info('mcdaniel apr-2020: CourseStructureCache.__init__() - set Django cache object')
             except InvalidCacheBackendError:
                 pass
+        if DEBUG: log.info('mcdaniel apr-2020: CourseStructureCache.__init__() - end')
+
+
+    def _memcached_num_chunks(self, object_size):
+        """calculates the number of chunks which an object must be broken 
+        into so that the object accords with the Memcached MAX_VALUE_LENGTH
+        constraint (which usually is 1MB).
+        
+        Arguments:
+            object_size {int} -- raw size of object to be cached, in bytes.
+        
+        Returns:
+            [int] -- [number of chunks required]
+        """
+        quotient = float(object_size) / float(MEMCACHED_MAX_VALUE_LENGTH)
+        ceiling = math.ceil(quotient)
+        chunks = int(ceiling)
+        if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache._memcached_num_chunks() size: {size}, chunks: {chunks}'.format(
+            size=object_size,
+            chunks=chunks
+        ))
+        return chunks
+
+    def _memcached_key_suffix(self, i):
+        """generate a hash suffix of the form ###-### which will be 
+        appended to chunked objects for serialization.
+        
+        Arguments:
+            i {int} -- identifies which chunk.
+            n {int} -- total number of chunks.
+        """
+        retval = str(i).zfill(3)
+        if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache._memcached_key_suffix() retval={retval}'.format(
+            retval=retval
+        ))
+        return retval
+
+    def _memcached_chunkify(self, i, val):
+        """return the ith chunk of a cache-bound value.
+        
+        Arguments:
+            i {int} -- indicates which i of n chunk to return
+            val {string?} -- a zlib-compressed and pickled json object
+        """
+        start = (i - 1) * MEMCACHED_MAX_VALUE_LENGTH
+        end = min((i * MEMCACHED_MAX_VALUE_LENGTH), len(val))
+        return val[start:end]
+
 
     def get(self, key, course_context=None):
         """Pull the compressed, pickled struct data from cache and deserialize."""
+        if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - begin')
         if self.cache is None:
             return None
 
+        key = str(key)
         with TIMER.timer("CourseStructureCache.get", course_context) as tagger:
-            compressed_pickled_data = self.cache.get(key)
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 1')
+
+            n = self.cache.get(key)
+            if not n: 
+                if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - cache miss.')
+                return 
+
+            n = int(float(n))
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - chunks: {n}'.format(
+                n=n
+            ))
+            
+            compressed_pickled_data = None
+            i = 1
+            checksum = 0
+            while i <= n:
+                chunk_key = key + self._memcached_key_suffix(i)
+                chunk = self.cache.get(chunk_key)
+                if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - chunk: {i} key: {key}, size: {size}'.format(
+                    i=i,
+                    key=chunk_key,
+                    size=len(chunk)
+                ))
+                if chunk is None:
+                    return
+                #    raise Exception('Internal error: cache miss: key={key}'.format(
+                #        key=key+key_suffix
+                #    ))
+
+                if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - compressed_pickled_data: {t}'.format(
+                    t=type(chunk)
+                ))
+                compressed_pickled_data = chunk if i == 1 else compressed_pickled_data + chunk
+                i += 1
+                checksum += len(chunk)
+
+
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 2')
             tagger.tag(from_cache=str(compressed_pickled_data is not None).lower())
 
             if compressed_pickled_data is None:
                 # Always log cache misses, because they are unexpected
                 tagger.sample_rate = 1
+                if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - end (cache miss)')
                 return None
 
             tagger.measure('compressed_size', len(compressed_pickled_data))
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 3 compressed_pickled_data: {size}'.format(
+                size=len(compressed_pickled_data)
+            ))
 
             pickled_data = zlib.decompress(compressed_pickled_data)
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 4')
             tagger.measure('uncompressed_size', len(pickled_data))
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 5')
 
-            return pickle.loads(pickled_data)
+            tmp = pickle.loads(pickled_data)
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 6')
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - end')
+
+            return tmp
 
     def set(self, key, structure, course_context=None):
         """Given a structure, will pickle, compress, and write to cache."""
+        key = str(key)
+        if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.set() - begin key: {key}'.format(
+            key=key
+        ))
         if self.cache is None:
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.set() - end (no cache!)')
             return None
 
         with TIMER.timer("CourseStructureCache.set", course_context) as tagger:
@@ -273,11 +392,41 @@ class CourseStructureCache(object):
 
             # 1 = Fastest (slightly larger results)
             compressed_pickled_data = zlib.compress(pickled_data, 1)
-            tagger.measure('compressed_size', len(compressed_pickled_data))
+            object_size = len(compressed_pickled_data)
+            tagger.measure('compressed_size', object_size)
 
             # Stuctures are immutable, so we set a timeout of "never"
-            self.cache.set(key, compressed_pickled_data, None)
+            #self.cache.set(key, compressed_pickled_data, None)
 
+            # set the master cache entry containing only
+            # an integer value representing the number of chunks
+            # this structure requires.
+            n = self._memcached_num_chunks(object_size)
+            if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.set() - chunks: {n}'.format(
+                n=n,
+            ))
+            self.cache.set(key, str(n), None)
+
+            i = 1
+            checksum = 0
+            while i <= n:
+                chunk = self._memcached_chunkify(i, compressed_pickled_data)
+                chunk_key = key + self._memcached_key_suffix(i)
+                if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.set() - chunk: {i}, key: {key}, size: {size}'.format(
+                    i=i,
+                    key=chunk_key,
+                    size=len(chunk)
+                ))
+                self.cache.set(chunk_key, chunk, None)
+                checksum += len(chunk)
+                i += 1
+
+
+        if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.set() - end. key: {key}, compressed_pickled_data: {size}, checksum: {checksum}'.format(
+            key=key,
+            size=len(compressed_pickled_data),
+            checksum=checksum
+        ))
 
 class MongoConnection(object):
     """
@@ -319,17 +468,28 @@ class MongoConnection(object):
 
         This method will use a cached version of the structure if it is available.
         """
+        if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() key: {key}, course_context: {course_context}'.format(
+            key=key,
+            course_context=course_context
+        ))
         with TIMER.timer("get_structure", course_context) as tagger_get_structure:
+            if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 1')
             cache = CourseStructureCache()
+            if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 2')
 
             structure = cache.get(key, course_context)
+            if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 3')
             tagger_get_structure.tag(from_cache=str(bool(structure)).lower())
+            if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 4')
+
             if not structure:
                 # Always log cache misses, because they are unexpected
                 tagger_get_structure.sample_rate = 1
 
                 with TIMER.timer("get_structure.find_one", course_context) as tagger_find_one:
+                    if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 5')
                     doc = self.structures.find_one({'_id': key})
+                    if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 6')
                     if doc is None:
                         log.warning(
                             "doc was None when attempting to retrieve structure for item with key %s",
@@ -337,10 +497,16 @@ class MongoConnection(object):
                         )
                         return None
                     tagger_find_one.measure("blocks", len(doc['blocks']))
+                    if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 7')
                     structure = structure_from_mongo(doc, course_context)
+                    if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 8')
                     tagger_find_one.sample_rate = 1
 
                 cache.set(key, structure, course_context)
+                if DEBUG: log.info('mcdaniel apr-2020: MongoConnection.get_structure() - 9 key: {key}, course_context: {course_context}'.format(
+                    key=key,
+                    course_context=course_context
+                ))
 
             return structure
 
