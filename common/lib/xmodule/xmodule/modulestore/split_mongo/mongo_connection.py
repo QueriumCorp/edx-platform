@@ -30,6 +30,7 @@ from xmodule.modulestore import BlockData
 from xmodule.modulestore.split_mongo import BlockKey
 from xmodule.mongo_utils import connect_to_mongodb, create_collection_index
 
+from xmodule.modulestore.exceptions import ItemNotFoundError
 
 new_contract('BlockData', BlockData)
 log = logging.getLogger(__name__)
@@ -40,8 +41,10 @@ DEBUG = False
 # mcdaniel apr-2020 
 # Memcached object splitter: a workaround to the 1mb object limit in Memcached.
 
+# DEPRECATED:
+# -----------
 # reduce default max value of 1024*1024 by the length of our hash
-# less another 7 characters to allow for the pattern: ###  (ie where 001 means "chunk one")
+# less another 3 characters to allow for the pattern: ###  (ie where 001 means "chunk one")
 MEMCACHED_MAX_VALUE_LENGTH = ((1024*1024)-3)
 
 
@@ -316,12 +319,22 @@ class CourseStructureCache(object):
         with TIMER.timer("CourseStructureCache.get", course_context) as tagger:
             if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - 1')
 
+            # retrieve the master cache object containing a string representation of 
+            # an integer representing the number of chunks for this object.
             n = self.cache.get(key)
             if not n: 
                 if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - cache miss.')
                 return 
 
-            n = int(float(n))
+            try:
+                n = int(float(n))
+            except ItemNotFoundError:
+                if DEBUG: log.error('Invalid data encountered trying to retrieve the chunk count for key {key}. You might need to restart memcached.'.format(
+                    key=key
+                ))
+                return
+
+
             if DEBUG: log.info('mcdaniel apr-2020 CourseStructureCache.get() - chunks: {n}'.format(
                 n=n
             ))
