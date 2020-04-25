@@ -322,15 +322,20 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     
     Returns:
         [Boolean] -- returns True if the return code is 200, False otherwise.
+
+
+    Obsoleted:
+        "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
     """
     if DEBUG: log.info('willolabs.tasks.post_grade()')
 
     try:
 
+        willo_id = willo_id_from_url(lti_cached_assignment.url) + ":" + lti_cached_enrollment.lti_user_id
         data = {
             "type": "result",
-            "id": willo_id_from_url(lti_cached_assignment.url),
-            "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
+            "id": willo_id,
+            "activity_id": willo_id_from_url(lti_cached_assignment.url)
             "user_id": lti_cached_enrollment.lti_user_id,
             "result_date": willo_date(lti_cached_grade.created),
             "score": lti_cached_grade.earned_graded,
