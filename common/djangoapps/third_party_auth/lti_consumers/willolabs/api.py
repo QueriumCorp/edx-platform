@@ -55,31 +55,31 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     ext_wl_outcome_service_url: 
         Provided by tpa_params dictionary from an LTI authentication, and cached in LTIExternalCourse.
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
-        example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/
+        example:  https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
 
     Payload format:
         data = {
-        "type": "activity",
-        "id": "123456",
-        "title": "Getting to Know Rover Review Assignment",
-        "description": "Getting to Know Rover Review Assignment",
-        "due_date": "2019-06-01T00:00:00+04:00",
-        "points_possible": 100
+            'due_date': '2020-04-29T04:59:00+00:00', 
+            'description': u'Lesson 4.5', 
+            'title': u'Lesson 4.5', 
+            'points_possible': 5.0, 
+            'type': , 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
     Curl equivalent:
     -------------------------     
-    curl -v -X POST https://stage.willolabs.com/api/v1/outcomes/BBKQyB/4469701c1aad450891edf449942cb25b/ \
+    curl -v -X POST https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/ \
         -H "Content-Type: application/vnd.willolabs.outcome.activity+json" \
         -H "Authorization: Token sampleaccesstoken" \
         -d \
     '{
-        "type": "activity",
-        "id": "tutorial-avoiding-plagiarism",
-        "title": "Tutorial: Avoiding Plagiarism",
-        "description": "sample description",
-        "due_date": "2019-06-01T00:00:00+04:00",
-        "points_possible": 100
+            'due_date': '2020-04-29T04:59:00+00:00', 
+            'description': u'Lesson 4.5', 
+            'title': u'Lesson 4.5', 
+            'points_possible': 5.0, 
+            'type': 'activity', 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
     }'
 
     """
@@ -108,6 +108,12 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
             if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully updated grade column: {grade_column_data}'.format(
                     grade_column_data = data_json
                 ))
+        if response.status_code not in (200, 201):
+            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - return code: {response} grade column: {grade_column_data}'.format(
+                    grade_column_data = data_json,
+                    response=response.status_code
+                ))
+
     else:
         log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column: {grade_column_data}, which generated the following response: {response}'.format(
             grade_column_data = data_json,
@@ -130,34 +136,36 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
     ext_wl_outcome_service_url: 
         Provided by tpa_params dictionary from an LTI authentication, and cached in LTIExternalCourse.
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
-        example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/
+        example: https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
+
 
     Payload format:
         data = {
-            "type": "result",
-            "id": "block-v1:OpenStax+PCL101+2020_Tmpl_RevY+type@problem+block@669e8abe089b4a69b3a2565402d27cad",
-            "activity_id": 123456,
-            "user_id": 123456,
-            "result_date": "2019-06-01T00:00:00+04:00",
-            "score": 10,
-            "points_possible": 10
+            'activity_id': u'lesson45', 
+            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce', 
+            'points_possible': 5.0, 
+            'score': 0.5, 
+            'result_date': '2020-04-24T19:12:19.454723+00:00', 
+            'type': 'result', 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
-    Curl equivalent:
+    Curl equivalent: (effective 25-Apr-2020 per conversation with Matt Hanger)
     -------------------------
-        curl -v -X POST https://stage.willolabs.com/api/v1/outcomes/BBKQyB/4469701c1aad450891edf449942cb25b/ \
-            -H "Content-Type: application/vnd.willolabs.outcome.result+json" \
-            -H "Authorization: Token sampleaccesstoken" \
-            -d \
+        curl -v -X POST https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/ \
+        -H "Content-Type: application/vnd.willolabs.outcome.result+json" \
+        -H "Authorization: Token replaceaccesstokenhere" \
+        -d \
         '{
+            "activity_id": "d7f67eb52e424909ba5ae7154d767a13",
+            "id": "block-v1:OpenStax+PCL101+2020_Tmpl_RevY+type@problem+block@669e8abe089b4a69b3a2565402d27cad",
+            "points_possible": 5.0,
+            "result_date": "2020-04-24T19:12:19.454723+00:00",
+            "score": 0.5,
             "type": "result",
-            "id": "8627ec7e1215413385f10b20d0dde4f0",
-            "activity_id": "tutorial-avoiding-plagiarism",
-            "user_id": "523bd4baaf772a615a478397d560a1591c7e3347",
-            "result_date": "2019-05-04T16:59:01.938229+00:00",
-            "score": 100,
-            "points_possible": 100
+            "user_id": "7010d877b3b74f39a6cbf89f9c3819ce"
         }'
+    
     """
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_post_grade()')
 
