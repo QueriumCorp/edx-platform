@@ -335,7 +335,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         data = {
             "type": "result",
             "id": willo_id,
-            "activity_id": willo_id_from_url(lti_cached_assignment.url)
+            "activity_id": willo_id_from_url(lti_cached_assignment.url),
             "user_id": lti_cached_enrollment.lti_user_id,
             "result_date": willo_date(lti_cached_grade.created),
             "score": lti_cached_grade.earned_graded,
