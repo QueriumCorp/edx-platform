@@ -11,7 +11,7 @@ from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from .models import LTIExternalCourse
 from opaque_keys.edx.locator import BlockUsageLocator
-
+from xmodule.modulestore.django import modulestore
 try:
     from urllib.parse import urlparse
 except ImportError:
@@ -19,6 +19,34 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
+
+def get_subsection_chapter(subsection_url):
+    """Traverse the course structure to locate the parent
+    chapter of subsection_url. 
+
+    in this example
+        https://dev.roverbyopenstax.org/courses/course-v1:ABC+OS9471721_9626+01/courseware/c0a9afb73af311e98367b7d76f928163/c8bc91313af211e98026b7d76f928163
+    - the chapter is c0a9afb73af311e98367b7d76f928163
+    - the subsection is c8bc91313af211e98026b7d76f928163
+
+    Arguments:
+        subsection_url {String} -- 
+
+    Returns:
+        [String] -- string representation of the chapter segment for a URL.
+    """
+    if not isinstance(subsection_url, BlockUsageLocator):
+        log.error('get_subsection_chapter() - data type mismatch. expected subsection_url of type BlockUsageLocator but received {t}'.format(
+            t=type(subsection_url)
+        ))
+        return None
+
+    parent = subsection_url
+    while parent.block_type != u'chapter':
+        parent = modulestore().get_parent_location(parent)
+
+    return parent.name
+
 
 def chapter_from_url(url):
     """
