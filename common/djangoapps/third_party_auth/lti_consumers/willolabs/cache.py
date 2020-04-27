@@ -361,7 +361,7 @@ class LTISession(object):
             # record, where the course_id is stored.
 
             # set course enrollment
-            self._course_enrollment = enrollment
+            self.course_enrollment = enrollment
             if DEBUG: log.info('LTISession.register_enrollment() - returning a cached enrollment record.')
             return enrollment
 
@@ -552,11 +552,24 @@ class LTISession(object):
         Returns:
             [LTIExternalCourseEnrollmentGrades] -- the cache record corresponding to the usage_key
         """
+        course_assignment = self.get_course_assignment(usage_key)
+
+        if self.course_enrollment is None:
+            log.error('LTISession.get_course_assignment_grade() - self.course_enrollment is not set."')
+            return False
+
+        if course_assignment is None:
+            log.error('LTISession.get_course_assignment_grade() - course_assignment is not set."')
+            return False
+
         grade = LTIExternalCourseEnrollmentGrades.objects.filter(
             course_enrollment = self.course_enrollment,
-            course_assignment = self.get_course_assignment(usage_key)
+            course_assignment = course_assignment
         ).order_by('-created').first()
-        if DEBUG: log.info('LTISession.get_course_assignment_grade() - usage_key: {usage_key} {key_type} {grade}'.format(
+
+        if DEBUG: log.info('LTISession.get_course_assignment_grade() - course_enrollment: {course_enrollment}, course_assignment: {course_assignment}, usage_key: {usage_key}, key_type: {key_type}, grade: {grade}'.format(
+            course_enrollment=self.course_enrollment,
+            course_assignment=course_assignment,
             usage_key=usage_key,
             key_type=type(usage_key),
             grade=grade
@@ -580,7 +593,7 @@ class LTISession(object):
         # try to find a cached problem record, then return its parent.
         problem = LTIExternalCourseAssignmentProblems.objects.filter(
             usage_key=usage_key
-        ).first()
+        ).order_by('-created').first()
         if problem:
             if DEBUG: log.info('LTISession.get_course_assignment() - returning the cached parent assignment object.\n\rproblem: {problem}\n\rassignment: {course_assignment}'.format(
                 problem=problem,
@@ -593,7 +606,7 @@ class LTISession(object):
         #
         # FIX NOTE: there could be holes in this logic.
         assignment = LTIExternalCourseAssignments.objects.filter(
-            course=self.get_course()
+            course=self.course
         ).order_by('-created').first()
         if assignment:
             if DEBUG: log.info('LTISession.get_course_assignment() - returning most recently created cached assignment record.')
@@ -618,7 +631,7 @@ class LTISession(object):
         ))
 
         assignment = LTIExternalCourseAssignments.objects.filter(
-            course = self.get_course(),
+            course = self.course,
             url = url
         ).first()
 
@@ -734,8 +747,8 @@ class LTISession(object):
 
         return problem
 
-    
-    def get_context_id(self):
+    @property
+    def context_id(self):
         """Lazy reader implementation. If context_id has not been set
         then look for it in lti_params and/or course.
         
@@ -758,7 +771,8 @@ class LTISession(object):
             self._context_id = self.course.context_id
             return self._context_id
     
-    def set_context_id(self, value):
+    @context_id.setter
+    def context_id(self, value):
         """the context_id changed, so try re-initializing the course and 
         course_enrollment cache objects.
         
@@ -806,7 +820,8 @@ class LTISession(object):
 
         self._context_id = value
     
-    def get_lti_params(self):
+    @property
+    def lti_params(self):
         """lti_params getter
         
         Returns:
@@ -817,8 +832,8 @@ class LTISession(object):
         ))
         return self._lti_params
 
-    
-    def set_lti_params(self, value):
+    @lti_params.setter
+    def lti_params(self, value):
         """lti_params setter. lti_params json object changed, so clear course and course_enrollment
         also need to initialize any property values that are sourced from lti_params
         
@@ -863,7 +878,8 @@ class LTISession(object):
             self.user_id = self._lti_params.user_id                 # uniquely identifies user in Willo
 
 
-    def get_user(self):
+    @property
+    def user(self):
         """user getter
         
         Returns:
@@ -874,7 +890,8 @@ class LTISession(object):
         ))
         return self._user
 
-    def set_user(self, value):
+    @user.setter
+    def user(self, value):
         """user setter. the user object changed, so reinitialize any properties that are functions of user.
         also need to try to reinitialize course_enrollment.
         
@@ -895,7 +912,8 @@ class LTISession(object):
         # clear, and attempt to reinitialize the enrollment cache.
         self._course_enrollment = None
 
-    def get_course_id(self):
+    @property
+    def course_id(self):
         """course_id getter
         
         Returns:
@@ -907,7 +925,8 @@ class LTISession(object):
         ))
         return self._course_id
 
-    def set_course_id(self, value):
+    @course_id.setter
+    def course_id(self, value):
         """course_id setter
         
         Arguments:
@@ -939,7 +958,8 @@ class LTISession(object):
         self._course = LTIExternalCourse.objects.filter(course_id=self._course_id).first()
         self._course_enrollment = None
 
-    def get_course(self):
+    @property
+    def course(self):
         """course getter. return a cached instance of the LTIExternalCourse record, if it exists.
         otherwise tries to register a new context_id/course_id course record
         
@@ -956,7 +976,8 @@ class LTISession(object):
 
         return self._course
 
-    def set_course(self, value):
+    @course.setter
+    def course(self, value):
         """course setter
         
         Arguments:
@@ -982,7 +1003,8 @@ class LTISession(object):
         self._course_enrollment = None
         self._context_id = self._course.context_id
 
-    def get_course_enrollment(self):
+    @property
+    def course_enrollment(self):
         """course_enrollment getter. Returns a cached instance of LTIExternalCourseEnrollment, if it exists.
         otherwise tries to register a new user / course record
         
@@ -998,11 +1020,14 @@ class LTISession(object):
             return self._course_enrollment
 
         # otherwise, try to retreive an instance from the cache, if it exists
-        self._course_enrollment = self.register_enrollment()
+        retval = self.register_enrollment()
+        if retval:
+            self.course_enrollment = retval
 
         return self._course_enrollment
 
-    def set_course_enrollment(self, value):
+    @course_enrollment.setter
+    def course_enrollment(self, value):
         """course_enrollment setter.
         
         Arguments:
@@ -1030,9 +1055,9 @@ class LTISession(object):
         self._course_enrollment = value
 
 
-    context_id = property(get_context_id, set_context_id)
-    lti_params = property(get_lti_params, set_lti_params)
-    user = property(get_user, set_user)
-    course_id = property(get_course_id, set_course_id)
-    course = property(get_course, set_course)
-    course_enrollment = property(get_course_enrollment, set_course_enrollment)
+    #context_id = property(get_context_id, set_context_id)
+    #lti_params = property(get_lti_params, set_lti_params)
+    #user = property(get_user, set_user)
+    #course_id = property(get_course_id, set_course_id)
+    #course = property(get_course, set_course)
+    #course_enrollment = property(get_course_enrollment, set_course_enrollment)
