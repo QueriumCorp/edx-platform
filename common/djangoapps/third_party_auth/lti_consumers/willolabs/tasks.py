@@ -34,7 +34,7 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 # for Willo api
 from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
 from .cache import LTISession
-from .utils import willo_id_from_url
+from .utils import willo_id_from_url, get_subsection_chapter
 from .api import (
     willo_api_post_grade,
     willo_api_create_column,
@@ -128,7 +128,7 @@ def _post_grades(self, username, course_id, usage_id):
         if lti_cached_assignment is None:
             log.error('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
 
-        lti_cached_enrollment = session.get_course_enrollment()
+        lti_cached_enrollment = session.course_enrollment
         if lti_cached_enrollment is None:
             log.error('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
 
@@ -413,12 +413,13 @@ def get_assignment_grade(course_key, subsection_grade):
         'section_grade_percent': _calc_grade_percentage(subsection_grade.graded_total.earned, subsection_grade.graded_total.possible),
         }
 
+    chapter = get_subsection_chapter(subsection_grade.url_name)
     section_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter}/{section}'.format(
-            scheme = u"https" if settings.HTTPS == "on" else u"http",
-            host = settings.SITE_NAME,
-            url_prefix='courses',
+            scheme=u"https" if settings.HTTPS == "on" else u"http",
+            host=settings.SITE_NAME,
+            url_prefix=u"courses",
             course_id=course_key.html_id(),
-            chapter='CHAPTER_URL',
+            chapter=chapter,
             section=subsection_grade.url_name
             )
 
