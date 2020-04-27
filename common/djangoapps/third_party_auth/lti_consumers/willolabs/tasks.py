@@ -30,7 +30,6 @@ from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
-from opaque_keys.edx.locator import BlockUsageLocator
 
 # for Willo api
 from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
@@ -421,7 +420,6 @@ def get_assignment_grade(course_key,  problem_usage_key, subsection_grade):
         'section_grade_percent': _calc_grade_percentage(subsection_grade.graded_total.earned, subsection_grade.graded_total.possible),
         }
 
-    subsection = BlockUsageLocator(course_key=course_key, block_id=subsection_grade.url_name)
     chapter = get_subsection_chapter(problem_usage_key)
     section_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter}/{section}'.format(
             scheme=u"https" if settings.HTTPS == "on" else u"http",
