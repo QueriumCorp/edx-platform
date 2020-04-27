@@ -30,6 +30,7 @@ from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
+from opaque_keys.edx.locator import BlockUsageLocator
 
 # for Willo api
 from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
@@ -133,7 +134,11 @@ def _post_grades(self, username, course_id, usage_id):
             log.error('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
 
         subsection_grade = get_subsection_grade(student, course_key, problem_usage_key)
-        homework_assignment_dict = get_assignment_grade(course_key=course_key, subsection_grade=subsection_grade)
+        homework_assignment_dict = get_assignment_grade(
+            course_key=course_key, 
+            problem_usage_key=problem_usage_key, 
+            subsection_grade=subsection_grade
+            )
 
         # Cache the grade data
         session.post_grades(
@@ -361,13 +366,16 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
 
 
 
-def get_assignment_grade(course_key, subsection_grade):
+def get_assignment_grade(course_key,  problem_usage_key, subsection_grade):
     """
     Extract assignment grade data and compose into a dict, along with the URL
     for the assignment. 
 
     Arguments:
     course_key: CourseKey
+
+    problem_usage_key: block usage locator for the problem that was submitted. 
+
     subsection_grade: 
         lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
         this contains a private __dict__ object along w dynamic getters
@@ -413,7 +421,8 @@ def get_assignment_grade(course_key, subsection_grade):
         'section_grade_percent': _calc_grade_percentage(subsection_grade.graded_total.earned, subsection_grade.graded_total.possible),
         }
 
-    chapter = get_subsection_chapter(subsection_grade.url_name)
+    subsection = BlockUsageLocator(course_key=course_key, block_id=subsection_grade.url_name)
+    chapter = get_subsection_chapter(problem_usage_key)
     section_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter}/{section}'.format(
             scheme=u"https" if settings.HTTPS == "on" else u"http",
             host=settings.SITE_NAME,
