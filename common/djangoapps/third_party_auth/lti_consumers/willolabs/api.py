@@ -7,6 +7,14 @@ import re
 import datetime
 import json
 import requests
+from requests.models import PreparedRequest
+
+try:
+    import urlparse
+    from urllib import urlencode
+except: # For Python 3
+    import urllib.parse as urlparse
+    from urllib.parse import urlencode
 
 from django.conf import settings
 from .models import LTIExternalCourse
@@ -45,6 +53,66 @@ def willo_activity_id_from_string(activity_string):
     return re.sub(r'\W+', '', activity_string).lower()     # alphanumeric
     #return re.sub(r'/^[a-zA-Z0-9-_]+$/', '', activity_string).lower()
 
+def willo_api_check_column(ext_wl_outcome_service_url, data):
+    """
+        Payload format:
+            data = {
+                'due_date': '2020-04-29T04:59:00+00:00', 
+                'description': u'Lesson 4.5', 
+                'title': u'Lesson 4.5', 
+                'points_possible': 5.0, 
+                'type': , 
+                'id': u'd7f67eb52e424909ba5ae7154d767a13'
+            }
+
+        curl -v -X GET "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13" \
+            -H "Accept: application/vnd.willolabs.outcome.activity+json" \
+            -H "Authorization: Token replaceaccesstokenhere"
+
+    Arguments:
+        ext_wl_outcome_service_url {[type]} -- [description]
+        data {[type]} -- [description]
+    """
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Checking assignment column: {id}-{assignment}'.format(
+            id=data.get('id'),
+            assignment=data.get('title')
+        ))
+
+    if not ext_wl_outcome_service_url:
+        raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: ext_wl_outcome_service_url has not been set for this course. Cannot continue.')
+    
+    if not data:
+        raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: data dict is missing or null. Cannot continue.')
+
+    req = requests.models.PreparedRequest()
+    headers = willo_api_headers(
+        key = 'Accept',
+        value = 'application/vnd.willolabs.outcome.activity+json'
+        )
+    params = {
+        u'id': data.get('id')
+    }
+    req.prepare_url(ext_wl_outcome_service_url, params)
+
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - headers: {headers} / url: {url}'.format(
+            headers=headers,
+            url=req.url
+        ))
+    response = requests.get(url=req.url, headers=headers)
+
+    if 200 <= response.status_code <= 299:
+        if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Found assignment column: {id}-{assignment}'.format(
+                id=data.get('id'),
+                assignment=data.get('title')
+            ))
+        return True
+
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Did not find assignment column: {id}-{assignment}. Return code: {status_code}'.format(
+            id=data.get('id'),
+            assignment=data.get('title'),
+            status_code=response.status_code
+        ))
+    return False
 
 def willo_api_create_column(ext_wl_outcome_service_url, data):
     """
@@ -55,31 +123,31 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     ext_wl_outcome_service_url: 
         Provided by tpa_params dictionary from an LTI authentication, and cached in LTIExternalCourse.
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
-        example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/
+        example:  https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
 
     Payload format:
         data = {
-        "type": "activity",
-        "id": "123456",
-        "title": "Getting to Know Rover Review Assignment",
-        "description": "Getting to Know Rover Review Assignment",
-        "due_date": "2019-06-01T00:00:00+04:00",
-        "points_possible": 100
+            'due_date': '2020-04-29T04:59:00+00:00', 
+            'description': u'Lesson 4.5', 
+            'title': u'Lesson 4.5', 
+            'points_possible': 5.0, 
+            'type': , 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
     Curl equivalent:
     -------------------------     
-    curl -v -X POST https://stage.willolabs.com/api/v1/outcomes/BBKQyB/4469701c1aad450891edf449942cb25b/ \
+    curl -v -X POST https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/ \
         -H "Content-Type: application/vnd.willolabs.outcome.activity+json" \
         -H "Authorization: Token sampleaccesstoken" \
         -d \
     '{
-        "type": "activity",
-        "id": "tutorial-avoiding-plagiarism",
-        "title": "Tutorial: Avoiding Plagiarism",
-        "description": "sample description",
-        "due_date": "2019-06-01T00:00:00+04:00",
-        "points_possible": 100
+            'due_date': '2020-04-29T04:59:00+00:00', 
+            'description': u'Lesson 4.5', 
+            'title': u'Lesson 4.5', 
+            'points_possible': 5.0, 
+            'type': 'activity', 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
     }'
 
     """
@@ -92,6 +160,9 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     
     if not data:
         raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing or null. Cannot continue.')
+
+    if willo_api_check_column(ext_wl_outcome_service_url, data):
+        return 200
 
     headers = willo_api_headers(
         key = 'Content-Type',
@@ -108,8 +179,16 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
             if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully updated grade column: {grade_column_data}'.format(
                     grade_column_data = data_json
                 ))
+        if response.status_code not in (200, 201):
+            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - return code: {response} grade column: {grade_column_data}'.format(
+                    grade_column_data = data_json,
+                    response=response.status_code
+                ))
+
     else:
-        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column: {grade_column_data}, which generated the following response: {response}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}'.format(
+            ext_wl_outcome_service_url=ext_wl_outcome_service_url,
+            headers=headers,
             grade_column_data = data_json,
             response = response.status_code
         ))
@@ -130,34 +209,36 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
     ext_wl_outcome_service_url: 
         Provided by tpa_params dictionary from an LTI authentication, and cached in LTIExternalCourse.
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
-        example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/
+        example: https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
+
 
     Payload format:
         data = {
-            "type": "result",
-            "id": "block-v1:OpenStax+PCL101+2020_Tmpl_RevY+type@problem+block@669e8abe089b4a69b3a2565402d27cad",
-            "activity_id": 123456,
-            "user_id": 123456,
-            "result_date": "2019-06-01T00:00:00+04:00",
-            "score": 10,
-            "points_possible": 10
+            'activity_id': u'lesson45', 
+            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce', 
+            'points_possible': 5.0, 
+            'score': 0.5, 
+            'result_date': '2020-04-24T19:12:19.454723+00:00', 
+            'type': 'result', 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
-    Curl equivalent:
+    Curl equivalent: (effective 25-Apr-2020 per conversation with Matt Hanger)
     -------------------------
-        curl -v -X POST https://stage.willolabs.com/api/v1/outcomes/BBKQyB/4469701c1aad450891edf449942cb25b/ \
-            -H "Content-Type: application/vnd.willolabs.outcome.result+json" \
-            -H "Authorization: Token sampleaccesstoken" \
-            -d \
+        curl -v -X POST https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/ \
+        -H "Content-Type: application/vnd.willolabs.outcome.result+json" \
+        -H "Authorization: Token replaceaccesstokenhere" \
+        -d \
         '{
+            "activity_id": "d7f67eb52e424909ba5ae7154d767a13",
+            "id": "block-v1:OpenStax+PCL101+2020_Tmpl_RevY+type@problem+block@669e8abe089b4a69b3a2565402d27cad",
+            "points_possible": 5.0,
+            "result_date": "2020-04-24T19:12:19.454723+00:00",
+            "score": 0.5,
             "type": "result",
-            "id": "8627ec7e1215413385f10b20d0dde4f0",
-            "activity_id": "tutorial-avoiding-plagiarism",
-            "user_id": "523bd4baaf772a615a478397d560a1591c7e3347",
-            "result_date": "2019-05-04T16:59:01.938229+00:00",
-            "score": 100,
-            "points_possible": 100
+            "user_id": "7010d877b3b74f39a6cbf89f9c3819ce"
         }'
+    
     """
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_post_grade()')
 
@@ -172,8 +253,10 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
             grade_data = data_json
         ))
     else:
-        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post the following grade: {grade_data} which generated the following response: {response}'.format(
-            grade_data = data_json,
+        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post a grade. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}'.format(
+            ext_wl_outcome_service_url=ext_wl_outcome_service_url,
+            headers=headers,
+            grade_column_data = data_json,
             response = response.status_code
         ))
 

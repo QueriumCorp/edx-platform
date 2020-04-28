@@ -212,7 +212,7 @@ class LTIExternalCourseAssignments(TimeStampedModel):
         #ordering = ('-fetched_at', )
 
     def __str__(self):
-        return self.display_name
+        return 'id: ' + str(self.id) + ' - ' + self.display_name
 
 
 class LTIExternalCourseAssignmentProblems(TimeStampedModel):

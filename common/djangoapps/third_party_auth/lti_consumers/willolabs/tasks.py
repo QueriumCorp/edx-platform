@@ -34,7 +34,7 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 # for Willo api
 from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
 from .cache import LTISession
-from .utils import willo_id_from_url
+from .utils import willo_id_from_url, get_subsection_chapter
 from .api import (
     willo_api_post_grade,
     willo_api_create_column,
@@ -128,12 +128,16 @@ def _post_grades(self, username, course_id, usage_id):
         if lti_cached_assignment is None:
             log.error('Tried to call Willo api with partially initialized LTI session object. course assignment property is not set.')
 
-        lti_cached_enrollment = session.get_course_enrollment()
+        lti_cached_enrollment = session.course_enrollment
         if lti_cached_enrollment is None:
             log.error('Tried to call Willo api with partially initialized LTI session object. enrollment property is not set.')
 
         subsection_grade = get_subsection_grade(student, course_key, problem_usage_key)
-        homework_assignment_dict = get_assignment_grade(course_key=course_key, subsection_grade=subsection_grade)
+        homework_assignment_dict = get_assignment_grade(
+            course_key=course_key, 
+            problem_usage_key=problem_usage_key, 
+            subsection_grade=subsection_grade
+            )
 
         # Cache the grade data
         session.post_grades(
@@ -322,15 +326,20 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     
     Returns:
         [Boolean] -- returns True if the return code is 200, False otherwise.
+
+
+    Obsoleted:
+        "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
     """
     if DEBUG: log.info('willolabs.tasks.post_grade()')
 
     try:
 
+        willo_id = willo_id_from_url(lti_cached_assignment.url) + ":" + lti_cached_enrollment.lti_user_id
         data = {
             "type": "result",
-            "id": willo_id_from_url(lti_cached_assignment.url),
-            "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
+            "id": willo_id,
+            "activity_id": willo_id_from_url(lti_cached_assignment.url),
             "user_id": lti_cached_enrollment.lti_user_id,
             "result_date": willo_date(lti_cached_grade.created),
             "score": lti_cached_grade.earned_graded,
@@ -356,13 +365,16 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
 
 
 
-def get_assignment_grade(course_key, subsection_grade):
+def get_assignment_grade(course_key,  problem_usage_key, subsection_grade):
     """
     Extract assignment grade data and compose into a dict, along with the URL
     for the assignment. 
 
     Arguments:
     course_key: CourseKey
+
+    problem_usage_key: block usage locator for the problem that was submitted. 
+
     subsection_grade: 
         lms.djangoapps.grades.subsection_grade.CreateSubsectionGrade
         this contains a private __dict__ object along w dynamic getters
@@ -408,12 +420,13 @@ def get_assignment_grade(course_key, subsection_grade):
         'section_grade_percent': _calc_grade_percentage(subsection_grade.graded_total.earned, subsection_grade.graded_total.possible),
         }
 
+    chapter = get_subsection_chapter(problem_usage_key)
     section_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter}/{section}'.format(
-            scheme = u"https" if settings.HTTPS == "on" else u"http",
-            host = settings.SITE_NAME,
-            url_prefix='courses',
+            scheme=u"https" if settings.HTTPS == "on" else u"http",
+            host=settings.SITE_NAME,
+            url_prefix=u"courses",
             course_id=course_key.html_id(),
-            chapter='CHAPTER_URL',
+            chapter=chapter,
             section=subsection_grade.url_name
             )
 
