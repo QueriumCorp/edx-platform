@@ -53,28 +53,28 @@ def willo_activity_id_from_string(activity_string):
     #return re.sub(r'/^[a-zA-Z0-9-_]+$/', '', activity_string).lower()
 
 def willo_api_check_column(ext_wl_outcome_service_url, data):
-"""
-    Payload format:
-        data = {
-            'due_date': '2020-04-29T04:59:00+00:00', 
-            'description': u'Lesson 4.5', 
-            'title': u'Lesson 4.5', 
-            'points_possible': 5.0, 
-            'type': , 
-            'id': u'd7f67eb52e424909ba5ae7154d767a13'
-        }
+    """
+        Payload format:
+            data = {
+                'due_date': '2020-04-29T04:59:00+00:00', 
+                'description': u'Lesson 4.5', 
+                'title': u'Lesson 4.5', 
+                'points_possible': 5.0, 
+                'type': , 
+                'id': u'd7f67eb52e424909ba5ae7154d767a13'
+            }
 
-                    https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13
-    curl -v -X GET "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13" \
-        -H "Accept: application/vnd.willolabs.outcome.activity+json" \
-        -H "Authorization: Token replaceaccesstokenhere"
+                        https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13
+        curl -v -X GET "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13" \
+            -H "Accept: application/vnd.willolabs.outcome.activity+json" \
+            -H "Authorization: Token replaceaccesstokenhere"
 
-Arguments:
-    ext_wl_outcome_service_url {[type]} -- [description]
-    data {[type]} -- [description]
-"""
+    Arguments:
+        ext_wl_outcome_service_url {[type]} -- [description]
+        data {[type]} -- [description]
+    """
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Checking assignment column: {id}-{assignment}'.format(
-            id=data.get('id')
+            id=data.get('id'),
             assignment=data.get('title')
         ))
 
@@ -97,7 +97,7 @@ Arguments:
 
     if 200 <= response.status_code <= 299:
         if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Found assignment column: {id}-{assignment}'.format(
-                id=data.get('id')
+                id=data.get('id'),
                 assignment=data.get('title')
             ))
         return True
