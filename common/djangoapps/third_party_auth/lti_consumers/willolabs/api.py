@@ -7,6 +7,7 @@ import re
 import datetime
 import json
 import requests
+from requests.models import PreparedRequest
 
 try:
     import urlparse
@@ -64,7 +65,6 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
                 'id': u'd7f67eb52e424909ba5ae7154d767a13'
             }
 
-                        https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13
         curl -v -X GET "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13" \
             -H "Accept: application/vnd.willolabs.outcome.activity+json" \
             -H "Authorization: Token replaceaccesstokenhere"
@@ -84,16 +84,21 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
     if not data:
         raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: data dict is missing or null. Cannot continue.')
 
+    req = requests.models.PreparedRequest()
     headers = willo_api_headers(
         key = 'Accept',
         value = 'application/vnd.willolabs.outcome.activity+json'
         )
     params = {
-        u'id': u'd7f67eb52e424909ba5ae7154d767a13'
+        u'id': data.get('id')
     }
-    url = ext_wl_outcome_service_url + '/?' + urlencode(params)
+    req.prepare_url(ext_wl_outcome_service_url, params)
 
-    response = requests.get(url=url, headers=headers)
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - headers: {headers} / url: {url}'.format(
+            headers=headers,
+            url=req.url
+        ))
+    response = requests.get(url=req.url, headers=headers)
 
     if 200 <= response.status_code <= 299:
         if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Found assignment column: {id}-{assignment}'.format(
@@ -102,6 +107,11 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
             ))
         return True
 
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Did not find assignment column: {id}-{assignment}. Return code: {status_code}'.format(
+            id=data.get('id'),
+            assignment=data.get('title'),
+            status_code=response.status_code
+        ))
     return False
 
 def willo_api_create_column(ext_wl_outcome_service_url, data):
