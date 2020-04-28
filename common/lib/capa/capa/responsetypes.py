@@ -1271,7 +1271,9 @@ class MultipleChoiceResponse(LoncapaResponse):
         # for general use.
         # pylint: disable=protected-access
         if not hasattr(problem, '_shared_rng'):
-            problem._shared_rng = random.Random(self.context['seed'])
+            ## fuka april-2020: Dont use a fixed seed.  We were not getting enough randomness.  Same answer choice order for each question.
+            ## was this: problem._shared_rng = random.Random(self.context['seed'])
+            problem._shared_rng = random.Random()	# Random() w/o args uses machine-based seed
         return problem._shared_rng
 
     def do_answer_pool(self, tree, problem):
