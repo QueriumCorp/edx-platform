@@ -8,6 +8,13 @@ import datetime
 import json
 import requests
 
+try:
+    import urlparse
+    from urllib import urlencode
+except: # For Python 3
+    import urllib.parse as urlparse
+    from urllib.parse import urlencode
+
 from django.conf import settings
 from .models import LTIExternalCourse
 
@@ -45,6 +52,57 @@ def willo_activity_id_from_string(activity_string):
     return re.sub(r'\W+', '', activity_string).lower()     # alphanumeric
     #return re.sub(r'/^[a-zA-Z0-9-_]+$/', '', activity_string).lower()
 
+def willo_api_check_column(ext_wl_outcome_service_url, data):
+"""
+    Payload format:
+        data = {
+            'due_date': '2020-04-29T04:59:00+00:00', 
+            'description': u'Lesson 4.5', 
+            'title': u'Lesson 4.5', 
+            'points_possible': 5.0, 
+            'type': , 
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+        }
+
+                    https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13
+    curl -v -X GET "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/?id=d7f67eb52e424909ba5ae7154d767a13" \
+        -H "Accept: application/vnd.willolabs.outcome.activity+json" \
+        -H "Authorization: Token replaceaccesstokenhere"
+
+Arguments:
+    ext_wl_outcome_service_url {[type]} -- [description]
+    data {[type]} -- [description]
+"""
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Checking assignment column: {id}-{assignment}'.format(
+            id=data.get('id')
+            assignment=data.get('title')
+        ))
+
+    if not ext_wl_outcome_service_url:
+        raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: ext_wl_outcome_service_url has not been set for this course. Cannot continue.')
+    
+    if not data:
+        raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: data dict is missing or null. Cannot continue.')
+
+    headers = willo_api_headers(
+        key = 'Accept',
+        value = 'application/vnd.willolabs.outcome.activity+json'
+        )
+    params = {
+        u'id': u'd7f67eb52e424909ba5ae7154d767a13'
+    }
+    url = ext_wl_outcome_service_url + '/?' + urlencode(params)
+
+    response = requests.get(url=url, headers=headers)
+
+    if 200 <= response.status_code <= 299:
+        if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Found assignment column: {id}-{assignment}'.format(
+                id=data.get('id')
+                assignment=data.get('title')
+            ))
+        return True
+
+    return False
 
 def willo_api_create_column(ext_wl_outcome_service_url, data):
     """
@@ -93,6 +151,9 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     if not data:
         raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing or null. Cannot continue.')
 
+    if willo_api_check_column(ext_wl_outcome_service_url, data):
+        return 200
+
     headers = willo_api_headers(
         key = 'Content-Type',
         value = 'application/vnd.willolabs.outcome.activity+json'
@@ -115,7 +176,9 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
                 ))
 
     else:
-        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column: {grade_column_data}, which generated the following response: {response}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}'.format(
+            ext_wl_outcome_service_url=ext_wl_outcome_service_url,
+            headers=headers,
             grade_column_data = data_json,
             response = response.status_code
         ))
@@ -180,8 +243,10 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
             grade_data = data_json
         ))
     else:
-        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post the following grade: {grade_data} which generated the following response: {response}'.format(
-            grade_data = data_json,
+        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post a grade. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}'.format(
+            ext_wl_outcome_service_url=ext_wl_outcome_service_url,
+            headers=headers,
+            grade_column_data = data_json,
             response = response.status_code
         ))
 
