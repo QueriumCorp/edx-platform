@@ -151,23 +151,29 @@ def _post_grades(self, username, course_id, usage_id):
                 usage_key=problem_usage_key
             ))
             return False
-        else:
 
-            # Push grades to Willo grade sync
-            retval = create_column(
+        if not lti_cached_course.enabled:
+            log.info('Willo Labs API Grade Sync is not enabled for course {coursekey}. Grade was locally cached for problem {usage_key} but it will not be posted to Willo Labs API.'.format(
+                coursekey=lti_cached_course.course_id,
+                usage_key=problem_usage_key
+            ))
+            return True
+
+        # Push grades to Willo grade sync
+        retval = create_column(
+            self,
+            lti_cached_course=lti_cached_course, 
+            lti_cached_assignment=lti_cached_assignment, 
+            lti_cached_grade=lti_cached_grade
+            )
+        if retval:
+            retval = post_grade(
                 self,
                 lti_cached_course=lti_cached_course, 
+                lti_cached_enrollment=lti_cached_enrollment, 
                 lti_cached_assignment=lti_cached_assignment, 
                 lti_cached_grade=lti_cached_grade
                 )
-            if retval:
-                retval = post_grade(
-                    self,
-                    lti_cached_course=lti_cached_course, 
-                    lti_cached_enrollment=lti_cached_enrollment, 
-                    lti_cached_assignment=lti_cached_assignment, 
-                    lti_cached_grade=lti_cached_grade
-                    )
         
         return retval
 

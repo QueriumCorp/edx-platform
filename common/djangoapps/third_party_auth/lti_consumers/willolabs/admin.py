@@ -25,6 +25,7 @@ class LTIExternalCourseAdmin(admin.ModelAdmin):
     LTI Willo Labs - Course
     """
     list_display = (
+        'enabled',
         'context_id',
         'course_id',
         'context_title',

@@ -41,6 +41,12 @@ class LTIExternalCourse(TimeStampedModel):
         primary_key=True
         )  # This is the key for lookups in this table
 
+    enabled = models.BooleanField(
+        default=False,
+        null=False,
+        help_text="True if grade results for this course should be posted to Willo Labs Grade Sync API."
+        )
+
     course_id = CourseKeyField(
         max_length=255, 
         db_index=True,
