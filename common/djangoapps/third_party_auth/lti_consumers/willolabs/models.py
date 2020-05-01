@@ -37,13 +37,15 @@ class LTIExternalCourse(TimeStampedModel):
         help_text="This is the unique identifier of the Willo Labs integration, passed via" \
             "from tpa-lti-params. Course runs from external LMS' are intended to be unique." \
             "Example: e14751571da04dd3a2c71a311dda2e1b",
-        max_length=255, 
+        max_length=255,
+        blank=False,
         primary_key=True
         )  # This is the key for lookups in this table
 
     enabled = models.BooleanField(
         default=False,
         null=False,
+        blank=False,
         help_text="True if grade results for this course should be posted to Willo Labs Grade Sync API."
         )
 
@@ -54,7 +56,7 @@ class LTIExternalCourse(TimeStampedModel):
         help_text="Rover Course Key (Opaque Key). " \
             "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
         default=None, 
-        blank=True, 
+        blank=False,
         null=True
         )
 
@@ -71,6 +73,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Context Label",
         help_text="Example: willolabs-launch-test-ku-blackboard-rover-grade-testing",
         max_length=255,
+        blank=True,
         null=True,
         )
 
@@ -78,12 +81,14 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="External WilloLab Launch Key",
         help_text="Example: QcTz6q",
         max_length=50,
+        blank=True,
         null=True,
         )
         
     ext_wl_launch_url = models.URLField(
         #verbose_name="External WilloLab Launch URL",
         help_text="Example: https://stage.willolabs.com/launch/QcTz6q/8cmzcd",
+        blank=True,
         null=True
         )
 
@@ -91,12 +96,14 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="External WilloLab Version",
         help_text="Example: 1.0",
         max_length=25,
+        blank=True,
         null=True,
         )
 
     ext_wl_outcome_service_url = models.URLField(
         #verbose_name="External  Outcome Service URL",
         help_text="Example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/",
+        blank=True,
         null=True,
         )
 
@@ -104,6 +111,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="LTI Params - custom_tpa_next",
         help_text="/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false",
         max_length=255,
+        blank=True,
         null=True,
         )
 
@@ -111,6 +119,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="custom_orig_context_id",
         help_text="Context_id from the original source system (ie Canvas, Blackboard). Example: 9caf71ef12da4d2993f8929242d93922",
         max_length=50,
+        blank=True,
         null=True,
         )
 
@@ -118,6 +127,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="custom_profile_url",
         help_text="URL pointing to user profile in the original source system. Example: https://courseware.ku.edu/learn/api/v1/lti/profile?lti_version=LTI-1p0",
         max_length=50,
+        blank=True,
         null=True,
         )
 
@@ -125,6 +135,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="tool_consumer_instance_description",
         help_text="Example: The University of Kansas",
         max_length=50,
+        blank=True,
         null=True,
         )
 
@@ -132,6 +143,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Custom Canvas API Domain",
         help_text="Example: willowlabs.instructure.com",
         max_length=255,
+        blank=True,
         null=True,
         )
 
@@ -139,6 +151,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Custom Course ID",
         help_text="Example: 421",
         max_length=50,
+        blank=True,
         null=True,
         )
 
@@ -146,6 +159,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Custom Canvas Course Start At",
         help_text="Example: 2019-12-11 16:18:01 -0500",
         db_index=False,
+        blank=True,
         null=True,
         )
 
@@ -153,6 +167,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Tool Consumer - Product Family Code",
         help_text="Example: canvas",
         max_length=50,
+        blank=True,
         null=True,
         )
 
@@ -160,12 +175,14 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Tool Consumer - Version",
         help_text="Example: cloud",
         max_length=50,
+        blank=True,
         null=True,
         )
 
     tool_consumer_instance_contact_email = models.EmailField(
         #verbose_name="Tool Consumer - Contact Email Address",
         help_text="Example: notifications@instructure.com",
+        blank=True,
         null=True,
     )
 
@@ -173,6 +190,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Tool Consumer - Instance GUID",
         help_text="Example: 7M58pE4F4Y56gZHUe6jaxhQ1csaktjA00ZiVNQb7:canvas-lms",
         max_length=100,
+        blank=True,
         null=True,
         )
 
@@ -180,6 +198,7 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Tool Consumer - Instance Name",
         help_text="Example: Willo Labs",
         max_length=50,
+        blank=True,
         null=True,
         )
 
