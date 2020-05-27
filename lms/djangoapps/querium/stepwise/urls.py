@@ -7,14 +7,14 @@ from rest_framework_swagger.views import get_swagger_view
 from .views import ConfigurationViewSet
 
 # Note: include_docs_urls stopped working after the python backport
-API_TITLE = u'OpenStax Rover Stepwise api V1.00'
-API_DESCRIPTION = u'A Web API for providing configuration data for Rover Stepwise'
+API_TITLE = 'OpenStax Rover Stepwise api V1.00'
+API_DESCRIPTION = 'A Web API for providing configuration data for Rover Stepwise'
 docs = include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)
 
 router = DefaultRouter(trailing_slash=False)
 
 # add routes with default CRUD behavior here
-router.register(ur'configuration', ConfigurationViewSet)
+router.register('configuration', ConfigurationViewSet)
 
 # add customized routes here
 urlpatterns = [

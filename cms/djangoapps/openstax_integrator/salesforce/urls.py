@@ -14,9 +14,9 @@ docs = include_docs_urls(title=API_TITLE, description=API_DESCRIPTION)
 router = DefaultRouter(trailing_slash=False)
 
 # add routes with default CRUD behavior here
-router.register(ur'contacts', ContactViewSet)
-router.register(ur'campaigns', CampaignViewSet)
-router.register(ur'coursecreators', CourseCreatorViewSet)
+router.register('contacts', ContactViewSet)
+router.register('campaigns', CampaignViewSet)
+router.register('coursecreators', CourseCreatorViewSet)
 
 # add customized routes here
 urlpatterns = [
