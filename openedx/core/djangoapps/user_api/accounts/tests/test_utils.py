@@ -1,14 +1,12 @@
 """ Unit tests for custom UserProfile properties. """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
 
 import ddt
-from django.test import TestCase
-from django.test.utils import override_settings
-from mock import patch
-
 from completion import models
 from completion.test_utils import CompletionWaffleTestMixin
+from django.test import TestCase
+from django.test.utils import override_settings
+
 from openedx.core.djangoapps.user_api.accounts.utils import retrieve_last_sitewide_block_completed
 from openedx.core.djangolib.testing.utils import skip_unless_lms
 from student.models import CourseEnrollment
@@ -16,7 +14,7 @@ from student.tests.factories import UserFactory
 from xmodule.modulestore.tests.django_utils import SharedModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
 
-from ..utils import format_social_link, validate_social_link, generate_password
+from ..utils import format_social_link, validate_social_link
 
 
 @ddt.ddt
@@ -107,23 +105,21 @@ class CompletionUtilsTestCase(SharedModuleStoreTestCase, CompletionWaffleTestMix
         for block in self.course.children[0].children[0].children:
             models.BlockCompletion.objects.submit_completion(
                 user=self.engaged_user,
-                course_key=self.course.id,
                 block_key=block.location,
                 completion=1.0
             )
 
     @override_settings(LMS_ROOT_URL='test_url:9999')
-    @ddt.data(True, False)
-    def test_retrieve_last_sitewide_block_completed(self, use_username):
+    def test_retrieve_last_sitewide_block_completed(self):
         """
         Test that the method returns a URL for the "last completed" block
         when sending a user object
         """
         block_url = retrieve_last_sitewide_block_completed(
-            self.engaged_user.username if use_username else self.engaged_user
+            self.engaged_user
         )
         empty_block_url = retrieve_last_sitewide_block_completed(
-            self.cruft_user.username if use_username else self.cruft_user
+            self.cruft_user
         )
         self.assertEqual(
             block_url,
@@ -135,29 +131,3 @@ class CompletionUtilsTestCase(SharedModuleStoreTestCase, CompletionWaffleTestMix
             )
         )
         self.assertEqual(empty_block_url, None)
-
-
-class GeneratePasswordTest(TestCase):
-    """Tests formation of randomly generated passwords."""
-
-    def test_default_args(self):
-        password = generate_password()
-        self.assertEqual(12, len(password))
-        self.assertTrue(any(c.isdigit for c in password))
-        self.assertTrue(any(c.isalpha for c in password))
-
-    def test_length(self):
-        length = 25
-        self.assertEqual(length, len(generate_password(length=length)))
-
-    def test_chars(self):
-        char = '!'
-        password = generate_password(length=12, chars=(char,))
-
-        self.assertTrue(any(c.isdigit for c in password))
-        self.assertTrue(any(c.isalpha for c in password))
-        self.assertEqual(char * 10, password[2:])
-
-    def test_min_length(self):
-        with self.assertRaises(ValueError):
-            generate_password(length=7)

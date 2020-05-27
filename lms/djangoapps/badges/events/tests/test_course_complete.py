@@ -1,6 +1,8 @@
 """
 Tests for the course completion helper functions.
 """
+
+
 from datetime import datetime
 
 from badges.events import course_complete
@@ -13,9 +15,8 @@ class CourseCompleteTestCase(ModuleStoreTestCase):
     """
     Tests for the course completion helper functions.
     """
-    shard = 4
 
-    def setUp(self, **kwargs):
+    def setUp(self):
         super(CourseCompleteTestCase, self).setUp()
         # Need key to be deterministic to test slugs.
         self.course = CourseFactory.create(
