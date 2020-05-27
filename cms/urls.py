@@ -128,7 +128,6 @@ urlpatterns = [
     # restful api
     url(r'^$', contentstore.views.howitworks, name='homepage'),
     url(r'^howitworks$', contentstore.views.howitworks, name='howitworks'),
-<<<<<<< HEAD
     url(r'^signup$', contentstore.views.signup, name='signup'),
 
     # mcdaniel oct-2019: scrubbing out any remaining manual login screens so that
@@ -136,12 +135,7 @@ urlpatterns = [
     #url(r'^signin$', contentstore.views.login_page, name='login'),
     url(r'^signin$', RedirectView.as_view(url='/' , permanent=True)),
 
-||||||| df94c82a04
-    url(r'^signup$', contentstore.views.signup, name='signup'),
-    url(r'^signin$', contentstore.views.login_page, name='login'),
-=======
     url(r'^signin_redirect_to_lms$', contentstore.views.login_redirect_to_lms, name='login_redirect_to_lms'),
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
     url(r'^request_course_creator$', contentstore.views.request_course_creator, name='request_course_creator'),
     url(r'^course_team/{}(?:/(?P<email>.+))?$'.format(COURSELIKE_KEY_PATTERN),
         contentstore.views.course_team_handler, name='course_team_handler'),
