@@ -1055,7 +1055,6 @@ if 'openedx.testing.coverage_context_listener' in settings.INSTALLED_APPS:
     ]
 
 urlpatterns.extend(plugin_urls.get_patterns(plugin_constants.ProjectType.LMS))
-<<<<<<< HEAD
 
 # McDaniel mar-2019: install Figures
 if 'figures' in settings.INSTALLED_APPS:
@@ -1073,11 +1072,8 @@ urlpatterns += (
     url(r'^grades_api/',
         include('lms.djangoapps.grades.api.urls')),
 )
-||||||| df94c82a04
-=======
 
 # Course Home API urls
 urlpatterns += [
     url(r'^api/course_home/', include('lms.djangoapps.course_home_api.urls')),
 ]
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
