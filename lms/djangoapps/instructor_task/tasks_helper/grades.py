@@ -889,120 +889,20 @@ class ProblemResponses(object):
                     continue
 
                 block = store.get_item(block_key)
-<<<<<<< HEAD
-                generated_report_data = {}
-||||||| df94c82a04
-=======
                 generated_report_data = defaultdict(list)
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
 
                 # Blocks can implement the generate_report_data method to provide their own
                 # human-readable formatting for user state.
                 if hasattr(block, 'generate_report_data'):
                     try:
                         user_state_iterator = user_state_client.iter_all_for_block(block_key)
-<<<<<<< HEAD
-                        generated_report_data = {
-                            username: state
-                            for username, state in
-                            block.generate_report_data(user_state_iterator, max_count)
-                        }
-||||||| df94c82a04
-                        responses = [
-                            {'username': username, 'state': state}
-                            for username, state in
-                            block.generate_report_data(user_state_iterator, max_count)
-                        ]
-=======
                         for username, state in block.generate_report_data(user_state_iterator, max_count):
                             generated_report_data[username].append(state)
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
                     except NotImplementedError:
-<<<<<<< HEAD
                         pass
-
-                responses = list_problem_responses(course_key, block_key, max_count)
-||||||| df94c82a04
-                        responses = list_problem_responses(course_key, block_key, max_count)
-                else:
-                    responses = list_problem_responses(course_key, block_key, max_count)
-=======
-                        pass
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
 
                 responses = []
 
-                for response in list_problem_responses(course_key, block_key, max_count):
-                    response['title'] = title
-                    # A human-readable location for the current block
-                    response['location'] = ' > '.join(path)
-                    # A machine-friendly location for the current block
-                    response['block_key'] = str(block_key)
-<<<<<<< HEAD
-                    user_data = generated_report_data.get(response['username'], {})
-                    response.update(user_data)
-                    student_data_keys = student_data_keys.union(user_data.keys())
-||||||| df94c82a04
-=======
-                    # A block that has a single state per user can contain multiple responses
-                    # within the same state.
-                    user_states = generated_report_data.get(response['username'], [])
-                    if user_states:
-                        # For each response in the block, copy over the basic data like the
-                        # title, location, block_key and state, and add in the responses
-                        for user_state in user_states:
-                            user_response = response.copy()
-                            user_response.update(user_state)
-                            student_data_keys = student_data_keys.union(list(user_state.keys()))
-                            responses.append(user_response)
-                    else:
-                        responses.append(response)
-
-                student_data += responses
-
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
-                if max_count is not None:
-                    max_count -= len(responses)
-                    if max_count <= 0:
-                        break
-
-        # Keep the keys in a useful order, starting with username, title and location,
-        # then the columns returned by the xblock report generator in sorted order and
-        # finally end with the more machine friendly block_key and state.
-        student_data_keys_list = (
-            ['username', 'title', 'location'] +
-            sorted(student_data_keys) +
-            ['block_key', 'state']
-        )
-
-        return student_data, student_data_keys_list
-
-    @classmethod
-    def generate(cls, _xmodule_instance_args, _entry_id, course_id, task_input, action_name):
-        """
-        For a given `course_id`, generate a CSV file containing
-        all student answers to a given problem, and store using a `ReportStore`.
-        """
-        start_time = time()
-        start_date = datetime.now(UTC)
-        num_reports = 1
-        task_progress = TaskProgress(action_name, num_reports, start_time)
-        current_step = {'step': 'Calculating students answers to problem'}
-        task_progress.update_task_state(extra_meta=current_step)
-        problem_location = task_input.get('problem_location')
-
-        # Compute result table and format it
-        student_data, student_data_keys = cls._build_student_data(
-            user_id=task_input.get('user_id'),
-            course_key=course_id,
-            usage_key_str=problem_location
-        )
-
-        for data in student_data:
-            for key in student_data_keys:
-                data.setdefault(key, '')
-
-        header, rows = format_dictlist(student_data, student_data_keys)
 
         task_progress.attempted = task_progress.succeeded = len(rows)
         task_progress.skipped = task_progress.total - task_progress.attempted
