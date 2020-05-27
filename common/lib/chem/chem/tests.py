@@ -12,7 +12,7 @@ LOCAL_DEBUG = None
 def log(msg, output_type=None):
     """Logging function for tests"""
     if LOCAL_DEBUG:
-        print msg
+        print (msg)
         if output_type == 'html':
             f.write(msg + '\n<br>\n')
 
