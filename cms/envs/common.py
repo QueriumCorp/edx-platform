@@ -1897,41 +1897,6 @@ CACHES = {
 
 ############################ OAUTH2 Provider ###################################
 
-<<<<<<< HEAD
-# OpenID Connect issuer ID. Normally the URL of the authentication endpoint.
-
-OAUTH_OIDC_ISSUER = 'https:/example.com/oauth2'
-
-# OpenID Connect claim handlers
-
-OAUTH_OIDC_ID_TOKEN_HANDLERS = (
-    'edx_oauth2_provider.oidc.handlers.BasicIDTokenHandler',
-    'edx_oauth2_provider.oidc.handlers.ProfileHandler',
-    'edx_oauth2_provider.oidc.handlers.EmailHandler',
-    'oauth2_handler.IDTokenHandler'
-)
-
-OAUTH_OIDC_USERINFO_HANDLERS = (
-    'edx_oauth2_provider.oidc.handlers.BasicUserInfoHandler',
-    'edx_oauth2_provider.oidc.handlers.ProfileHandler',
-    'edx_oauth2_provider.oidc.handlers.EmailHandler',
-    'oauth2_handler.UserInfoHandler'
-)
-
-OAUTH_EXPIRE_CONFIDENTIAL_CLIENT_DAYS = 365
-OAUTH_EXPIRE_PUBLIC_CLIENT_DAYS = 30
-
-# Automatically clean up edx-django-oauth2-provider tokens on use
-OAUTH_DELETE_EXPIRED = True
-OAUTH_ID_TOKEN_EXPIRATION = 60 * 60
-
-# OpenID Connect issuer ID. Normally the URL of the authentication endpoint.
-OAUTH_OIDC_ISSUER = 'https://www.example.com/oauth2'
-||||||| df94c82a04
-# OpenID Connect issuer ID. Normally the URL of the authentication endpoint.
-OAUTH_OIDC_ISSUER = 'https://www.example.com/oauth2'
-=======
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
 
 # 5 minute expiration time for JWT id tokens issued for external API requests.
 OAUTH_ID_TOKEN_EXPIRATION = 5 * 60
