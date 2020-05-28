@@ -15,7 +15,7 @@ import datetime
 import json
 
 from .common import *
-import roversecrets
+from . import roversecrets
 
 from openedx.core.lib.derived import derive_settings
 from openedx.core.lib.logsettings import get_logger_config
