@@ -9,7 +9,8 @@ from lms.djangoapps.grades.api.views import CourseGradingPolicy
 
 
 from rest_framework.documentation import include_docs_urls
-from rest_framework_swagger.views import get_swagger_view
+# mcdaniel may-2020: swagger seems to have been removed in juniper.rc3
+#from rest_framework_swagger.views import get_swagger_view
 
 """
   mcdaniel nov-2019
@@ -44,9 +45,11 @@ urlpatterns = [
 
     # ----------------------------------------------------------------------
     # mcdaniel nov-2019
-    # Add fully formatted Swagger documentation 
+    # Add fully formatted Swagger documentation
+    #
+    # may-2020: swagger seems to have been removed in juniper.rc3
     # ----------------------------------------------------------------------
-    url(u'docs/', get_swagger_view(title=API_TITLE)),
+    #url(u'docs/', get_swagger_view(title=API_TITLE)),
 
     # ----------------------------------------------------------------------
     # mcdaniel nov-2019
