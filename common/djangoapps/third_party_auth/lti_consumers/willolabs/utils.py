@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import logging
 
 from django.conf import settings
+from django.http import Http404
 
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
@@ -20,9 +21,25 @@ except ImportError:
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
+# mcdaniel may-2020: copied from lms.djangoapps.courseware.courses
+# to try to resolve a race situation in juniper.rc3.
+def get_course_by_id(course_key, depth=0):
+    """
+    Given a course id, return the corresponding course descriptor.
+    If such a course does not exist, raises a 404.
+    depth: The number of levels of children for the modulestore to cache. None means infinite depth
+    """
+    with modulestore().bulk_operations(course_key):
+        course = modulestore().get_course(course_key, depth=depth)
+    if course:
+        return course
+    else:
+        raise Http404(u"Course not found: {}.".format(six.text_type(course_key)))
+
+
 def get_subsection_chapter(subsection_url):
     """Traverse the course structure to locate the parent
-    chapter of subsection_url. 
+    chapter of subsection_url.
 
     in this example
         https://dev.roverbyopenstax.org/courses/course-v1:ABC+OS9471721_9626+01/courseware/c0a9afb73af311e98367b7d76f928163/c8bc91313af211e98026b7d76f928163
@@ -30,7 +47,7 @@ def get_subsection_chapter(subsection_url):
     - the subsection is c8bc91313af211e98026b7d76f928163
 
     Arguments:
-        subsection_url {String} -- 
+        subsection_url {String} --
 
     Returns:
         [String] -- string representation of the chapter segment for a URL.
@@ -50,7 +67,7 @@ def get_subsection_chapter(subsection_url):
 
 def chapter_from_url(url):
     """
-     Strip right-most segment of a URL path to use as a unique id for 
+     Strip right-most segment of a URL path to use as a unique id for
      Willo Labs api grades posts.
 
      Example - fully-qualified URL:
@@ -70,7 +87,7 @@ def chapter_from_url(url):
 
 def willo_id_from_url(url):
     """
-     Strip right-most segment of a URL path to use as a unique id for 
+     Strip right-most segment of a URL path to use as a unique id for
      Willo Labs api grades posts.
 
      Example - fully-qualified URL:
@@ -100,10 +117,10 @@ def is_lti_gradesync_enabled(course_key):
     """Grade sync is considered enabled for a course if
     there exists a cache record for the course. Cache
     records are created during LTI authentication via Willo Labs.
-    
+
     Arguments:
-        course_key {CourseKey} 
-    
+        course_key {CourseKey}
+
     Returns:
         [Boolean] -- True if LTI Grade Sync is enabled for the course_key
     """
@@ -121,10 +138,10 @@ def is_valid_course_id(course_id):
        object from the string.
     2. Open edX LMS returns a CourseOverview object
     for the course_key.
-    
+
     Arguments:
         course_id {string} -- example: ?????????
-    
+
     Returns:
         [Boolean] -- True if the course_id string is valid.
     """
@@ -135,10 +152,10 @@ def is_valid_course_id(course_id):
         pass
         return False
 
-    # Verify that this course_id corresponds with a Rover course 
+    # Verify that this course_id corresponds with a Rover course
     if not CourseOverview.get_from_id(course_key):
         return False
-    
+
     return True
 
 
@@ -152,7 +169,7 @@ def find_course_unit(course, url):
 
     course: a Rover course object
 
-    url: a fully-qualified URL (including http protocol). 
+    url: a fully-qualified URL (including http protocol).
     example: https://dev.roverbyopenstax.org/courses/course-v1:OpenStax+PCL101+2020_Tmpl_RevY/courseware/aa342d9db424426f8c6c550935e8716a/249dfef365fd434c9f5b98754f2e2cb3
     """
     def find(node, url):

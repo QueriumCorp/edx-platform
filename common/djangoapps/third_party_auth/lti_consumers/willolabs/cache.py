@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Manages cached course and enrollment relationship data between Rover 
+"""Manages cached course and enrollment relationship data between Rover
 and External platforms like Canvas, Blackboard and Moodle via Willo Labs
 
 Raises:
@@ -22,8 +22,10 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
 
 # for locating a course assignment by its URL.
-from lms.djangoapps.courseware.courses import get_course_by_id
-from .utils import find_course_unit
+# mcdaniel may-2020: getting a race situation on this import.
+# moved the def to utils, in this module.
+#from lms.djangoapps.courseware.courses import get_course_by_id
+from .utils import find_course_unit, get_course_by_id
 
 from .exceptions import LTIBusinessRuleError
 from .lti_params import LTIParamsFieldMap, LTIParams, get_cached_course_id
@@ -42,14 +44,14 @@ DEBUG = settings.ROVER_DEBUG
 class LTISession(object):
     """Used during LTI authentication from external platforms connecting to Rover via
     Willo Labs. Persists external course and enrollment data provided during LTI authentication
-    in the http response body, in a json object named lti_params. Establishes the 
+    in the http response body, in a json object named lti_params. Establishes the
     relationships between external courses/users and the corresponding Rover courses/users.
-    These relationships are required by Rover's Grade Sync, so that we can send 
+    These relationships are required by Rover's Grade Sync, so that we can send
     Grade Sync requests to the Willo Lab api.
-    
+
     Arguments:
         object {object} -- required to implement Python properties
-    
+
     Raises:
         LTIBusinessRuleError
     """
@@ -58,11 +60,11 @@ class LTISession(object):
         by lti_params if it exists. Otherwise, we have to carefully pick through
         which property initializations are possible based on which arguments are provided.
         Bootstrap sequence matters a lot.
-        
+
         Keyword Arguments:
-            lti_params {dict or LTIParams} -- (default: {None}) Provided in http request body during 
+            lti_params {dict or LTIParams} -- (default: {None}) Provided in http request body during
             authentication. contains extensive data on the student and the source system
-            where authentication originated. 
+            where authentication originated.
 
             user {User} -- (default: {None}) Django User model.
 
@@ -105,7 +107,7 @@ class LTISession(object):
                         username=username
                     ))
                     self.user = User.objects.get(username=username)
-        
+
         if course_id:
             # assign the course_id passed to __init__()
             self.course_id = course_id              # Rover (Open edX) course_id (aka Opaque Key)
@@ -124,7 +126,7 @@ class LTISession(object):
                         course=self.course_id
                     ))
                 else:
-                    # we'll arrive here if a) the student is enrolled in multiple courses, 
+                    # we'll arrive here if a) the student is enrolled in multiple courses,
                     # or b) the student is not enrolled in any courses.
                     self.course_id =  self.get_cached_course_id(context_id=self.context_id)
 
@@ -156,7 +158,7 @@ class LTISession(object):
 
     def refresh(self):
         """Retrieve cached content from MySQL for the current context_id, user
-        
+
         Returns:
             [type] -- [description]
         """
@@ -186,7 +188,7 @@ class LTISession(object):
                 course = LTIExternalCourse.objects.filter(course_id=self.course_id).first()
                 if course:
                     self.course = course
-            
+
             if self.course_enrollment is None:
                 # this only covers cases where cache data exists. if user is student
                 # entering Rover for the first time then we'll still be None
@@ -211,7 +213,7 @@ class LTISession(object):
         course.delete()
 
         enrollment = LTIExternalCourseEnrollment.objects.filter(
-            course = course, 
+            course = course,
             user = user
             )
         enrollment.delete()
@@ -219,7 +221,7 @@ class LTISession(object):
     def register_course(self):
         """try to retrieve a cached course record for the context_id / course_id
         otherwise, add a new course record to the cache.
-        
+
         Returns:
             [LTIExternalCourse] -- the LTI cache record for the course_id
         """
@@ -229,11 +231,11 @@ class LTISession(object):
         self._course = None
         self._course_enrollment = None
 
-        # if __init__() received both lti_params and a course_id then we should 
-        # check to verify that we are fully initialized before attempting to 
+        # if __init__() received both lti_params and a course_id then we should
+        # check to verify that we are fully initialized before attempting to
         # register the course.
         if self.COMPLETE_MAPPING and (self.course_id is None or self.lti_params is None):
-            if DEBUG: 
+            if DEBUG:
                 log.info('LTISession.register_course() - COMPLETE_MAPPING=True'\
                     'but we are not yet fully initialized. exiting. course_id: {course_id}, lti_params: {lti_params}'.format(
                         course_id = self.course_id,
@@ -253,7 +255,7 @@ class LTISession(object):
         if course:
             if DEBUG: log.info('LTISession.register_course() - found a cached course.')
             # we didn't necesarily know the course_id at the time the record was created.
-            # the course_id could materialize at any time, and if so then we'll 
+            # the course_id could materialize at any time, and if so then we'll
             # need to persist the value.
             if course.course_id is None and self.course_id is not None:
                 try:
@@ -276,9 +278,9 @@ class LTISession(object):
                 # that course.course_id is the correct value.
                 self._course_id = course.course_id
 
-            return course 
+            return course
 
-        # Did not find a cached record. In order to proceed beyond this point we 
+        # Did not find a cached record. In order to proceed beyond this point we
         # need to verify that lti_params is set and that we have a Rover course_id
         # to map to.
         if self.lti_params is None:
@@ -319,7 +321,7 @@ class LTISession(object):
                 tool_consumer_instance_guid = params.tool_consumer_instance_guid,
                 tool_consumer_instance_name = params.tool_consumer_instance_name,
             )
-            
+
             course.save()
 
         except ValidationError as err:
@@ -338,7 +340,7 @@ class LTISession(object):
     def register_enrollment(self):
         """try to retreive a cached enrollment record for the context_id / user
         otherwise, create a new record for the cache.
-        
+
         Returns:
             [LTIExternalCourseEnrollment] -- the cached enrollment record for the student / course_id
         """
@@ -353,7 +355,7 @@ class LTISession(object):
 
         # look for a cached record for this user / context_id
         enrollment = LTIExternalCourseEnrollment.objects.filter(
-            course = self.course, 
+            course = self.course,
             user = self.user
             ).first()
         if enrollment:
@@ -415,27 +417,27 @@ class LTISession(object):
     def post_grades(self, usage_key, grades_dict):
         """Caches the grade data for one problem response. This is called each time a student
         submits an answer to a problem in LTI Grade Sync-enabled course.
-        
+
         Arguments:
-            usage_key {OpaqueKey} -- identifier for a problem of a Rover course. 
+            usage_key {OpaqueKey} -- identifier for a problem of a Rover course.
                                      corresponds to the homework problem that was just graded.
             grades_dict {dict} -- contains all fields from grades.models.PersistentSubsectionGrade
                     {
                         'grades': {
                             'section_display_name': 'Chapter 5 Section 1 Quadratic Functions Sample Homework'
-                            'section_attempted_graded': True, 
-                            'section_possible_graded': 17.0, 
-                            'section_earned_graded': 0.0, 
-                            'section_possible_all': 17.0, 
+                            'section_attempted_graded': True,
+                            'section_possible_graded': 17.0,
+                            'section_earned_graded': 0.0,
+                            'section_possible_all': 17.0,
                             'section_earned_all': 0.0}
                             'section_grade_percent': 0.0
-                            }, 
+                            },
                         'url': u'https://dev.roverbyopenstax.org/courses/course-v1:ABC+OS9471721_9626+01/courseware/c0a9afb73af311e98367b7d76f928163/c8bc91313af211e98026b7d76f928163'
                     }
-        
+
         Raises:
             LTIBusinessRuleError: [description]
-        
+
         Returns:
             [Boolean] -- returns True if the Grades were posted.
         """
@@ -486,13 +488,13 @@ class LTISession(object):
 
         # cache the relationship between this assignment URL and the course to which it belongs.
         assignment = self.set_course_assignment(
-            url=grades_dict['url'], 
+            url=grades_dict['url'],
             display_name=grades_dict['grades']['section_display_name']
             )
 
         # cache the relationship between the homework problem that was just graded and the assignment to which it belongs.
         problem = self.set_course_assignment_problem(
-            course_assignment=assignment, 
+            course_assignment=assignment,
             usage_key=usage_key
             )
 
@@ -545,10 +547,10 @@ class LTISession(object):
     #=========================================================================================================
     def get_course_assignment_grade(self, usage_key):
         """Try to retrieve a cached course assignment grade object for the given usage_key (Opaque Key).
-        
+
         Arguments:
             usage_key {OpaqueKey} -- add an example usage_key.
-        
+
         Returns:
             [LTIExternalCourseEnrollmentGrades] -- the cache record corresponding to the usage_key
         """
@@ -578,10 +580,10 @@ class LTISession(object):
 
     def get_course_assignment(self, usage_key):
         """Try to retrieve a cached course assignment for the given usage_key (Opaque Key).
-        
+
         Arguments:
             usage_key {OpaqueKey} -- add an example usage_key
-        
+
         Returns:
             [LTIExternalCourseAssignments] -- the cache record corresponding to the usage_key
         """
@@ -617,11 +619,11 @@ class LTISession(object):
 
     def set_course_assignment(self, url, display_name):
         """Cache the given assignment URL.
-        
+
         Arguments:
             url {string or url} -- a valid URL
             display_name {string} -- the visible text description of the Assignment in the course
-        
+
         Returns:
             [LTIExternalCourseAssignments] -- the cache record corresponding to this url
         """
@@ -690,10 +692,10 @@ class LTISession(object):
 
     def get_course_assignment_problem(self, usage_key):
         """Try to retrieve a cached assignment problem.
-        
+
         Arguments:
             usage_key {OpaqueKey} -- add an example usage_key
-        
+
         Returns:
             [LTIExternalCourseAssignmentProblems] -- the cache record corresponding to this usage_key
         """
@@ -707,11 +709,11 @@ class LTISession(object):
 
     def set_course_assignment_problem(self, course_assignment, usage_key):
         """cache an assignment problem.
-        
+
         Arguments:
             course_assignment {LTIExternalCourseAssignment} -- the parent LTIExternalCourseAssignment
             usage_key {string} -- a string representation of an OpaqueKey
-        
+
         Returns:
             LTIExternalCourseAssignmentProblems -- the cache record corresponding to the usage_key.
         """
@@ -751,7 +753,7 @@ class LTISession(object):
     def context_id(self):
         """Lazy reader implementation. If context_id has not been set
         then look for it in lti_params and/or course.
-        
+
         Returns:
             [string] -- string value representing context_id
         """
@@ -770,15 +772,15 @@ class LTISession(object):
         if self.course is not None:
             self._context_id = self.course.context_id
             return self._context_id
-    
+
     @context_id.setter
     def context_id(self, value):
-        """the context_id changed, so try re-initializing the course and 
+        """the context_id changed, so try re-initializing the course and
         course_enrollment cache objects.
-        
+
         Arguments:
             value {string} -- string value representing a context_id
-        
+
         Raises:
             LTIBusinessRuleError: raises an error if the value provided is
             inconsistent with the value in lti_params or course.
@@ -789,7 +791,7 @@ class LTISession(object):
 
         if value == self._context_id:
             if DEBUG: log.info('LTISession.set_context_id() - no changes. Exiting.')
-            return 
+            return
 
         # check for integrity between context_id and the current contents of lti_params
         lti_params_context_id = self.lti_params.context_id
@@ -800,7 +802,7 @@ class LTISession(object):
                     lti_params=self.lti_params.context_id
                 ))
 
-        # check for integrity between context_id and course.context_id        
+        # check for integrity between context_id and course.context_id
         if self.course is not None:
             if self.course.context_id != value:
                 raise LTIBusinessRuleError("set_context_id() - Tried to set context_id to {value}, which is inconsistent with the " \
@@ -819,11 +821,11 @@ class LTISession(object):
 
 
         self._context_id = value
-    
+
     @property
     def lti_params(self):
         """lti_params getter
-        
+
         Returns:
             dict -- lti_params dictionary
         """
@@ -836,10 +838,10 @@ class LTISession(object):
     def lti_params(self, value):
         """lti_params setter. lti_params json object changed, so clear course and course_enrollment
         also need to initialize any property values that are sourced from lti_params
-        
+
         Arguments:
             value {LTIParams} -- a lti_params helper class
-        
+
         Raises:
             LTIBusinessRuleError: raises an exception if lti_params is invalid.
         """
@@ -881,7 +883,7 @@ class LTISession(object):
     @property
     def user(self):
         """user getter
-        
+
         Returns:
             User -- Django User object
         """
@@ -894,7 +896,7 @@ class LTISession(object):
     def user(self, value):
         """user setter. the user object changed, so reinitialize any properties that are functions of user.
         also need to try to reinitialize course_enrollment.
-        
+
         Arguments:
             value {User} -- a valid Django User object.
         """
@@ -902,7 +904,7 @@ class LTISession(object):
 
         if value == self._user:
             if DEBUG: log.info('LTISession.set_user() - no changes. Exiting.')
-            return 
+            return
 
         self._user = value
 
@@ -915,7 +917,7 @@ class LTISession(object):
     @property
     def course_id(self):
         """course_id getter
-        
+
         Returns:
             string -- a string value representing a course_id (CourseKey)
         """
@@ -928,10 +930,10 @@ class LTISession(object):
     @course_id.setter
     def course_id(self, value):
         """course_id setter
-        
+
         Arguments:
             value {string} -- a string representation of a CourseKey
-        
+
         Raises:
             LTIBusinessRuleError: raises an excpetion if value is not a valid CourseKey
         """
@@ -942,7 +944,7 @@ class LTISession(object):
 
         if value == self._course_id:
             if DEBUG: log.info('LTISession.set_course_id() - no changes. Exiting.')
-            return 
+            return
 
         if isinstance(value, CourseKey):
             self._course_id = value
@@ -962,7 +964,7 @@ class LTISession(object):
     def course(self):
         """course getter. return a cached instance of the LTIExternalCourse record, if it exists.
         otherwise tries to register a new context_id/course_id course record
-        
+
         Returns:
             LTIExternalCourse -- a course cache record.
         """
@@ -979,10 +981,10 @@ class LTISession(object):
     @course.setter
     def course(self, value):
         """course setter
-        
+
         Arguments:
             value {LTIExternalCourse} -- a course cache record.
-        
+
         Raises:
             LTIBusinessRuleError: raises an exception if value is not an object of type LTIExternalCourse
         """
@@ -990,7 +992,7 @@ class LTISession(object):
 
         if value == self.course:
             if DEBUG: log.info('LTISession.set_course() - no changes. Exiting.')
-            return 
+            return
 
         if not isinstance(value, LTIExternalCourse):
             raise LTIBusinessRuleError("set_course() - Tried to assign object {dtype} {obj} to course property that is not" \
@@ -1007,7 +1009,7 @@ class LTISession(object):
     def course_enrollment(self):
         """course_enrollment getter. Returns a cached instance of LTIExternalCourseEnrollment, if it exists.
         otherwise tries to register a new user / course record
-        
+
         Returns:
             LTIExternalCourseEnrollment -- a cache record corresponding to user / context_id / course_id
         """
@@ -1029,10 +1031,10 @@ class LTISession(object):
     @course_enrollment.setter
     def course_enrollment(self, value):
         """course_enrollment setter.
-        
+
         Arguments:
             value {LTIExternalCourseEnrollment} -- a course enrollment cache record
-        
+
         Raises:
             LTIBusinessRuleError: raises an exception if value is not an object of type LTIExternalCourseEnrollment
         """
@@ -1041,10 +1043,10 @@ class LTISession(object):
             val_type=type(value)
         )
         if DEBUG: log.info('LTISession.set_course_enrollment()' + msg)
-        
+
         if value == self._course_enrollment:
             if DEBUG: log.info('LTISession.set_course_enrollment() - no changes. Exiting.')
-            return 
+            return
 
         if not isinstance(value, LTIExternalCourseEnrollment) and value is not None:
             msg = "LTISession.set_course_enrollment() - Tried to assign an object to course_enrollment property that is not" \
