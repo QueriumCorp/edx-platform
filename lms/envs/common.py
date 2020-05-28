@@ -2357,11 +2357,6 @@ INSTALLED_APPS = [
     # add Willo Labs LTI Grade Sync module
     'common.djangoapps.third_party_auth.lti_consumers.willolabs',
 
-    # We don't use this directly (since we use OAuth2), but we need to install it anyway.
-    # When a user is deleted, Django queries all tables with a FK to the auth_user table,
-    # and since django-rest-framework-oauth imports this, it will try to access tables
-    # defined by oauth_provider.  If those tables don't exist, an error can occur.
-    'oauth_provider',
     # System Wide Roles
     'openedx.core.djangoapps.system_wide_roles',
 
