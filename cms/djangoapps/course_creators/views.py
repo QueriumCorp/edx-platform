@@ -1,15 +1,14 @@
 """
 Methods for interacting programmatically with the user creator table.
 """
-# mcdaniel feb-2019: the partialluy direct address was causing the openstax oauth to blow up.
-#          switched this to completely relative addressing, which seems to work.
-from models import CourseCreator
-#from course_creators.models import CourseCreator
 
+
+from course_creators.models import CourseCreator
 from student import auth
 from student.roles import CourseCreatorRole
 
 #mcdaniel mar-2019: additional imports
+from django.contrib.auth.models import User
 import logging
 log = logging.getLogger(__name__)
 
@@ -17,10 +16,8 @@ log = logging.getLogger(__name__)
 def add_user_with_status_unrequested(user):
     """
     Adds a user to the course creator table with status 'unrequested'.
-
     If the user is already in the table, this method is a no-op
     (state will not be changed).
-
     If the user is marked as is_staff, this method is a no-op (user
     will not be added to table).
     """
@@ -30,13 +27,10 @@ def add_user_with_status_unrequested(user):
 def add_user_with_status_granted(caller, user):
     """
     Adds a user to the course creator table with status 'granted'.
-
     If appropriate, this method also adds the user to the course creator group maintained by authz.py.
     Caller must have staff permissions.
-
     If the user is already in the table, this method is a no-op
     (state will not be changed).
-
     If the user is marked as is_staff, this method is a no-op (user
     will not be added to table, nor added to authz.py group).
     """
@@ -47,23 +41,20 @@ def add_user_with_status_granted(caller, user):
 def update_course_creator_group(caller, user, add):
     """
     Method for adding and removing users from the creator group.
-
     Caller must have staff permissions.
     """
     # mcdaniel feb-2019 - use a dedicated admin user for this.
-    from django.contrib.auth.models import User
     admin = User.objects.filter(username="openstax")
 
     if add:
-        auth.add_users(caller, CourseCreatorRole(), admin)
+        auth.add_users(caller, CourseCreatorRole(), user)
     else:
-        auth.remove_users(caller, CourseCreatorRole(), admin)
+        auth.remove_users(caller, CourseCreatorRole(), user)
 
 
 def get_course_creator_status(user):
     """
     Returns the status for a particular user, or None if user is not in the table.
-
     Possible return values are:
         'unrequested' = user has not requested course creation rights
         'pending' = user has requested course creation rights
@@ -82,7 +73,6 @@ def get_course_creator_status(user):
 def user_requested_access(user):
     """
     User has requested course creator access.
-
     This changes the user state to CourseCreator.PENDING, unless the user
     state is already CourseCreator.GRANTED, in which case this method is a no-op.
     """
@@ -95,16 +85,12 @@ def user_requested_access(user):
 def _add_user(user, state):
     """
     Adds a user to the course creator table with the specified state.
-
     Returns True if user was added to table, else False.
-
     If the user is already in the table, this method is a no-op
     (state will not be changed, method will return False).
-
     If the user is marked as is_staff, this method is a no-op (False will be returned).
     """
     if not user.is_staff and CourseCreator.objects.filter(user=user).count() == 0:
-        log.info('_add_user() - adding {} to course_creators.'.format(user.username))
         entry = CourseCreator(user=user, state=state)
         entry.save()
         return True
