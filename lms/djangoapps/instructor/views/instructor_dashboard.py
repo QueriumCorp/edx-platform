@@ -91,7 +91,6 @@ class InstructorDashboardTab(CourseTab):
 def show_analytics_dashboard_message(course_key):
     """
     Defines whether or not the analytics dashboard URL should be displayed.
-
     Arguments:
         course_key (CourseLocator): The course locator to display the analytics dashboard message on.
     """
@@ -136,9 +135,7 @@ def instructor_dashboard_2(request, course_id):
         sections.extend([
             _section_course_info(course, access),
             _section_membership(course, access),
-            # mcdaniel mar-2019: we're not currently using cohorts.
-            #          may-2020: juniper merge
-            # _section_cohort_management(course, access),
+            _section_cohort_management(course, access),
             _section_discussions_management(course, access),
             _section_student_admin(course, access),
         ])
@@ -158,8 +155,7 @@ def instructor_dashboard_2(request, course_id):
             link_start=link_start, link_end=HTML("</a>"), analytics_dashboard_name=settings.ANALYTICS_DASHBOARD_NAME)
 
         # Temporarily show the "Analytics" section until we have a better way of linking to Insights
-        # mcdaniel mar-2019: we're not using analytics. removing this from the sub menu
-        # sections.append(_section_analytics(course, access))
+        sections.append(_section_analytics(course, access))
 
     # Check if there is corresponding entry in the CourseMode Table related to the Instructor Dashboard course
     course_mode_has_price = False
@@ -243,8 +239,6 @@ def instructor_dashboard_2(request, course_id):
     context = {
         'course': course,
         'studio_url': get_studio_url(course, 'course'),
-        # mcdaniel mar-2019: so that we can add a shortcut button to the Gradebook
-        'spoc_gradebook_url': reverse('spoc_gradebook', kwargs={'course_id': unicode(course_key)}),
         'sections': sections,
         'disable_buttons': disable_buttons,
         'analytics_dashboard_message': analytics_dashboard_message,
@@ -361,17 +355,13 @@ def _section_special_exams(course, access):
 
 def _section_certificates(course):
     """Section information for the certificates panel.
-
     The certificates panel allows global staff to generate
     example certificates and enable self-generated certificates
     for a course.
-
     Arguments:
         course (Course)
-
     Returns:
         dict
-
     """
     example_cert_status = None
     html_cert_enabled = certs_api.has_html_certificates_enabled(course)
