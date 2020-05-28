@@ -1419,10 +1419,6 @@ INSTALLED_APPS = [
     # django-oauth-toolkit
     'oauth2_provider',
 
-    # added by mcdaniel feb-2019 based on setup of lms common.py
-    'openedx.core.djangoapps.oauth_dispatch.apps.OAuthDispatchAppConfig',
-    'third_party_auth',
-
     # mcdaniel dec-2019
     # add Willo Labs LTI Grade Sync module
     'common.djangoapps.third_party_auth.lti_consumers.willolabs',
