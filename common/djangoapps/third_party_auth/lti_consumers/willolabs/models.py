@@ -14,7 +14,12 @@ from __future__ import absolute_import
 from django.conf import settings
 from django.db import models
 from model_utils.models import TimeStampedModel
-from lms.djangoapps.coursewarehistoryextended.fields import UnsignedBigIntAutoField
+
+# mcdaniel may-2020: field was refactored in juniper.rc3
+#-----------------
+#from lms.djangoapps.coursewarehistoryextended.fields import UnsignedBigIntAutoField
+from lms.djangoapps.courseware.fields import UnsignedBigIntAutoField
+#-----------------
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -50,12 +55,12 @@ class LTIExternalCourse(TimeStampedModel):
         )
 
     course_id = CourseKeyField(
-        max_length=255, 
+        max_length=255,
         db_index=True,
         #verbose_name="Course Id",
         help_text="Rover Course Key (Opaque Key). " \
             "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
-        default=None, 
+        default=None,
         blank=False,
         null=True
         )
@@ -64,8 +69,8 @@ class LTIExternalCourse(TimeStampedModel):
         #verbose_name="Context Title",
         help_text="Name of the Willo Lab integration. Example: Willo Labs Test Launch for KU Blackboard Rover Grade Testing",
         max_length=255,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True
         )
 
@@ -84,7 +89,7 @@ class LTIExternalCourse(TimeStampedModel):
         blank=True,
         null=True,
         )
-        
+
     ext_wl_launch_url = models.URLField(
         #verbose_name="External WilloLab Launch URL",
         help_text="Example: https://stage.willolabs.com/launch/QcTz6q/8cmzcd",
@@ -226,7 +231,7 @@ class LTIExternalCourseAssignments(TimeStampedModel):
     due_date = models.DateTimeField(
         #verbose_name="Due Date",
         help_text="The Rover assignment due date.",
-        null=True, 
+        null=True,
         blank=True,
         )
 
@@ -245,7 +250,7 @@ class LTIExternalCourseAssignmentProblems(TimeStampedModel):
     usage_key = UsageKeyField(
         #verbose_name="Usage Key",
         help_text="Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api. Example: block-v1:ABC+OS9471721_9626+01+type@swxblock+block@c081d7653af211e98379b7d76f928163",
-        blank=False, 
+        blank=False,
         max_length=255,
         )
     class Meta(object):
@@ -277,8 +282,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="Canvas User ID",
         help_text="User ID provided to Willo Labs. Example: 394",
         max_length=25,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -286,8 +291,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="Canvas Username",
         help_text="Login ID provided to Willo Labs. Example: rover_student",
         max_length=50,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -295,8 +300,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="Canvas user time zone",
         help_text="Source system time zone from user's profile, provided to Willo Labs. Example: America/New_York",
         max_length=50,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -304,8 +309,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="External System Roles",
         help_text="User permitted roles in external system. Example: urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
         max_length=255,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -313,8 +318,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="External WilloLab Privacy Mode",
         help_text="Privacy settings from external system, provided to Willo Lab. Example: allow-pii-all",
         max_length=50,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -328,8 +333,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="User Family Name",
         help_text="Example: Thornton",
         max_length=50,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -337,8 +342,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="User Family Name",
         help_text="Example: Billy Bob Thornton",
         max_length=255,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -346,8 +351,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="User Given Name",
         help_text="Example: Billy Bob",
         max_length=255,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -355,8 +360,8 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #verbose_name="Source system Username",
         help_text="Example: _tonn_test5",
         max_length=255,
-        default=None, 
-        blank=True, 
+        default=None,
+        blank=True,
         null=True,
         )
 
@@ -383,7 +388,7 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     synched = models.DateTimeField(
         #verbose_name="Willo Posting Date",
         help_text="The timestamp when this grade record was successfully posted to Willo Grade Sync.",
-        null=True, 
+        null=True,
         blank=True,
         )
 
@@ -400,7 +405,7 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     usage_key = UsageKeyField(
         #verbose_name="Usage Key",
         help_text="Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api.",
-        blank=False, 
+        blank=False,
         max_length=255,
         )
 
@@ -410,7 +415,7 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     possible_all = models.FloatField(blank=False)
     earned_graded = models.FloatField(blank=False)
     possible_graded = models.FloatField(blank=False)
-    
+
     class Meta(object):
         verbose_name = "LTI External Course Enrollment Grades"
         verbose_name_plural = verbose_name
