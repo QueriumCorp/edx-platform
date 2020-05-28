@@ -6,7 +6,8 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import lms.djangoapps.coursewarehistoryextended.fields
+from lms.djangoapps.courseware.fields import UnsignedBigIntAutoField
+#import lms.djangoapps.coursewarehistoryextended.fields
 import model_utils.fields
 import opaque_keys.edx.django.models
 
@@ -104,7 +105,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
-                ('id', lms.djangoapps.coursewarehistoryextended.fields.UnsignedBigIntAutoField(primary_key=True, serialize=False)),
+                ('id', UnsignedBigIntAutoField(primary_key=True, serialize=False)),
                 ('synched', models.DateTimeField(blank=True, help_text=b'The timestamp when this grade record was successfully posted to Willo Grade Sync.', null=True, verbose_name=b'Willo Posting Date')),
                 ('section_url', models.URLField(help_text=b'Open edX Course Assignment', max_length=255, verbose_name=b'Homework Section URL')),
                 ('usage_key', opaque_keys.edx.django.models.UsageKeyField(help_text=b'Open edX Block usage key pointing to the homework problem that was graded, invoking the post_grades() api.', max_length=255, verbose_name=b'Usage Key')),
