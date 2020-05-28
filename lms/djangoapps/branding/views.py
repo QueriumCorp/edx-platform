@@ -31,14 +31,16 @@ import third_party_auth
 from third_party_auth import pipeline
 from third_party_auth.decorators import xframe_allow_whitelisted
 from django.utils.translation import ugettext as _
-from openedx.core.djangoapps.external_auth.login_and_register import login as external_auth_login
-from openedx.core.djangoapps.external_auth.login_and_register import register as external_auth_register
 from student.helpers import get_next_url_for_login_page
 from django.contrib import messages
 from student.helpers import (
     auth_pipeline_urls,
     get_next_url_for_login_page
 )
+# mcdaniel may-2020: breaks in juniper.rc3.
+# candidate to obsolete.
+#from openedx.core.djangoapps.external_auth.login_and_register import login as external_auth_login
+#from openedx.core.djangoapps.external_auth.login_and_register import register as external_auth_register
 
 
 
@@ -384,6 +386,7 @@ def _third_party_auth_context(request, redirect_to, tpa_hint=None):
 
     return context
 
+# mcdaniel may-2020: we might be able to obsolete this. TBC.
 def _external_auth_intercept(request, mode):
     """Allow external auth to intercept a login/registration request.
 
@@ -396,9 +399,12 @@ def _external_auth_intercept(request, mode):
 
     """
     if mode == "login":
-        return external_auth_login(request)
+        log.error('_external_auth_intercept() - login HOW DID I GET HERE?')
+        #return external_auth_login(request)
     elif mode == "register":
-        return external_auth_register(request)
+        log.error('_external_auth_intercept() - register HOW DID I GET HERE?')
+        #return external_auth_register(request)
+    return None
 
 
 def _get_login_context(request):
