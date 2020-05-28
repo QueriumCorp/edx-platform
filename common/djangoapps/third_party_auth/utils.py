@@ -4,7 +4,7 @@ Utility functions for third_party_auth
 
 
 from django.contrib.auth.models import User
-
+from .provider import Registry
 
 def user_exists(details):
     """
