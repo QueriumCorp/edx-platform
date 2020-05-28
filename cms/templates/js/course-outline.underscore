@@ -1,5 +1,4 @@
 <%
-var isPublishable = xblockInfo.isPublishable();
 var releasedToStudents = xblockInfo.get('released_to_students');
 var visibilityState = xblockInfo.get('visibility_state');
 var published = xblockInfo.get('published');
@@ -28,12 +27,6 @@ var addStatusMessage = function (statusType, message) {
     statusMessages.push({iconClass: statusIconClass, text: message});
 };
 
-/*---------------------------------------------------
- mcdaniel jun-2019: this breaks styling in the outline, and, breaks the expand/collapse action button.
-if (xblockType) {
-  xblockType = xblockType.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter')
-}
-*----------------------------------------------------*/
 if (prereq) {
     var prereqDisplayName = '';
     _.each(xblockInfo.get('prereqs'), function (p) {
@@ -52,7 +45,7 @@ if (prereq) {
 }
 if (staffOnlyMessage) {
     messageType = 'staff-only';
-    messageText = 'Hidden from students';
+    messageText = gettext('Contains staff only content');
     addStatusMessage(messageType, messageText);
 } else {
     if (visibilityState === 'needs_attention' && xblockInfo.isVertical()) {
@@ -60,7 +53,7 @@ if (staffOnlyMessage) {
         if (published && releasedToStudents) {
             messageText = gettext('Unpublished changes to live content');
         } else if (!published) {
-            messageText = gettext('Unpublished questions will not be released');
+            messageText = gettext('Unpublished units will not be released');
         } else {
             messageText = gettext('Unpublished changes to content that will release in the future');
         }
@@ -70,7 +63,7 @@ if (staffOnlyMessage) {
     if (selectedPartitionIndex !== -1 && !isNaN(selectedPartitionIndex) && xblockInfo.isVertical()) {
         messageType = 'partition-groups';
         messageText = edx.StringUtils.interpolate(
-                gettext('Access to this question is restricted to: {selectedGroupsLabel}'),
+                gettext('Access to this unit is restricted to: {selectedGroupsLabel}'),
                 {
                     selectedGroupsLabel: selectedGroupsLabel
                 }
@@ -79,7 +72,7 @@ if (staffOnlyMessage) {
     } else if (hasPartitionGroups && xblockInfo.isVertical()) {
         addStatusMessage(
             'partition-groups',
-            gettext('Access to some content in this question is restricted to specific groups of learners')
+            gettext('Access to some content in this unit is restricted to specific groups of learners')
         );
     }
 }
@@ -107,34 +100,21 @@ if (is_proctored_exam) {
 }
 %>
 <% if (parentInfo) { %>
-/*
-  McDaniel Nov-2018
-  create a 2-column course outline layout. Publish button moved to the left column.
-  styling for the 2-column layout is inline in theme folder cms/templates/course_outline.html
-
-  McDaniel May-2020
-  merge w juniper.
-*/
-<li class="rover-outline-item outline-item outline-<%- xblockType %> <%- visibilityClass %> is-draggable <%- includesChildren ? 'is-collapsible' : '' %> <%- isCollapsed ? 'is-collapsed' : '' %>"
+<li class="outline-item outline-<%- xblockType %> <%- visibilityClass %> is-draggable <%- includesChildren ? 'is-collapsible' : '' %> <%- isCollapsed ? 'is-collapsed' : '' %>"
     data-parent="<%- parentInfo.get('id') %>" data-locator="<%- xblockInfo.get('id') %>" id="<%- xblockInfo.get('id') %>">
 
-
-
-    <div class="outline-item-row <%- isCollapsed ? '' : 'rover-box-shadow' %>">
-        <% if (isPublishable) { %>
-            <a href="#" data-tooltip="Publish this assignment" class="rover-publish publish-button action-button">
-              <div class="outline-item-left outline-item-left-editmode">
-                <span class="rover-white-text icon fa fa-upload" aria-hidden="true"></span>
-                <span class="sr action-button-text"><%- gettext('Publish') %></span>
-              </div>  <!-- class="outline-item-left" -->
-            </a>
-        <% }  else { %>
-        <div>
-          <div class="outline-item-left">
-            <span class="rover-white-text icon fa fa-check" aria-hidden="true"></span>
-          </div>  <!-- class="outline-item-left" -->
-
-        </div>
+    <span class="draggable-drop-indicator draggable-drop-indicator-before"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
+    <% if (xblockInfo.isHeaderVisible()) { %>
+    <div class="<%- xblockType %>-header">
+        <% if (includesChildren) { %>
+            <h3 class="<%- xblockType %>-header-details expand-collapse <%- isCollapsed ? 'expand' : 'collapse' %> ui-toggle-expansion"
+                title="<%- interpolate(
+                      gettext('Collapse/Expand this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName }, true
+                ) %>"
+            >
+                <span class="icon fa fa-caret-down" aria-hidden="true"></span>
+        <% } else { %>
+            <h3 class="<%- xblockType %>-header-details">
         <% } %>
                 <% if (xblockInfo.isVertical()) { %>
                     <span class="unit-title item-title">
@@ -188,110 +168,44 @@ if (is_proctored_exam) {
                             <span class="sr action-button-text"><%- gettext('Delete') %></span>
                         </a>
                     </li>
-                    <% } %>
-                </ul>
-            </div>
+                <% } %>
+                <% if (xblockInfo.isDraggable()) { %>
+                <li class="action-item action-drag">
+                    <span data-tooltip="<%- gettext('Drag to reorder') %>"
+                          class="drag-handle <%- xblockType %>-drag-handle action">
+                        <span class="sr"><%- gettext('Drag to reorder') %></span>
+                    </span>
+                </li>
+                <% } %>
+            </ul>
         </div>
-        <div class="<%- xblockType %>-status">
-            <% if (!xblockInfo.isVertical()) { %>
-                <% if (xblockInfo.get('explanatory_message') !=null) { %>
-                    <div class="explanatory-message">
-                        <span>
-                            <%- xblockInfo.get('explanatory_message') %>
-                        </span>
-                    </div>
-                <% } else { %>
-                  <div class="status-release">
-                    <p>
-                        <span class="sr status-release-label"><%- gettext('Release Status:') %></span>
-                        <span class="status-release-value">
-                            <% if (!course.get('self_paced')) { %>
-                                <% if (xblockInfo.get('released_to_students')) { %>
-                                    <!-- McDaniel Nov-2018: begin copied snippet -->
-                                    <% if (xblockInfo.isEditableOnCourseOutline()) { %>
-                                        <span class="action-item action-configure">
-                                            <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
-                                                <span class="icon fa fa-calendar" aria-hidden="true"></span>
-                                                <span class="sr action-button-text">Set assignment due date</span>
-                                                <%- gettext('Released:') %>
-                                                <% if (xblockInfo.get('release_date')) { %>
-                                                    <%- xblockInfo.get('release_date') %>
-                                                <% } %>
-                                            </a>
-                                            <!-- McDaniel Nov-2018: end copied snippet -->
-                                        </span>
-                                    <% } %>
-                                <% } else if (xblockInfo.get('release_date')) { %>
-
-                                  <!-- McDaniel mar-2019: wrapping original fa icon snippets with "edit" anchors from "Set assignment date", above. -->
-                                  <% if (xblockInfo.isEditableOnCourseOutline()) { %>
-                                      <span class="action-item action-configure">
-                                          <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
-                                            <span class="icon fa fa-clock-o" aria-hidden="true"></span>
-                                            <%- gettext('Scheduled:') %>
-                                            <% if (xblockInfo.get('release_date')) { %>
-                                                <%- xblockInfo.get('release_date') %>
-                                            <% } %>
-                                          </a>
-                                      </span>
-                                  <% } %>
-
-                                <% } else { %>
-
-                                    <!-- McDaniel mar-2019: wrapping original fa icon snippets with "edit" anchors from "Set assignment date", above. -->
-                                    <% if (xblockInfo.isEditableOnCourseOutline()) { %>
-                                        <span class="action-item action-configure">
-                                            <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
-
-                                              <span class="icon fa fa-clock-o" aria-hidden="true"></span>
-                                              <%- gettext('Unscheduled') %>
-                                              <% if (xblockInfo.get('release_date')) { %>
-                                                  <%- xblockInfo.get('release_date') %>
-                                              <% } %>
-
-                                            </a>
-                                        </span>
-                                    <% } %>
-
-                                <% } %>
+    </div>
+    <div class="<%- xblockType %>-status">
+        <% if (!xblockInfo.isVertical()) { %>
+            <% if (xblockInfo.get('explanatory_message') !=null) { %>
+                <div class="explanatory-message">
+                    <span>
+                        <%- xblockInfo.get('explanatory_message') %>
+                    </span>
+                </div>
+            <% } else { %>
+              <div class="status-release">
+                <p>
+                    <span class="sr status-release-label"><%- gettext('Release Status:') %></span>
+                    <span class="status-release-value">
+                        <% if (!course.get('self_paced')) { %>
+                            <% if (xblockInfo.get('released_to_students')) { %>
+                                <span class="icon fa fa-check" aria-hidden="true"></span>
+                                <%- gettext('Released:') %>
+                            <% } else if (xblockInfo.get('release_date')) { %>
+                                <span class="icon fa fa-clock-o" aria-hidden="true"></span>
+                                <%- gettext('Scheduled:') %>
+                            <% } else { %>
+                                <span class="icon fa fa-clock-o" aria-hidden="true"></span>
+                                <%- gettext('Unscheduled') %>
                             <% } %>
-                        </span>
-                    </p>
-                  </div>
-                <% } %>
-                <% if (xblockInfo.get('highlights_enabled') && course.get('self_paced') && xblockInfo.isChapter()) { %>
-                    <div class="block-highlights">
-                        <% var number_of_highlights = (xblockInfo.get('highlights') || []).length; %>
-                            <button class="block-highlights-value highlights-button action-button">
-                                <span class="number-highlights"><%- number_of_highlights %></span>
-                                Chapter Highlights
-                            </button>
-                    </div>
-                <% } %>
-                <% if (xblockInfo.get('is_time_limited')) { %>
-                    <div class="status-timed-proctored-exam">
-                        <p>
-                            <span class="sr status-grading-label"> <%- gettext('Graded as:') %> </span>
-                            <!-- McDaniel Nov-2018: don't want any more check marks appearing -->
-                            <!-- <span class="icon fa fa-check" aria-hidden="true"></span> -->
-                            <span class="status-grading-value"> <%- gradingType %> </span>
-                             -
-                            <span class="sr status-proctored-exam-label"> <%- exam_value %> </span>
-                            <span class="status-proctored-exam-value"> <%- exam_value %> </span>
-                            <% if (xblockInfo.get('due_date')) { %>
-                                <span class="status-grading-date"> <%- gettext('Due:') %> <%- xblockInfo.get('due_date') %> </span>
-                            <% } %>
-                        </p>
-                    </div>
-                <% } else if (xblockInfo.get('due_date') || xblockInfo.get('graded')) { %>
-                    <div class="status-grading">
-                        <p>
-                            <span class="sr status-grading-label"> <%- gettext('Graded as:') %> </span>
-                            <!-- McDaniel Nov-2018: don't want any more check marks appearing -->
-                            <!-- <span class="icon fa fa-check" aria-hidden="true"></span>  -->
-                            <span class="status-grading-value"> <%- gradingType %> </span>
-                            <% if (xblockInfo.get('due_date') && !course.get('self_paced')) { %>
-                                <span class="status-grading-date"> <%- gettext('Due:') %> <%- xblockInfo.get('due_date') %> </span>
+                            <% if (xblockInfo.get('release_date')) { %>
+                                <%- xblockInfo.get('release_date') %>
                             <% } %>
                         <% } %>
                     </span>
@@ -324,75 +238,82 @@ if (is_proctored_exam) {
             <% } else if (xblockInfo.get('due_date') || xblockInfo.get('graded')) { %>
                 <div class="status-grading">
                     <p>
-                        <% if (xblockInfo.get('hide_after_due')) { %>
-                            <span class="icon fa fa-eye-slash" aria-hidden="true"></span>
-                            <span class="status-hide-after-due-value">
-                            <% if (course.get('self_paced')) { %>
-                                <%- gettext("Assignment is hidden after course end date") %> </span>
-                            <% } else { %>
-                                <%- gettext("Assignment is hidden after due date") %> </span>
-                            <% } %>
+                        <span class="sr status-grading-label"> <%- gettext('Graded as:') %> </span>
+                        <span class="icon fa fa-check" aria-hidden="true"></span>
+                        <span class="status-grading-value"> <%- gradingType %> </span>
+                        <% if (xblockInfo.get('due_date') && !course.get('self_paced')) { %>
+                            <span class="status-grading-date"> <%- gettext('Due:') %> <%- xblockInfo.get('due_date') %> </span>
                         <% } %>
                     </p>
                 </div>
             <% } %>
-            <% if (statusMessages.length > 0) { %>
-                <div class="status-messages">
-                <% for (var i=0; i<statusMessages.length; i++) { %>
-                    <div class="status-message">
-                        <i class="fa fa-eye-slash" aria-hidden="true"></i>
-                        <p class="status-message-copy"><%- statusMessages[i].text %></p>
-                    </div>
-                <% } %>
-                </div>
-            <% } %>
-        </div>
-        <% } %>
-    <% } %>
-
-        <% if (!parentInfo && xblockInfo.get('child_info') && xblockInfo.get('child_info').children.length === 0) { %>
-            <div class="no-content add-section">
-                <p><%- gettext("You haven't added any content to this course yet.") %>
-                    <a href="#" class="button button-new" data-category="<%- childCategory %>"
-                       data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') %>"
-                       title="<%- interpolate(
-                             gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
-                       ) %>"
-                    >
-                        <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') %>
-                    </a>
+            <div class="status-hide-after-due">
+                <p>
+                    <% if (xblockInfo.get('hide_after_due')) { %>
+                        <span class="icon fa fa-eye-slash" aria-hidden="true"></span>
+                        <span class="status-hide-after-due-value">
+                        <% if (course.get('self_paced')) { %>
+                            <%- gettext("Subsection is hidden after course end date") %> </span>
+                        <% } else { %>
+                            <%- gettext("Subsection is hidden after due date") %> </span>
+                        <% } %>
+                    <% } %>
                 </p>
             </div>
-        <% } else if (!xblockInfo.isVertical()) { %>
+        <% } %>
+        <% if (statusMessages.length > 0) { %>
+            <div class="status-messages">
+            <% for (var i=0; i<statusMessages.length; i++) { %>
+                <div class="status-message">
+                    <span class="icon fa <%- statusMessages[i].iconClass %>" aria-hidden="true"></span>
+                    <p class="status-message-copy"><%- statusMessages[i].text %></p>
+                </div>
+            <% } %>
+            </div>
+        <% } %>
+    </div>
+    <% } %>
+<% } %>
 
-        </div>  <!-- class="outline-item-right" -->
-      </div>  <!-- class="outline-item-row" -->
+    <% if (!parentInfo && xblockInfo.get('child_info') && xblockInfo.get('child_info').children.length === 0) { %>
+        <div class="no-content add-section">
+            <p><%- gettext("You haven't added any content to this course yet.") %>
+                <a href="#" class="button button-new" data-category="<%- childCategory %>"
+                   data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName %>"
+                   title="<%- interpolate(
+                         gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName }, true
+                   ) %>"
+                >
+                    <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel %>
+                </a>
+            </p>
+        </div>
+    <% } else if (!xblockInfo.isVertical()) { %>
+        <div class="outline-content <%- xblockType %>-content">
+            <ol class="<%- typeListClass %> is-sortable">
+                <li class="ui-splint ui-splint-indicator">
+                    <span class="draggable-drop-indicator draggable-drop-indicator-initial"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
+                </li>
+            </ol>
 
-              <div class="outline-content <%- xblockType %>-content">
-                  <ol class="<%- typeListClass %> is-sortable">
-                      <li class="ui-splint ui-splint-indicator">
-                          <span class="draggable-drop-indicator draggable-drop-indicator-initial"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
-                      </li>
-                  </ol>
-
-                  <% if (childType) { %>
-                  <% if (xblockInfo.isChildAddable()) { %>
-                      <div class="add-<%- childType %> add-item">
-                          <a href="#" class="button button-new" data-category="<%- childCategory %>"
-                             data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName %>"
-                             title="<%- interpolate(
-                                   gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
-                             ) %>"
-                          >
-                              <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') %>
-                          </a>
-                      </div>
-                      <% } %>
-                  <% } %>
-              </div>
-          <% } %>
+            <% if (childType) { %>
+            <% if (xblockInfo.isChildAddable()) { %>
+                <div class="add-<%- childType %> add-item">
+                    <a href="#" class="button button-new" data-category="<%- childCategory %>"
+                       data-parent="<%- xblockInfo.get('id') %>" data-default-name="<%- defaultNewChildName %>"
+                       title="<%- interpolate(
+                             gettext('Click to add a new %(xblock_type)s'), { xblock_type: defaultNewChildName }, true
+                       ) %>"
+                    >
+                        <span class="icon fa fa-plus" aria-hidden="true"></span><%- addChildLabel %>
+                    </a>
+                </div>
+                <% } %>
+            <% } %>
+        </div>
+    <% } %>
 
 <% if (parentInfo) { %>
-  <span class="draggable-drop-indicator draggable-drop-indicator-after"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
+    <span class="draggable-drop-indicator draggable-drop-indicator-after"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
 </li>
 <% } %>
