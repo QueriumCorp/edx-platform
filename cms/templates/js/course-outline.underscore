@@ -136,108 +136,6 @@ if (is_proctored_exam) {
 
         </div>
         <% } %>
-<<<<<<< HEAD
-
-        <div class="outline-item-right <%- isPublishable ? 'rover-publishable-content' : '' %>">
-        <span class="draggable-drop-indicator draggable-drop-indicator-before"><span class="icon fa fa-caret-right" aria-hidden="true"></span></span>
-        <% if (xblockInfo.isHeaderVisible()) { %>
-        <div class="<%- xblockType %>-header">
-            <% if (includesChildren) { %>
-                <h3 class="<%- xblockType %>-header-details expand-collapse <%- isCollapsed ? 'expand' : 'collapse' %> ui-toggle-expansion"
-                    title="<%- interpolate(
-                          gettext('Edit the title of this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
-                    ) %>"
-                >
-                    <span class="icon fa fa-caret-down" aria-hidden="true"></span>
-            <% } else { %>
-                <h3 class="<%- xblockType %>-header-details">
-            <% } %>
-                    <% if (xblockInfo.isVertical()) { %>
-                        <span class="unit-title item-title">
-                            <a href="<%- xblockInfo.get('studio_url') %>"><%- xblockInfo.get('display_name') %></a>
-                        </span>
-                    <% } else { %>
-                        <span class="wrapper-<%- xblockType %>-title wrapper-xblock-field incontext-editor is-editable" data-field="display_name" data-field-display-name="<%- gettext("Display Name") %>">
-                            <span class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value"><%- xblockInfo.get('display_name') %></span>
-                        </span>
-                    <% } %>
-                </h3>
-
-            <div class="<%- xblockType %>-header-actions">
-                <ul class="actions-list">
-                    <% if (xblockInfo.isDuplicable()) { %>
-                        <li class="action-item action-duplicate">
-                            <a href="#" data-tooltip="<%- interpolate(
-                                  gettext('Duplicate this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
-                            ) %>"
-                                        class="duplicate-button action-button">
-                                <span class="icon fa fa-copy" aria-hidden="true"></span>
-                                <span class="sr action-button-text"><%- gettext('Duplicate') %></span>
-                            </a>
-                        </li>
-                    <% } %>
-                    <% if (xblockInfo.isDeletable()) { %>
-                        <li class="action-item action-delete">
-                            <a href="#" data-tooltip="<%- interpolate(
-                                  gettext('Delete this %(xblock_type)s'), { xblock_type: xblockTypeDisplayName.replace('Subsection', 'Assignment').replace('subsection', 'assignment').replace('Unit', 'Question').replace('unit', 'question').replace('Section', 'Chapter').replace('section', 'chapter') }, true
-                            ) %>"
-                                        class="delete-button action-button">
-                                <span class="icon fa fa-trash-o" aria-hidden="true"></span>
-                                <span class="sr action-button-text"><%- gettext('Delete') %></span>
-                            </a>
-                        </li>
-                    <% } %>
-                    <% if (xblockInfo.isDraggable()) { %>
-                    <li class="action-item action-drag">
-                        <span data-tooltip="<%- gettext('Drag to reorder') %>"
-                              class="drag-handle <%- xblockType %>-drag-handle action">
-                            <span class="sr"><%- gettext('Drag to reorder') %></span>
-                        </span>
-||||||| df94c82a04
-                <% if (xblockInfo.isVertical()) { %>
-                    <span class="unit-title item-title">
-                        <a href="<%- xblockInfo.get('studio_url') %>"><%- xblockInfo.get('display_name') %></a>
-                    </span>
-                <% } else { %>
-                    <span class="wrapper-<%- xblockType %>-title wrapper-xblock-field incontext-editor is-editable" data-field="display_name" data-field-display-name="<%- gettext("Display Name") %>">
-                        <span class="<%- xblockType %>-title item-title xblock-field-value incontext-editor-value"><%- xblockInfo.get('display_name') %></span>
-                    </span>
-                <% } %>
-            </h3>
-
-        <div class="<%- xblockType %>-header-actions">
-            <ul class="actions-list">
-                <% if (xblockInfo.isPublishable()) { %>
-                    <li class="action-item action-publish">
-                        <a href="#" data-tooltip="<%- gettext('Publish') %>" class="publish-button action-button">
-                            <span class="icon fa fa-upload" aria-hidden="true"></span>
-                            <span class="sr action-button-text"><%- gettext('Publish') %></span>
-                        </a>
-                    </li>
-                <% } %>
-                <% if (xblockInfo.isEditableOnCourseOutline()) { %>
-                    <li class="action-item action-configure">
-                        <a href="#" data-tooltip="<%- gettext('Configure') %>" class="configure-button action-button">
-                            <span class="icon fa fa-gear" aria-hidden="true"></span>
-                            <span class="sr action-button-text"><%- gettext('Configure') %></span>
-                        </a>
-                    </li>
-                <% } %>
-                <% if (xblockInfo.isDuplicable()) { %>
-                    <li class="action-item action-duplicate">
-                        <a href="#" data-tooltip="<%- gettext('Duplicate') %>" class="duplicate-button action-button">
-                            <span class="icon fa fa-copy" aria-hidden="true"></span>
-                            <span class="sr action-button-text"><%- gettext('Duplicate') %></span>
-                        </a>
-                    </li>
-                <% } %>
-                <% if (xblockInfo.isDeletable()) { %>
-                    <li class="action-item action-delete">
-                        <a href="#" data-tooltip="<%- gettext('Delete') %>" class="delete-button action-button">
-                            <span class="icon fa fa-trash-o" aria-hidden="true"></span>
-                            <span class="sr action-button-text"><%- gettext('Delete') %></span>
-                        </a>
-=======
                 <% if (xblockInfo.isVertical()) { %>
                     <span class="unit-title item-title">
                     <span class="wrapper-<%- xblockType %>-title wrapper-xblock-field incontext-editor is-editable" data-field="display_name" data-field-display-name="<%- gettext("Display Name") %>">
@@ -289,7 +187,6 @@ if (is_proctored_exam) {
                             <span class="icon fa fa-trash-o" aria-hidden="true"></span>
                             <span class="sr action-button-text"><%- gettext('Delete') %></span>
                         </a>
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
                     </li>
                     <% } %>
                 </ul>
@@ -396,43 +293,6 @@ if (is_proctored_exam) {
                             <% if (xblockInfo.get('due_date') && !course.get('self_paced')) { %>
                                 <span class="status-grading-date"> <%- gettext('Due:') %> <%- xblockInfo.get('due_date') %> </span>
                             <% } %>
-<<<<<<< HEAD
-                        </p>
-                    </div>
-                <% } %>
-                <div class="status-hide-after-due">
-||||||| df94c82a04
-                        <% } %>
-                    </span>
-                </p>
-              </div>
-            <% } %>
-            <% if (xblockInfo.get('highlights_enabled') && course.get('self_paced') && xblockInfo.isChapter()) { %>
-                <div class="block-highlights">
-                    <% var number_of_highlights = (xblockInfo.get('highlights') || []).length; %>
-                        <button class="block-highlights-value highlights-button action-button">
-                            <span class="number-highlights"><%- number_of_highlights %></span>
-                            <%- gettext('Section Highlights') %>
-                        </button>
-                </div>
-            <% } %>
-            <% if (xblockInfo.get('is_time_limited')) { %>
-                <div class="status-timed-proctored-exam">
-                    <p>
-                        <span class="sr status-grading-label"> <%- gettext('Graded as:') %> </span>
-                        <span class="icon fa fa-check" aria-hidden="true"></span>
-                        <span class="status-grading-value"> <%- gradingType %> </span>
-                         -
-                        <span class="sr status-proctored-exam-label"> <%- exam_value %> </span>
-                        <span class="status-proctored-exam-value"> <%- exam_value %> </span>
-                        <% if (xblockInfo.get('due_date')) { %>
-                            <span class="status-grading-date"> <%- gettext('Due:') %> <%- xblockInfo.get('due_date') %> </span>
-                        <% } %>
-                    </p>
-                </div>
-            <% } else if (xblockInfo.get('due_date') || xblockInfo.get('graded')) { %>
-                <div class="status-grading">
-=======
                         <% } %>
                     </span>
                 </p>
@@ -463,7 +323,6 @@ if (is_proctored_exam) {
                 </div>
             <% } else if (xblockInfo.get('due_date') || xblockInfo.get('graded')) { %>
                 <div class="status-grading">
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
                     <p>
                         <% if (xblockInfo.get('hide_after_due')) { %>
                             <span class="icon fa fa-eye-slash" aria-hidden="true"></span>

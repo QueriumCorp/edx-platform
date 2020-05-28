@@ -33,25 +33,6 @@ bleach                              # Allowed-list-based HTML sanitizing library
 boto==2.39.0                        # Deprecated version of the AWS SDK; we should stop using this
 boto3==1.4.8                        # Amazon Web Services SDK for Python
 botocore==1.8.17                    # via boto3, s3transfer
-<<<<<<< HEAD
-celery==3.1.25                      # Asynchronous task execution library
-ddt==0.8.0                          # via xblock-drag-and-drop-v2 (which probably shouldn't require it)
-defusedxml==0.4.1                   # XML bomb protection for common XML parsers
-Django==1.11.15                     # Web application framework
-django-babel-underscore             # underscore template extractor for django-babel (internationalization utilities)
-django-config-models==0.1.8         # Configuration models for Django allowing config management with auditing
-django-cors-headers==2.1.0          # Used to allow to configure CORS headers for cross-domain requests
-django-countries==4.6.1             # Country data for Django forms and model fields
-||||||| df94c82a04
-celery==3.1.25                      # Asynchronous task execution library
-ddt==0.8.0                          # via xblock-drag-and-drop-v2 (which probably shouldn't require it)
-defusedxml==0.4.1                   # XML bomb protection for common XML parsers
-Django==1.11.14                     # Web application framework
-django-babel-underscore             # underscore template extractor for django-babel (internationalization utilities)
-django-config-models==0.1.8         # Configuration models for Django allowing config management with auditing
-django-cors-headers==2.1.0          # Used to allow to configure CORS headers for cross-domain requests
-django-countries==4.6.1             # Country data for Django forms and model fields
-=======
 celery                              # Asynchronous task execution library
 contextlib2                         # We need contextlib2.ExitStack so we can stop using contextlib.nested which doesn't exist in python 3
 defusedxml
@@ -61,7 +42,6 @@ django-cookies-samesite             # Middleware which allows SameSite=None flag
 django-config-models>=1.0.0         # Configuration models for Django allowing config management with auditing
 django-cors-headers                 # Used to allow to configure CORS headers for cross-domain requests
 django-countries                    # Country data for Django forms and model fields
->>>>>>> 27b0e8d845d7795eefda17ea2bc2ba58460bb092
 django-crum                         # Middleware that stores the current request and user in thread local storage
 django-fernet-fields                # via edx-enterprise (should be added to its setup.py)
 django-filter                       # Allows users to filter Django querysets dynamically
