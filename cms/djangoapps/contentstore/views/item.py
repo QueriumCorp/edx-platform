@@ -1320,7 +1320,6 @@ class VisibilityState(object):
         Note: content is ready when it is published and scheduled with a release date in the future.
       unscheduled - the block and all of its descendants have no release date (excluding staff only items)
         Note: it is valid for items to be published with no release date in which case they are still unscheduled.
-
       needs_attention - the block or its descendants are not fully live, ready or unscheduled
         (excluding staff only items)
         For example: one subsection has draft content, or there's both unreleased and released content in one section.
