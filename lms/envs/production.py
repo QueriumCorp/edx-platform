@@ -202,7 +202,7 @@ if STATIC_ROOT_BASE:
 STATIC_URL_BASE = ENV_TOKENS.get('STATIC_URL_BASE', None)
 if STATIC_URL_BASE:
     STATIC_URL = STATIC_URL_BASE
-    if not STATIC_URL.endswith("/".encode('ascii')):
+    if not STATIC_URL.endswith("/"):
         STATIC_URL += "/"
 
 
