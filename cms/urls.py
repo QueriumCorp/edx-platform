@@ -1,44 +1,37 @@
+"""
+Urls of Studio.
+"""
+
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib.admin import autodiscover as django_autodiscover
 from django.utils.translation import ugettext_lazy as _
-from rest_framework_swagger.views import get_swagger_view
-
-import contentstore.views
-from cms.djangoapps.contentstore.views.organization import OrganizationListView
-import openedx.core.djangoapps.common_views.xblock
-import openedx.core.djangoapps.debug.views
-import openedx.core.djangoapps.external_auth.views
-import openedx.core.djangoapps.lang_pref.views
-from openedx.core.djangoapps.password_policy import compliance as password_policy_compliance
-from openedx.core.djangoapps.password_policy.forms import PasswordPolicyAwareAdminAuthForm
-
+from edx_api_doc_tools import make_docs_urls
 from ratelimitbackend import admin
 
-# mcdaniel - feb-2019
-# for oauth to openstax
-import os
-from django.urls import reverse_lazy
-from django.views.generic import RedirectView
-from django_openid_auth import views as django_openid_auth_views
-from openedx.core.djangoapps.external_auth import views as external_auth_views
-from student import views as student_views
-from openedx.core.djangoapps.auth_exchange.views import LoginWithAccessTokenView
-from logging import getLogger
-logger = getLogger(__name__)
-
-# mcdaniel nov-2019: to dynamically determine oauth backend name
-from third_party_auth.utils import preferred_querium_backend
+import contentstore.views
+import openedx.core.djangoapps.common_views.xblock
+import openedx.core.djangoapps.debug.views
+import openedx.core.djangoapps.lang_pref.views
+from cms.djangoapps.contentstore.views.organization import OrganizationListView
+from openedx.core.djangoapps.password_policy import compliance as password_policy_compliance
+from openedx.core.djangoapps.password_policy.forms import PasswordPolicyAwareAdminAuthForm
+from openedx.core.apidocs import api_info
 
 
 django_autodiscover()
-admin.site.site_header = _('AM Administration')
+admin.site.site_header = _('Studio Administration')
 admin.site.site_title = admin.site.site_header
 
 if password_policy_compliance.should_enforce_compliance_on_login():
     admin.site.login_form = PasswordPolicyAwareAdminAuthForm
 
+# Custom error pages
+# These are used by Django to render these error codes. Do not remove.
+# pylint: disable=invalid-name
+handler404 = contentstore.views.render_404
+handler500 = contentstore.views.render_500
 
 # Pattern to match a course key or a library key
 COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
@@ -48,34 +41,8 @@ COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
 # Pattern to match a library key only
 LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
-"""
-mcdaniel mar-2019
-new users are bounced over to LMS to leverage the legacy registration codebase.
-This method builds up the URL for LMS.
-"""
-def registration_redirect():
-    backend = preferred_querium_backend()
-
-    scheme = u"https" if settings.HTTPS == "on" else u"http"
-    url = u'{scheme}://{domain}/'.format(
-            scheme = scheme,
-            domain=settings.SESSION_COOKIE_DOMAIN
-            )
-
-    if backend:
-        url += u'auth/login/{backend}/'.format(
-                backend=backend
-                )
-
-    return url
-
 urlpatterns = [
-    # mcdaniel feb-2019
-    # Redirect for new user sign up. we'll send these to LMS and restart the oauth
-    # process there.
-    url(r'^register/$', RedirectView.as_view(url=registration_redirect() , permanent=True)),
-    url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=True)),
-
+    url(r'', include('openedx.core.djangoapps.user_authn.urls_common')),
     url(r'', include('student.urls')),
     url(r'^transcripts/upload$', contentstore.views.upload_transcripts, name='upload_transcripts'),
     url(r'^transcripts/download$', contentstore.views.download_transcripts, name='download_transcripts'),
@@ -89,6 +56,7 @@ urlpatterns = [
         contentstore.views.component_handler, name='component_handler'),
     url(r'^xblock/resource/(?P<block_type>[^/]*)/(?P<uri>.*)$',
         openedx.core.djangoapps.common_views.xblock.xblock_resource, name='xblock_resource_url'),
+    url(r'', include('openedx.core.djangoapps.xblock.rest_api.urls', namespace='xblock_api')),
     url(r'^not_found$', contentstore.views.not_found, name='not_found'),
     url(r'^server_error$', contentstore.views.server_error, name='server_error'),
     url(r'^organizations$', OrganizationListView.as_view(), name='organizations'),
@@ -96,7 +64,6 @@ urlpatterns = [
     # noop to squelch ajax errors
     url(r'^event$', contentstore.views.event, name='event'),
     url(r'^heartbeat', include('openedx.core.djangoapps.heartbeat.urls')),
-    url(r'^user_api/', include('openedx.core.djangoapps.user_api.legacy_urls')),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
     # User API endpoints
@@ -118,13 +85,7 @@ urlpatterns = [
     # restful api
     url(r'^$', contentstore.views.howitworks, name='homepage'),
     url(r'^howitworks$', contentstore.views.howitworks, name='howitworks'),
-    url(r'^signup$', contentstore.views.signup, name='signup'),
-
-    # mcdaniel oct-2019: scrubbing out any remaining manual login screens so that
-    # oAuth via Openstax is the only means of authenticating.
-    #url(r'^signin$', contentstore.views.login_page, name='login'),
-    url(r'^signin$', RedirectView.as_view(url='/' , permanent=True)),
-
+    url(r'^signin_redirect_to_lms$', contentstore.views.login_redirect_to_lms, name='login_redirect_to_lms'),
     url(r'^request_course_creator$', contentstore.views.request_course_creator, name='request_course_creator'),
     url(r'^course_team/{}(?:/(?P<email>.+))?$'.format(COURSELIKE_KEY_PATTERN),
         contentstore.views.course_team_handler, name='course_team_handler'),
@@ -216,17 +177,23 @@ urlpatterns = [
     url(r'^accessibility$', contentstore.views.accessibility, name='accessibility'),
 ]
 
+if not settings.DISABLE_DEPRECATED_SIGNIN_URL:
+    # TODO: Remove deprecated signin url when traffic proves it is no longer in use
+    urlpatterns += [
+        url(r'^signin$', contentstore.views.login_redirect_to_lms),
+    ]
+
+if not settings.DISABLE_DEPRECATED_SIGNUP_URL:
+    # TODO: Remove deprecated signup url when traffic proves it is no longer in use
+    urlpatterns += [
+        url(r'^signup$', contentstore.views.register_redirect_to_lms, name='register_redirect_to_lms'),
+    ]
+
 JS_INFO_DICT = {
     'domain': 'djangojs',
     # We need to explicitly include external Django apps that are not in LOCALE_PATHS.
     'packages': ('openassessment',),
 }
-
-# mcdaniel feb-2019 - add salesforce REST api
-if settings.ROVER_ENABLE_SALESFORCE_API:
-    urlpatterns.append(
-    url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls'))
-    )
 
 if settings.FEATURES.get('ENABLE_CONTENT_LIBRARIES'):
     urlpatterns += [
@@ -243,25 +210,15 @@ if settings.FEATURES.get('ENABLE_EXPORT_GIT'):
             name='export_git')
     ]
 
-# mcdaniel feb-2019 - add salesforce REST api
-if settings.ROVER_ENABLE_SALESFORCE_API:
-    urlpatterns.append(
-    url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls'))
-    )
-
-
 if settings.FEATURES.get('ENABLE_SERVICE_STATUS'):
     urlpatterns.append(url(r'^status/', include('openedx.core.djangoapps.service_status.urls')))
 
-if settings.FEATURES.get('AUTH_USE_CAS'):
-    import django_cas.views
-
-    urlpatterns += [
-        url(r'^cas-auth/login/$', openedx.core.djangoapps.external_auth.views.cas_login, name="cas-login"),
-        url(r'^cas-auth/logout/$', django_cas.views.logout, {'next_page': '/'}, name="cas-logout"),
-    ]
-
-urlpatterns.append(url(r'^admin/', include(admin.site.urls)))
+# The password pages in the admin tool are disabled so that all password
+# changes go through our user portal and follow complexity requirements.
+if not settings.FEATURES.get('ENABLE_CHANGE_USER_PASSWORD_ADMIN'):
+    urlpatterns.append(url(r'^admin/auth/user/\d+/password/$', handler404))
+urlpatterns.append(url(r'^admin/password_change/$', handler404))
+urlpatterns.append(url(r'^admin/', admin.site.urls))
 
 # enable entrance exams
 if settings.FEATURES.get('ENTRANCE_EXAMS'):
@@ -288,6 +245,12 @@ if settings.FEATURES.get('CERTIFICATES_HTML_VIEW'):
         url(r'^certificates/{}$'.format(settings.COURSE_KEY_PATTERN),
             certificates_list_handler, name='certificates_list_handler')
     ]
+
+# mcdaniel feb-2019 - add salesforce REST api
+if settings.ROVER_ENABLE_SALESFORCE_API:
+    urlpatterns.append(
+    url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls'))
+    )
 
 # Maintenance Dashboard
 urlpatterns.append(url(r'^maintenance/', include('maintenance.urls', namespace='maintenance')))
@@ -317,70 +280,19 @@ if 'debug_toolbar' in settings.INSTALLED_APPS:
 urlpatterns.append(url(r'^template/(?P<template>.+)$', openedx.core.djangoapps.debug.views.show_reference_template,
                        name='openedx.core.djangoapps.debug.views.show_reference_template'))
 
-# Custom error pages
-# These are used by Django to render these error codes. Do not remove.
-# pylint: disable=invalid-name
-handler404 = contentstore.views.render_404
-handler500 = contentstore.views.render_500
-
 # display error page templates, for testing purposes
 urlpatterns += [
     url(r'^404$', handler404),
     url(r'^500$', handler500),
 ]
 
-if settings.FEATURES.get('ENABLE_API_DOCS'):
+# API docs.
+urlpatterns += make_docs_urls(api_info)
+
+if 'openedx.testing.coverage_context_listener' in settings.INSTALLED_APPS:
     urlpatterns += [
-        url(r'^api-docs/$', get_swagger_view(title='Studio API')),
+        url(r'coverage_context', include('openedx.testing.coverage_context_listener.urls'))
     ]
-
-# Third-party auth.
-## mcdaniel feb-2019: copied from lms urls.py
-if settings.FEATURES.get('ENABLE_THIRD_PARTY_AUTH'):
-    urlpatterns += [
-        url(r'', include('third_party_auth.urls')),
-        url(r'api/third_party_auth/', include('third_party_auth.api.urls')),
-        # NOTE: The following login_oauth_token endpoint is DEPRECATED.
-        # Please use the exchange_access_token endpoint instead.
-        url(r'^login_oauth_token/(?P<backend>[^/]+)/$', student_views.login_oauth_token),
-    ]
-
-# OAuth token exchange
-## mcdaniel feb-2019: copied from lms urls.py
-if settings.FEATURES.get('ENABLE_OAUTH2_PROVIDER'):
-    urlpatterns += [
-        url(
-            r'^oauth2/login/$',
-            LoginWithAccessTokenView.as_view(),
-            name='login_with_access_token'
-        ),
-    ]
-
-
-if settings.FEATURES.get('AUTH_USE_OPENID'):
-    urlpatterns += [
-        url(r'^openid/login/$', django_openid_auth_views.login_begin, name='openid-login'),
-        url(
-            r'^openid/complete/$',
-            external_auth_views.openid_login_complete,
-            name='openid-complete',
-        ),
-        url(r'^openid/logo.gif$', django_openid_auth_views.logo, name='openid-logo'),
-    ]
-
-if settings.FEATURES.get('AUTH_USE_SHIB'):
-    urlpatterns += [
-        url(r'^shib-login/$', external_auth_views.shib_login, name='shib-login'),
-    ]
-
-if settings.FEATURES.get('AUTH_USE_CAS'):
-    from django_cas import views as django_cas_views
-
-    urlpatterns += [
-        url(r'^cas-auth/login/$', external_auth_views.cas_login, name='cas-login'),
-        url(r'^cas-auth/logout/$', django_cas_views.logout, {'next_page': '/'}, name='cas-logout'),
-    ]
-
 
 from openedx.core.djangoapps.plugins import constants as plugin_constants, plugin_urls
 urlpatterns.extend(plugin_urls.get_patterns(plugin_constants.ProjectType.CMS))
