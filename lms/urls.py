@@ -1070,7 +1070,7 @@ if 'figures' in settings.INSTALLED_APPS:
 #   ----- :/ -----
 urlpatterns += (
     url(r'^grades_api/',
-        include('lms.djangoapps.grades.api.urls')),
+        include('lms.djangoapps.grades.rest_api.urls')),
 )
 
 # Course Home API urls
