@@ -145,14 +145,11 @@ def _footer_css_urls(request, package_name):
 
 def _render_footer_html(request, show_openedx_logo, include_dependencies, include_language_selector, language):
     """Render the footer as HTML.
-
     Arguments:
         show_openedx_logo (bool): If True, include the OpenEdX logo in the rendered HTML.
         include_dependencies (bool): If True, include JavaScript and CSS dependencies.
         include_language_selector (bool): If True, include a language selector with all supported languages.
-
     Returns: unicode
-
     """
     bidi = 'rtl' if translation.get_language_bidi() else 'ltr'
     css_name = settings.FOOTER_CSS['openedx'][bidi]
@@ -173,28 +170,22 @@ def _render_footer_html(request, show_openedx_logo, include_dependencies, includ
 @cache_control(must_revalidate=True, max_age=settings.FOOTER_BROWSER_CACHE_MAX_AGE)
 def footer(request):
     """Retrieve the branded footer.
-
     This end-point provides information about the site footer,
     allowing for consistent display of the footer across other sites
     (for example, on the marketing site and blog).
-
     It can be used in one of two ways:
     1) A client renders the footer from a JSON description.
     2) A browser loads an HTML representation of the footer
         and injects it into the DOM.  The HTML includes
         CSS and JavaScript links.
-
     In case (2), we assume that the following dependencies
     are included on the page:
     a) JQuery (same version as used in edx-platform)
     b) font-awesome (same version as used in edx-platform)
     c) Open Sans web fonts
-
     Example: Retrieving the footer as JSON
-
         GET /api/branding/v1/footer
         Accepts: application/json
-
         {
             "navigation_links": [
                 {
@@ -239,37 +230,21 @@ def footer(request):
             "logo_image": "http://example.com/static/images/logo.png",
             "copyright": "edX, Open edX and their respective logos are registered trademarks of edX Inc."
         }
-
-
     Example: Retrieving the footer as HTML
-
         GET /api/branding/v1/footer
         Accepts: text/html
-
-
     Example: Including the footer with the "Powered by Open edX" logo
-
         GET /api/branding/v1/footer?show-openedx-logo=1
         Accepts: text/html
-
-
     Example: Retrieving the footer in a particular language
-
         GET /api/branding/v1/footer?language=en
         Accepts: text/html
-
-
     Example: Retrieving the footer with a language selector
-
         GET /api/branding/v1/footer?include-language-selector=1
         Accepts: text/html
-
-
     Example: Retrieving the footer with all JS and CSS dependencies (for testing)
-
         GET /api/branding/v1/footer?include-dependencies=1
         Accepts: text/html
-
     """
     if not branding_api.is_enabled():
         raise Http404
@@ -330,6 +305,7 @@ def footer(request):
 
     else:
         return HttpResponse(status=406)
+
 
 
 """
