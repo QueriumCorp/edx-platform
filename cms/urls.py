@@ -1,24 +1,20 @@
-"""
-Urls of Studio.
-"""
-
 from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib.admin import autodiscover as django_autodiscover
 from django.utils.translation import ugettext_lazy as _
-from edx_api_doc_tools import make_docs_urls
-from ratelimitbackend import admin
+from rest_framework_swagger.views import get_swagger_view
 
 import contentstore.views
+from cms.djangoapps.contentstore.views.organization import OrganizationListView
 import openedx.core.djangoapps.common_views.xblock
 import openedx.core.djangoapps.debug.views
+import openedx.core.djangoapps.external_auth.views
 import openedx.core.djangoapps.lang_pref.views
-from cms.djangoapps.contentstore.views.organization import OrganizationListView
 from openedx.core.djangoapps.password_policy import compliance as password_policy_compliance
 from openedx.core.djangoapps.password_policy.forms import PasswordPolicyAwareAdminAuthForm
-from openedx.core.apidocs import api_info
 
+from ratelimitbackend import admin
 
 # mcdaniel - feb-2019
 # for oauth to openstax
@@ -43,11 +39,6 @@ admin.site.site_title = admin.site.site_header
 if password_policy_compliance.should_enforce_compliance_on_login():
     admin.site.login_form = PasswordPolicyAwareAdminAuthForm
 
-# Custom error pages
-# These are used by Django to render these error codes. Do not remove.
-# pylint: disable=invalid-name
-handler404 = contentstore.views.render_404
-handler500 = contentstore.views.render_500
 
 # Pattern to match a course key or a library key
 COURSELIKE_KEY_PATTERN = r'(?P<course_key_string>({}|{}))'.format(
@@ -85,7 +76,6 @@ urlpatterns = [
     url(r'^register/$', RedirectView.as_view(url=registration_redirect() , permanent=True)),
     url(r'^login/$', RedirectView.as_view(url='/signin' , permanent=True)),
 
-    url(r'', include('openedx.core.djangoapps.user_authn.urls_common')),
     url(r'', include('student.urls')),
     url(r'^transcripts/upload$', contentstore.views.upload_transcripts, name='upload_transcripts'),
     url(r'^transcripts/download$', contentstore.views.download_transcripts, name='download_transcripts'),
@@ -99,7 +89,6 @@ urlpatterns = [
         contentstore.views.component_handler, name='component_handler'),
     url(r'^xblock/resource/(?P<block_type>[^/]*)/(?P<uri>.*)$',
         openedx.core.djangoapps.common_views.xblock.xblock_resource, name='xblock_resource_url'),
-    url(r'', include('openedx.core.djangoapps.xblock.rest_api.urls', namespace='xblock_api')),
     url(r'^not_found$', contentstore.views.not_found, name='not_found'),
     url(r'^server_error$', contentstore.views.server_error, name='server_error'),
     url(r'^organizations$', OrganizationListView.as_view(), name='organizations'),
@@ -107,6 +96,7 @@ urlpatterns = [
     # noop to squelch ajax errors
     url(r'^event$', contentstore.views.event, name='event'),
     url(r'^heartbeat', include('openedx.core.djangoapps.heartbeat.urls')),
+    url(r'^user_api/', include('openedx.core.djangoapps.user_api.legacy_urls')),
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
     # User API endpoints
@@ -135,7 +125,6 @@ urlpatterns = [
     #url(r'^signin$', contentstore.views.login_page, name='login'),
     url(r'^signin$', RedirectView.as_view(url='/' , permanent=True)),
 
-    url(r'^signin_redirect_to_lms$', contentstore.views.login_redirect_to_lms, name='login_redirect_to_lms'),
     url(r'^request_course_creator$', contentstore.views.request_course_creator, name='request_course_creator'),
     url(r'^course_team/{}(?:/(?P<email>.+))?$'.format(COURSELIKE_KEY_PATTERN),
         contentstore.views.course_team_handler, name='course_team_handler'),
@@ -227,18 +216,6 @@ urlpatterns = [
     url(r'^accessibility$', contentstore.views.accessibility, name='accessibility'),
 ]
 
-if not settings.DISABLE_DEPRECATED_SIGNIN_URL:
-    # TODO: Remove deprecated signin url when traffic proves it is no longer in use
-    urlpatterns += [
-        url(r'^signin$', contentstore.views.login_redirect_to_lms),
-    ]
-
-if not settings.DISABLE_DEPRECATED_SIGNUP_URL:
-    # TODO: Remove deprecated signup url when traffic proves it is no longer in use
-    urlpatterns += [
-        url(r'^signup$', contentstore.views.register_redirect_to_lms, name='register_redirect_to_lms'),
-    ]
-
 JS_INFO_DICT = {
     'domain': 'djangojs',
     # We need to explicitly include external Django apps that are not in LOCALE_PATHS.
@@ -266,15 +243,25 @@ if settings.FEATURES.get('ENABLE_EXPORT_GIT'):
             name='export_git')
     ]
 
+# mcdaniel feb-2019 - add salesforce REST api
+if settings.ROVER_ENABLE_SALESFORCE_API:
+    urlpatterns.append(
+    url(r'^salesforce/v1/', include('openstax_integrator.salesforce.urls'))
+    )
+
+
 if settings.FEATURES.get('ENABLE_SERVICE_STATUS'):
     urlpatterns.append(url(r'^status/', include('openedx.core.djangoapps.service_status.urls')))
 
-# The password pages in the admin tool are disabled so that all password
-# changes go through our user portal and follow complexity requirements.
-if not settings.FEATURES.get('ENABLE_CHANGE_USER_PASSWORD_ADMIN'):
-    urlpatterns.append(url(r'^admin/auth/user/\d+/password/$', handler404))
-urlpatterns.append(url(r'^admin/password_change/$', handler404))
-urlpatterns.append(url(r'^admin/', admin.site.urls))
+if settings.FEATURES.get('AUTH_USE_CAS'):
+    import django_cas.views
+
+    urlpatterns += [
+        url(r'^cas-auth/login/$', openedx.core.djangoapps.external_auth.views.cas_login, name="cas-login"),
+        url(r'^cas-auth/logout/$', django_cas.views.logout, {'next_page': '/'}, name="cas-logout"),
+    ]
+
+urlpatterns.append(url(r'^admin/', include(admin.site.urls)))
 
 # enable entrance exams
 if settings.FEATURES.get('ENTRANCE_EXAMS'):
@@ -330,18 +317,21 @@ if 'debug_toolbar' in settings.INSTALLED_APPS:
 urlpatterns.append(url(r'^template/(?P<template>.+)$', openedx.core.djangoapps.debug.views.show_reference_template,
                        name='openedx.core.djangoapps.debug.views.show_reference_template'))
 
+# Custom error pages
+# These are used by Django to render these error codes. Do not remove.
+# pylint: disable=invalid-name
+handler404 = contentstore.views.render_404
+handler500 = contentstore.views.render_500
+
 # display error page templates, for testing purposes
 urlpatterns += [
     url(r'^404$', handler404),
     url(r'^500$', handler500),
 ]
 
-# API docs.
-urlpatterns += make_docs_urls(api_info)
-
-if 'openedx.testing.coverage_context_listener' in settings.INSTALLED_APPS:
+if settings.FEATURES.get('ENABLE_API_DOCS'):
     urlpatterns += [
-        url(r'coverage_context', include('openedx.testing.coverage_context_listener.urls'))
+        url(r'^api-docs/$', get_swagger_view(title='Studio API')),
     ]
 
 # Third-party auth.
