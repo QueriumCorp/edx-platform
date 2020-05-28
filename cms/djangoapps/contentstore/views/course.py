@@ -100,9 +100,11 @@ from xmodule.modulestore.exceptions import DuplicateCourseError, ItemNotFoundErr
 from xmodule.partitions.partitions import UserPartition
 from xmodule.tabs import CourseTab, CourseTabList, InvalidTabsException
 
-from .component import ADVANCED_COMPONENT_TYPES
-from .item import create_xblock_info
-from .library import LIBRARIES_ENABLED, get_library_creator_status
+# mcdaniel may-2020
+# fully-qualify paths. they otherwise break in juniper.rc3
+from cms.djangoapps.contentstore.views.component import ADVANCED_COMPONENT_TYPES
+from cms.djangoapps.contentstore.views.item import create_xblock_info
+from cms.djangoapps.contentstore.views.library import LIBRARIES_ENABLED, get_library_creator_status
 
 #mcdaniel mar-2019
 from student.models import is_faculty
