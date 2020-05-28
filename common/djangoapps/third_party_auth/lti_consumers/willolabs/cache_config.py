@@ -47,5 +47,8 @@ parser = ConfigParser(default_values)
 # mcdaniel: feb-2020
 # Fix DeprecationWarning: You passed a bytestring as `filenames`. This will not work on Python 3. Use `cp.read_file()` or switch to using Unicode strings across the board.
 filename = os.path.join(WORKING_PATH, CONFIG_FILENAME)
-filename = filename.decode()
+
+# mcdaniel: may-2020
+# CONFIRMED! this breaks in python3
+#filename = filename.decode()
 parser.read(filename)
