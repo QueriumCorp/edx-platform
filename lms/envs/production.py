@@ -277,7 +277,7 @@ STATICFILES_STORAGE = os.environ.get('STATICFILES_STORAGE', ENV_TOKENS.get('STAT
 # Load all AWS_ prefixed variables to allow an S3Boto3Storage to be configured
 _locals = locals()
 for key, value in ENV_TOKENS.items():
-    if key.startswith(b'AWS_'):
+    if key.startswith('AWS_'):
         _locals[key] = value
 
 # Currency
