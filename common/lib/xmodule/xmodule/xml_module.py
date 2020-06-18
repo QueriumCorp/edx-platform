@@ -18,10 +18,11 @@ from xmodule.x_module import DEPRECATION_VSCOMPAT_EVENT, XModuleDescriptor
 log = logging.getLogger(__name__)
 
 # assume all XML files are persisted as utf-8.
+# fuka june-2020 can't leave strip_cdata=True (the default) or else <problem> blocks with embedded Python code as CDATA
+#                 will lose the CDATA wrapper on course import
 EDX_XML_PARSER = XMLParser(dtd_validation=False, load_dtd=False,
-                           remove_comments=True, remove_blank_text=True,
-                           encoding='utf-8')
-
+                          remove_comments=True, remove_blank_text=True,
+                          strip_cdata=False, encoding='utf-8')
 
 def name_to_pathname(name):
     """
