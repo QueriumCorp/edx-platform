@@ -35,6 +35,51 @@ from .common import *
 from util.db import NoOpMigrationModules  # pylint: disable=wrong-import-order
 from util.testing import patch_sessions, patch_testcase  # pylint: disable=wrong-import-order
 
+# McDaniel jul-2019: add a rover-specific client code to be used as a subdomain in some url's
+# feb-2020: wrap this in a try/except so that we have a stop-gap default without crashing the platform
+from . import roversecrets
+
+try:
+    with open("/home/ubuntu/.rover/rover.env.json") as rover_env_file:
+        ROVER_TOKENS = json.load(rover_env_file)
+        ROVER_DEBUG = ROVER_TOKENS.get('DEBUG', False)
+        ROVER_CLIENT_CODE = ROVER_TOKENS.get('CLIENT_CODE', 'MISSING')
+
+except IOError:
+        ROVER_TOKENS = {}
+        ROVER_DEBUG = False
+        ROVER_CLIENT_CODE = 'MISSING'
+
+# mcdaniel feb-2020: feature settings for custom Rover modules.
+ROVER_ENABLE_LTI_GRADE_SYNC = ROVER_TOKENS.get('ROVER_ENABLE_LTI_GRADE_SYNC', False)
+ROVER_ENABLE_GRADES_API = ROVER_TOKENS.get('ROVER_ENABLE_GRADES_API', False)
+ROVER_ENABLE_SALESFORCE_API = ROVER_TOKENS.get('ROVER_ENABLE_SALESFORCE_API', False)
+ROVER_ENABLE_TRAINING_WHEELS = ROVER_TOKENS.get('ROVER_ENABLE_TRAINING_WHEELS', False)
+ROVER_ENABLE_PAGE_TIPS = ROVER_TOKENS.get('ROVER_ENABLE_PAGE_TIPS', False)
+
+
+# mcdaniel jul-2019: tokenized some of the values in cms.env.json. this converts
+#       the values to the actual client code. Example:
+#           {CLIENT} = 'dev'
+#           {CLIENT}.roverbyopenstax.org becomes: dev.roverbyopenstax.org
+def rover_env_token(token, default=None):
+    obj = ENV_TOKENS.get(token, default)
+    if isinstance(obj, str):
+        return obj.replace('{CLIENT}', ROVER_CLIENT_CODE)
+    else:
+        return obj
+
+
+
+def get_env_setting(setting):
+    """ Get the environment setting or return exception """
+    try:
+        return os.environ[setting]
+    except KeyError:
+        error_msg = u"Set the %s env variable" % setting
+        raise ImproperlyConfigured(error_msg)
+
+
 # This patch disables the commit_on_success decorator during tests
 # in TestCase subclasses.
 patch_testcase()
@@ -590,3 +635,43 @@ PROCTORING_SETTINGS = {}
 ############### Settings for Django Rate limit #####################
 
 RATELIMIT_RATE = '2/m'
+
+
+# McDaniel mar-2019: install figures
+if 'figures' in INSTALLED_APPS:
+    import figures
+    figures.update_settings(
+        WEBPACK_LOADER,
+        CELERYBEAT_SCHEDULE,
+        rover_env_token('FIGURES', {}))
+
+# McDaniel jul-2019: add querium apps
+INSTALLED_APPS.append('querium.stepwise')
+
+
+# mcdaniel mar-2019: Openstax Backend parameters
+# jul-2019: changed these to hard-coded values in order to remove from lms.env.json
+OPENSTAX_BACKEND_CLIENT_ID = roversecrets.OPENSTAX_BACKEND_CLIENT_ID
+OPENSTAX_BACKEND_CLIENT_SECRET = roversecrets.OPENSTAX_BACKEND_CLIENT_SECRET
+OPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://accounts.openstax.org/oauth/authorize'
+OPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://accounts.openstax.org/oauth/token'
+OPENSTAX_BACKEND_USER_QUERY = 'https://accounts.openstax.org/api/user?'
+OPENSTAX_BACKEND_USERS_QUERY = 'https://accounts.openstax.org/api/users?'
+
+# mcdaniel oct-2019: Added backend for oauth provider roverbyopenstax.org
+ROVERBYOPENSTAX_BACKEND_CLIENT_ID = roversecrets.ROVERBYOPENSTAX_BACKEND_CLIENT_ID
+ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET = roversecrets.ROVERBYOPENSTAX_BACKEND_CLIENT_SECRET
+ROVERBYOPENSTAX_BACKEND_AUTHORIZATION_URL = 'https://roverbyopenstax.org/o/authorize'
+ROVERBYOPENSTAX_BACKEND_ACCESS_TOKEN_URL = 'https://roverbyopenstax.org/o/token'
+ROVERBYOPENSTAX_BACKEND_USER_QUERY = 'https://roverbyopenstax.org/o/api/users?'
+ROVERBYOPENSTAX_BACKEND_USERS_QUERY = 'https://roverbyopenstax.org/o/api/users?'
+
+# mcdaniel jan-2020: Fixed Willo api token assigned by Willo Labs staff.
+WILLO_API_AUTHORIZATION_TOKEN = roversecrets.WILLO_API_AUTHORIZATION_TOKEN
+
+"""
+mcdaniel aug-2019
+On projects behind a reverse proxy that uses HTTPS, the redirect URIs can have the wrong schema (http:// instead of https://) if the request lacks the appropriate headers, which might cause errors during the auth process. To force HTTPS in the final URIs set this setting to True
+more: https://python-social-auth-docs.readthedocs.io/en/latest/configuration/settings.html#processing-redirects-and-urlopen
+"""
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
