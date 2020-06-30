@@ -151,6 +151,7 @@ class Migration(migrations.Migration):
             name='custom_user_login_id',
             field=models.CharField(blank=True, default=None, help_text='Login ID provided to Willo Labs. Example: rover_student', max_length=50, null=True),
         ),
+        migrations.AlterField(
             model_name='ltiexternalcourseenrollment',
             name='ext_roles',
             field=models.CharField(blank=True, default=None, help_text='User permitted roles in external system. Example: urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User', max_length=255, null=True),
