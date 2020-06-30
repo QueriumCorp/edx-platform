@@ -584,8 +584,9 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
     def relative_datestring(self):
         dynamic_deadline = self._dynamic_deadline()
         if dynamic_deadline is None:
-            return '11:59PM PT on Tuesday, Feb 4'
-            #return super(VerifiedUpgradeDeadlineDate, self).relative_datestring
+            # mcdaniel jun-2020 - ecommerce assuming we do not need to manipulate this?
+            #return '11:59PM PT on Tuesday, Feb 4'
+            return super(VerifiedUpgradeDeadlineDate, self).relative_datestring
 
         if self.date is None or self.deadline_has_passed():
             return ' '
@@ -703,7 +704,7 @@ class VerificationDeadlineDate(DateSummary):
     def is_enabled(self):
         # mcdaniel jan-2020: rover does not require identity verifications
         return False
-        """        
+        """
         if self.date is None:
             return False
         (mode, is_active) = CourseEnrollment.enrollment_mode_for_user(self.user, self.course_id)

@@ -1,11 +1,8 @@
 """Settings for the third-party auth module.
-
 The flow for settings registration is:
-
 The base settings file contains a boolean, ENABLE_THIRD_PARTY_AUTH, indicating
 whether this module is enabled. startup.py probes the ENABLE_THIRD_PARTY_AUTH.
 If true, it:
-
     a) loads this module.
     b) calls apply_settings(), passing in the Django settings
 """
@@ -61,20 +58,15 @@ def apply_settings(django_settings):
         'social_core.pipeline.social_auth.associate_user',
         'social_core.pipeline.social_auth.load_extra_data',
         'social_core.pipeline.user.user_details',
+
         #'third_party_auth.pipeline.user_details_force_sync',
         # mcdaniel: 2019 set faculty status
         'third_party_auth.pipeline.set_id_verification_status',
         # mcdaniel: jan-2020 auto enroll Willo LTI integrated students
         'third_party_auth.pipeline.lti_consumer_provisioner',
+
         'third_party_auth.pipeline.set_logged_in_cookies',
         'third_party_auth.pipeline.login_analytics',
-    ]
-
-    # mcdaniel feb-2019: add pipeline functions to auto setup AM course creators
-    # for users with faculty_status = 'confirmed_faculty'
-    #
-    # 28-feb-2019: moved this to AM
-    django_settings.SOCIAL_AUTH_PIPELINE += [
     ]
 
     # Add enterprise pipeline elements if the enterprise app is installed
