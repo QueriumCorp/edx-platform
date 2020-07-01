@@ -227,7 +227,9 @@ def login_and_registration_form(request, initial_mode="login"):
     enterprise_customer = enterprise_customer_for_request(request)
     update_logistration_context_for_enterprise(request, context, enterprise_customer)
 
-    response = render_to_response('student_account/login_and_register.html', context)
+    # mcdaniel jul-2020: make this use the home page template.
+    #response = render_to_response('student_account/login_and_register.html', context)
+    response = render_to_response('index.html', context)
     handle_enterprise_cookies_for_logistration(request, response, context)
 
     return response

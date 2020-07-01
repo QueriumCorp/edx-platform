@@ -25,12 +25,25 @@ from openedx.core.djangoapps.site_configuration import helpers as configuration_
 from util.cache import cache_if_anonymous
 from util.json_request import JsonResponse
 
+
+# mcdaniel jul-2020: switching home page to use login page
+from openedx.core.djangoapps.user_authn.views.login_form import login_and_registration_form
+from django.views.decorators.http import require_http_methods
+from third_party_auth.decorators import xframe_allow_whitelisted
+
+
+
 log = logging.getLogger(__name__)
 
 
-@ensure_csrf_cookie
-@transaction.non_atomic_requests
-@cache_if_anonymous()
+# mcdaniel jul-2020: switching home page to use the login page instead
+#@ensure_csrf_cookie
+#@transaction.non_atomic_requests
+#@cache_if_anonymous()
+
+@require_http_methods(['GET'])
+#@ensure_csrf_cookie
+#@xframe_allow_whitelisted
 def index(request):
     """
     Redirects to main page -- info page if user authenticated, or marketing if not
@@ -55,7 +68,9 @@ def index(request):
             'MKTG_URLS',
             settings.MKTG_URLS
         )
-        return redirect(marketing_urls.get('ROOT'))
+        #return redirect(marketing_urls.get('ROOT'))
+        # mcdaniel jul-2020: use the new open edx login form as the home page
+        return login_and_registration_form(request)
 
     domain = request.META.get('HTTP_HOST')
 
@@ -67,17 +82,19 @@ def index(request):
     #  we do not expect this case to be reached in cases where
     #  marketing and edge are enabled
 
-    try:
-        return student.views.index(request, user=request.user)
-    except NoReverseMatch:
-        log.error(
-            'https is not a registered namespace Request from {}'.format(domain),
-            'request_site= {}'.format(request.site.__dict__),
-            'enable_mktg_site= {}'.format(enable_mktg_site),
-            'Auth Status= {}'.format(request.user.is_authenticated),
-            'Request Meta= {}'.format(request.META)
-        )
-        raise
+    # mcdaniel jul-2020: use the new open edx login form as the home page
+    return login_and_registration_form(request)
+    #try:
+    #    return student.views.index(request, user=request.user)
+    #except NoReverseMatch:
+    #    log.error(
+    #        'https is not a registered namespace Request from {}'.format(domain),
+    #        'request_site= {}'.format(request.site.__dict__),
+    #        'enable_mktg_site= {}'.format(enable_mktg_site),
+    #        'Auth Status= {}'.format(request.user.is_authenticated),
+    #        'Request Meta= {}'.format(request.META)
+    #    )
+    #    raise
 
 
 @ensure_csrf_cookie
