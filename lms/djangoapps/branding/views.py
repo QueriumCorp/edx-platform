@@ -28,22 +28,14 @@ from util.json_request import JsonResponse
 
 # mcdaniel jul-2020: switching home page to use login page
 from openedx.core.djangoapps.user_authn.views.login_form import login_and_registration_form
-from django.views.decorators.http import require_http_methods
-from third_party_auth.decorators import xframe_allow_whitelisted
-
-
 
 log = logging.getLogger(__name__)
 
 
 # mcdaniel jul-2020: switching home page to use the login page instead
-#@ensure_csrf_cookie
-#@transaction.non_atomic_requests
-#@cache_if_anonymous()
-
-@require_http_methods(['GET'])
-#@ensure_csrf_cookie
-#@xframe_allow_whitelisted
+@ensure_csrf_cookie
+@transaction.non_atomic_requests
+@cache_if_anonymous()
 def index(request):
     """
     Redirects to main page -- info page if user authenticated, or marketing if not
