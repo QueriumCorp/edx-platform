@@ -81,6 +81,8 @@ from third_party_auth.utils import user_exists
 from track import segment
 from util.json_request import JsonResponse
 
+# mcdaniel: Rover custom imports for oauth and LTI integration
+import student
 from . import provider
 
 # These are the query string params you can pass
