@@ -75,18 +75,20 @@ def index(request):
     #  marketing and edge are enabled
 
     # mcdaniel jul-2020: use the new open edx login form as the home page
-    return login_and_registration_form(request)
-    #try:
-    #    return student.views.index(request, user=request.user)
-    #except NoReverseMatch:
-    #    log.error(
-    #        'https is not a registered namespace Request from {}'.format(domain),
-    #        'request_site= {}'.format(request.site.__dict__),
-    #        'enable_mktg_site= {}'.format(enable_mktg_site),
-    #        'Auth Status= {}'.format(request.user.is_authenticated),
-    #        'Request Meta= {}'.format(request.META)
-    #    )
-    #    raise
+    if settings.ENABLE_COMPREHENSIVE_THEMING and settings.DEFAULT_SITE_THEME == 'rover':
+        return login_and_registration_form(request)
+    else:
+        try:
+            return student.views.index(request, user=request.user)
+        except NoReverseMatch:
+            log.error(
+                'https is not a registered namespace Request from {}'.format(domain),
+                'request_site= {}'.format(request.site.__dict__),
+                'enable_mktg_site= {}'.format(enable_mktg_site),
+                'Auth Status= {}'.format(request.user.is_authenticated),
+                'Request Meta= {}'.format(request.META)
+            )
+            raise
 
 
 @ensure_csrf_cookie

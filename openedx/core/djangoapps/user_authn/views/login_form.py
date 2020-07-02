@@ -228,8 +228,10 @@ def login_and_registration_form(request, initial_mode="login"):
     update_logistration_context_for_enterprise(request, context, enterprise_customer)
 
     # mcdaniel jul-2020: make this use the home page template.
-    #response = render_to_response('student_account/login_and_register.html', context)
-    response = render_to_response('index.html', context)
+    if settings.ENABLE_COMPREHENSIVE_THEMING and settings.DEFAULT_SITE_THEME == 'rover':
+        response = render_to_response('index.html', context)
+    else:
+        response = render_to_response('student_account/login_and_register.html', context)
     handle_enterprise_cookies_for_logistration(request, response, context)
 
     return response
