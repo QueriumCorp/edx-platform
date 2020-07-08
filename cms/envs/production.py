@@ -7,6 +7,7 @@ This is the default template for our main set of AWS servers.
 # pylint: disable=wildcard-import, unused-wildcard-import
 
 
+import json
 import codecs
 import copy
 import os
@@ -584,8 +585,7 @@ if 'figures' in INSTALLED_APPS:
         rover_env_token('FIGURES', {}))
 
 # McDaniel jul-2019: add querium apps
-INSTALLED_APPS.append('querium.stepwise')
-
+INSTALLED_APPS.append('openstax_integrator.salesforce')
 
 # mcdaniel mar-2019: Openstax Backend parameters
 # jul-2019: changed these to hard-coded values in order to remove from lms.env.json

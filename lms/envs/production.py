@@ -17,6 +17,7 @@ Common traits:
 # pylint: disable=invalid-name
 
 
+import json
 import codecs
 import copy
 import datetime
