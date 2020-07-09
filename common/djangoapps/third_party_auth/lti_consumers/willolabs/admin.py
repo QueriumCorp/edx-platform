@@ -26,6 +26,7 @@ class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
     list_display = (
         'context_id',
+        'enabled',
         'course_id',
         'context_title',
         'context_label',

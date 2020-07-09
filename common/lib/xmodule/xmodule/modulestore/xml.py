@@ -38,9 +38,10 @@ import dogstats_wrapper as dog_stats_api
 from .exceptions import ItemNotFoundError
 from .inheritance import compute_inherited_metadata, inheriting_field_data, InheritanceKeyValueStore
 
-
+# fuka june-2020 can't leave strip_cdata=True (the default) or else <problem> blocks with embedded Python code as CDATA
+#                 will lose their CDATA wrapper on course export
 edx_xml_parser = etree.XMLParser(dtd_validation=False, load_dtd=False,
-                                 remove_comments=True, remove_blank_text=True)
+                                 remove_comments=True, remove_blank_text=True, strip_cdata=False)
 
 etree.set_default_parser(edx_xml_parser)
 
