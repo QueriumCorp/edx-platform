@@ -147,7 +147,7 @@ class InheritanceMixin(XBlockMixin):
     )
     max_attempts = Integer(
         display_name=_("Maximum Attempts"),
-        help=_("Enter the maximum number of times a student can try to answer problems. By default, Maximum Attempts is set to null, meaning that students have an unlimited number of attempts for problems. You can override this course-wide setting for individual problems. However, if the course-wide setting is a specific number, you cannot set the Maximum Attempts for individual problems to unlimited. You can set a separate course-wide default for StepWise Maxmimum Attempts (see "StepWise Maximum Attempts" below)."),
+        help=_('Enter the maximum number of times a student can try to answer problems. By default, Maximum Attempts is set to null, meaning that students have an unlimited number of attempts for problems. You can override this course-wide setting for individual problems. However, if the course-wide setting is a specific number, you cannot set the Maximum Attempts for individual problems to unlimited. You can set a separate course-wide default for StepWise Maxmimum Attempts (see "StepWise Maximum Attempts" below).'),
         values={"min": 0}, scope=Scope.settings
     )
     matlab_api_key = String(
