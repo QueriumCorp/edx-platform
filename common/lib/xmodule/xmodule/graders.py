@@ -274,21 +274,21 @@ class WeightedSubsectionsGrader(CourseGrader):
         section_breakdown = []
         grade_breakdown = OrderedDict()
 
-        # log.info("KENTGRADE WeightedSubsectionsGrader.grade start")
+        log.info("KENTGRADE WeightedSubsectionsGrader.grade start")
         for subgrader, assignment_type, weight in self.subgraders:
             subgrade_result = subgrader.grade(grade_sheet, generate_random_scores)
 
             weighted_percent = subgrade_result['percent'] * weight
-            # log.info("KENTGRADE WeightedSubsectionsGrader.grade subgrade_result['percent']={a} weight={b}".format(a=subgrade_result['percent'],b=weight))
+            log.info("KENTGRADE WeightedSubsectionsGrader.grade subgrade_result['percent']={a} weight={b}".format(a=subgrade_result['percent'],b=weight))
             section_detail = _(u"{assignment_type} = {weighted_percent:.2%} of a possible {weight:.2%}").format(
                 assignment_type=assignment_type,
                 weighted_percent=weighted_percent,
                 weight=weight)
-            # log.info("KENTGRADE WeightedSubsectionsGrader.grade section_detail={s}".format(s=section_detail))
+            log.info("KENTGRADE WeightedSubsectionsGrader.grade section_detail={s}".format(s=section_detail))
 
             total_percent += weighted_percent
-            # log.info("KENTGRADE WeightedSubsectionsGrader.grade total_percent={t}".format(t=total_percent))
-            # log.info("KENTGRADE WeightedSubsectionsGrader.grade weighted_percent={w} assignment_type={a}".format(w=weighted_percent,a=assignment_type))
+            log.info("KENTGRADE WeightedSubsectionsGrader.grade total_percent={t}".format(t=total_percent))
+            log.info("KENTGRADE WeightedSubsectionsGrader.grade weighted_percent={w} assignment_type={a}".format(w=weighted_percent,a=assignment_type))
             section_breakdown += subgrade_result['section_breakdown']
             grade_breakdown[assignment_type] = {
                 'percent': weighted_percent,
@@ -296,7 +296,7 @@ class WeightedSubsectionsGrader(CourseGrader):
                 'category': assignment_type,
             }
 
-        # log.info("KENTGRADE WeightedSubsectionsGrader.grade total_percent={t} section_breakdown={s} grade_breakdown={g}".format(t=total_percent,s=section_breakdown,g=grade_breakdown))
+        log.info("KENTGRADE WeightedSubsectionsGrader.grade total_percent={t} section_breakdown={s} grade_breakdown={g}".format(t=total_percent,s=section_breakdown,g=grade_breakdown))
         return {
             'percent': total_percent,
             'section_breakdown': section_breakdown,
@@ -379,14 +379,16 @@ class AssignmentFormatGrader(CourseGrader):
         if len(breakdown) - self.drop_count > 0:
             aggregate_score /= len(breakdown) - self.drop_count
 
-        # log.info("KENTGRADE AssignmentFormatGrader.total_with_drops aggregate_score={a} dropped_indices={d}".format(a=aggregate_score,d=dropped_indices))
+        log.info("KENTGRADE AssignmentFormatGrader.total_with_drops aggregate_score={a} dropped_indices={d}".format(a=aggregate_score,d=dropped_indices))
         return aggregate_score, dropped_indices
 
     def grade(self, grade_sheet, generate_random_scores=False):
         scores = grade_sheet.get(self.type, {}).values()
+        log.info("KENTGRADE AssignmentFormatGrader.grade scores={s}".format(s=scores))
         breakdown = []
+        log.info("KENTGRADE AssignmentFormatGrader.grade self.min_count={s} len(scores)={l}".format(s=self.min_count,l=len(scores)))
         for i in range(max(self.min_count, len(scores))):
-            # log.info("KENTGRADE AssignmentFormatGrader.grade i={i}".format(i=i))
+            log.info("KENTGRADE AssignmentFormatGrader.grade i={i}".format(i=i))
             if i < len(scores) or generate_random_scores:
                 if generate_random_scores:  	# for debugging!
                     earned = random.randint(2, 15)
@@ -397,10 +399,10 @@ class AssignmentFormatGrader(CourseGrader):
                     earned = scores[i].graded_total.earned
                     possible = scores[i].graded_total.possible
                     section_name = scores[i].display_name
-                    # log.info("KENTGRADE AssignmentFormatGrader.grade earned={e} possible={p} section_name={s}".format(e=earned,p=possible,s=section_name))
+                    log.info("KENTGRADE AssignmentFormatGrader.grade earned={e} possible={p} section_name={s}".format(e=earned,p=possible,s=section_name))
 
                 percentage = scores[i].percent_graded
-                # log.info("KENTGRADE AssignmentFormatGrader.grade percentage={p}".format(p=percentage))
+                log.info("KENTGRADE AssignmentFormatGrader.grade percentage={p}".format(p=percentage))
                 summary_format = u"{section_type} {index} - {name} - {percent:.0%} ({earned:.3n}/{possible:.3n})"
                 summary = summary_format.format(
                     index=i + self.starting_index,
@@ -410,7 +412,7 @@ class AssignmentFormatGrader(CourseGrader):
                     earned=float(earned),
                     possible=float(possible)
                 )
-                # log.info("KENTGRADE AssignmentFormatGrader.grade summary={s}".format(s=summary))
+                log.info("KENTGRADE AssignmentFormatGrader.grade summary={s}".format(s=summary))
             else:
                 percentage = 0.0
                 # Translators: "Homework 1 - Unreleased - 0% (?/?)" The section has not been released for viewing.
@@ -418,7 +420,7 @@ class AssignmentFormatGrader(CourseGrader):
                     index=i + self.starting_index,
                     section_type=self.section_type
                 )
-                # log.info("KENTGRADE AssignmentFormatGrader.grade summary={s}".format(s=summary))
+                log.info("KENTGRADE AssignmentFormatGrader.grade summary={s}".format(s=summary))
             short_label = u"{short_label} {index:02d}".format(
                 index=i + self.starting_index,
                 short_label=self.short_label
@@ -426,10 +428,10 @@ class AssignmentFormatGrader(CourseGrader):
 
             breakdown.append({'percent': percentage, 'label': short_label,
                               'detail': summary, 'category': self.category})
-            # log.info("KENTGRADE AssignmentFormatGrader.grade breakdown={b}".format(b=breakdown))
+            log.info("KENTGRADE AssignmentFormatGrader.grade breakdown={b}".format(b=breakdown))
 
         total_percent, dropped_indices = self.total_with_drops(breakdown)
-        # log.info("KENTGRADE AssignmentFormatGrader.grade total_percent={t}".format(t=total_percent))
+        log.info("KENTGRADE AssignmentFormatGrader.grade total_percent={t}".format(t=total_percent))
 
         for dropped_index in dropped_indices:
             breakdown[dropped_index]['mark'] = {
@@ -449,7 +451,7 @@ class AssignmentFormatGrader(CourseGrader):
             total_label = u"{short_label}".format(short_label=self.short_label)
             breakdown = [{'percent': total_percent, 'label': total_label,
                           'detail': total_detail, 'category': self.category, 'prominent': True}, ]
-            # log.info("KENTGRADE AssignmentFormatGrader.grade len(breakdown) == 1, breakdown={b}".format(b=breakdown))
+            log.info("KENTGRADE AssignmentFormatGrader.grade len(breakdown) == 1, breakdown={b}".format(b=breakdown))
         else:
             # Translators: "Homework Average = 0%"
             total_detail = _(u"{section_type} Average = {percent:.0%}").format(
@@ -458,7 +460,7 @@ class AssignmentFormatGrader(CourseGrader):
             )
             # Translators: Avg is short for Average
             total_label = _(u"{short_label} Avg").format(short_label=self.short_label)
-            # log.info("KENTGRADE AssignmentFormatGrader.grade len(breakdown) != 1, total_detail={d} total_label={t}".format(d=total_detail,t=total_label))
+            log.info("KENTGRADE AssignmentFormatGrader.grade len(breakdown) != 1, total_detail={d} total_label={t}".format(d=total_detail,t=total_label))
 
             if self.show_only_average:
                 breakdown = []
@@ -467,7 +469,7 @@ class AssignmentFormatGrader(CourseGrader):
                 breakdown.append({'percent': total_percent, 'label': total_label,
                                   'detail': total_detail, 'category': self.category, 'prominent': True})
 
-        # log.info("KENTGRADE AssignmentFormatGrader.grade total_percent={t}".format(t=total_percent))
+        log.info("KENTGRADE AssignmentFormatGrader.grade total_percent={t}".format(t=total_percent))
         return {
             'percent': total_percent,
             'section_breakdown': breakdown,
