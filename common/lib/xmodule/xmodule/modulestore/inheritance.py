@@ -366,6 +366,8 @@ class InheritanceMixin(XBlockMixin):
             'Number of valid steps the student must enter to get full credit '
             'for a question (Default: 3). '
             'Only applies if the student would otherwise get full credit. '
+            'Does not apply to questions whose StepWise Specification is "MatchSpec", since these are '
+            'intended for students to only provide their final answer. '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
