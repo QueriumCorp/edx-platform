@@ -279,15 +279,23 @@ class InheritanceMixin(XBlockMixin):
         scope=Scope.settings
     )
 
-    stepwise_grade_errors_ded = Float(
-        display_name=_('StepWise Hints Deduction'),
+    stepwise_option_hint = Boolean(
+        display_name=_('StepWise Enable Hint Button'),
         help=_(
-            'Point deduction out of 3.0 points for making more errors than allowed (Default: 1.0). '
-            'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
-            'then the score is multiplied by the defined weight for the question. '
+            'Display StepWise "Hint" button if "True" (Default: "True"). '
             'Individual StepWise questions can override this setting.'
         ),
-        default=1.0,
+        default=True,
+        scope=Scope.settings
+    )
+
+    stepwise_option_showme = Boolean(
+        display_name=_('StepWise Enable Show Solution Button'),
+        help=_(
+            'Display StepWise "Show Solution" button if "True" (Default: "True"). '
+            'Individual StepWise questions can override this setting.'
+        ),
+        default=True,
         scope=Scope.settings
     )
 
@@ -374,26 +382,6 @@ class InheritanceMixin(XBlockMixin):
             'Individual StepWise questions can override this setting.'
         ),
         default=1.0,
-        scope=Scope.settings
-    )
-
-    stepwise_option_hint = Boolean(
-        display_name=_('StepWise Enable Hint Button'),
-        help=_(
-            'Display StepWise "Hint" button if "True" (Default: "True"). '
-            'Individual StepWise questions can override this setting.'
-        ),
-        default=True,
-        scope=Scope.settings
-    )
-
-    stepwise_option_showme = Boolean(
-        display_name=_('StepWise Enable Show Solution Button'),
-        help=_(
-            'Display StepWise "Show Solution" button if "True" (Default: "True"). '
-            'Individual StepWise questions can override this setting.'
-        ),
-        default=True,
         scope=Scope.settings
     )
 
