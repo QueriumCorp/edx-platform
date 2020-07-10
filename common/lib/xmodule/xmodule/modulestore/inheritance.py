@@ -248,7 +248,8 @@ class InheritanceMixin(XBlockMixin):
     stepwise_weight = Float(
         display_name=_('StepWise Problem Weight'),
         help=_(
-            'Defines the number of points the problem is worth after the student\'s raw score has been scaled to 1.0 point. '
+            'Defines the number of points the problem is worth after the student\'s raw score has been scaled to 1.0 point '
+            '(Default: 1.0). '
             'Deductions are taken from 3.0 possible raw points and then scaled to a score of 1.0. '
             'The scaled score is then mutiplied by this weight for the question to get the final gradebook score. '
             'For example, a Stepwise problem is worth a possible 3.0 raw points, less deductions. '
@@ -367,7 +368,7 @@ class InheritanceMixin(XBlockMixin):
     stepwise_grade_min_steps_ded = Float(
         display_name=_('StepWise Minimum Valid Steps Deduction'),
         help=_(
-            'Point deduction out of 3.0 points for entering fewer valid steps than allowed (Default: 0.25).'
+            'Point deduction out of 3.0 points for entering fewer valid steps than allowed (Default: 0.25). '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
@@ -379,17 +380,17 @@ class InheritanceMixin(XBlockMixin):
     stepwise_option_hint = Boolean(
         display_name=_('StepWise Enable Hint Button'),
         help=_(
-            'Display StepWise Hint button if "True" (Default: "True")'
+            'Display StepWise "Hint" button if "True" (Default: "True"). '
             'Individual StepWise questions can override this setting.'
         ),
         default=True,
         scope=Scope.settings
     )
 
-    stepwise_option_hint = Boolean(
+    stepwise_option_showme = Boolean(
         display_name=_('StepWise Enable Show Solution Button'),
         help=_(
-            'Display StepWise Show Solution button if "True" (Default: "True")'
+            'Display StepWise "Show Solution" button if "True" (Default: "True"). '
             'Individual StepWise questions can override this setting.'
         ),
         default=True,
