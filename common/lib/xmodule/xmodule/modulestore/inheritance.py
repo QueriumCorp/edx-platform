@@ -271,7 +271,7 @@ class InheritanceMixin(XBlockMixin):
             'You can override this course-wide setting for individual problems. '
             'However, if the course-wide setting is a specific number, you cannot set the Maximum Attempts for individual '
             'StepWise problems to unlimited. You can set a separate course-wide default for non-StepWise Maxmimum Attempts '
-            '(see "Maximum Attempts" above).'
+            '(see "Maximum Attempts" above). '
             'Individual StepWise questions can override this setting.'
         ),
         values={"min": 0},
@@ -312,7 +312,7 @@ class InheritanceMixin(XBlockMixin):
     )
 
     stepwise_grade_hints_count = Integer(
-        display_name=_('StepWise Number of Hints Before Deduction'),
+        display_name=_('StepWise Hints Count'),
         help=_(
             'Number of hints the student can request before they lose points (Default: 2). '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
@@ -337,7 +337,7 @@ class InheritanceMixin(XBlockMixin):
     )
 
     stepwise_grade_errors_count = Integer(
-        display_name=_('StepWise Number of Errors Before Deduction'),
+        display_name=_('StepWise Errors Count'),
         help=_(
             'Number of errors the student can make before they lose points (Default: 3). '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
@@ -349,7 +349,7 @@ class InheritanceMixin(XBlockMixin):
     )
 
     stepwise_grade_errors_ded = Float(
-        display_name=_('StepWise Hints Deduction'),
+        display_name=_('StepWise Errors Deduction'),
         help=_(
             'Point deduction out of 3.0 points for making more errors than allowed (Default: 1.0). '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
@@ -361,10 +361,11 @@ class InheritanceMixin(XBlockMixin):
     )
 
     stepwise_grade_min_steps_count = Integer(
-        display_name=_('StepWise Minimum Valid Steps Before Deduction'),
+        display_name=_('StepWise Minimum Valid Steps Count'),
         help=_(
-            'Number of valid steps must enter to get full credit if they would otherwise get full credit '
+            'Number of valid steps the student must enter to get full credit '
             'for a question (Default: 3). '
+            'Only applies if the student would otherwise get full credit. '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
