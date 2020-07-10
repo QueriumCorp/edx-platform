@@ -332,14 +332,14 @@ class InheritanceMixin(XBlockMixin):
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
         ),
-        default=3.0,
+        default=1.0,
         scope=Scope.settings
     )
 
     stepwise_grade_errors_count = Integer(
         display_name=_('StepWise Errors Count'),
         help=_(
-            'Number of errors the student can make before they lose points (Default: 3). '
+            'Number of errors the student can make before they lose points (Default: 2). '
             'Points are deducted from 3.0 points, then the resulting points are scaled to a score of 1.0, '
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
@@ -372,7 +372,7 @@ class InheritanceMixin(XBlockMixin):
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
         ),
-        default=2,
+        default=3,
         scope=Scope.settings
     )
 
@@ -384,7 +384,7 @@ class InheritanceMixin(XBlockMixin):
             'then the score is multiplied by the defined weight for the question. '
             'Individual StepWise questions can override this setting.'
         ),
-        default=1.0,
+        default=0.25,
         scope=Scope.settings
     )
 
