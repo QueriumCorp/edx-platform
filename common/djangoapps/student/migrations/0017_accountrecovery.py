@@ -26,13 +26,4 @@ class Migration(migrations.Migration):
                 'db_table': 'auth_accountrecovery',
             },
         ),
-
-        # mcdaniel may-2020
-        # had to combine our db migration with one from juniper.rc3
-        migrations.AddField(
-            model_name='userprofile',
-            name='faculty_status',
-            field=models.CharField(blank=True, db_index=True, max_length=255, null=True),
-        ),
-
     ]

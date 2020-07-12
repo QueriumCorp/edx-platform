@@ -35,7 +35,7 @@ def user_exists(details):
 
     this method codifies querium's preferences for which oauth backend to use depending on the configuration
     of this instance.
-"""
+
 def preferred_querium_backend():
     backend = None
     providers = Registry.displayed_for_login()
@@ -58,3 +58,4 @@ def preferred_querium_backend():
 
     backend = providers[0].slug
     return backend
+"""

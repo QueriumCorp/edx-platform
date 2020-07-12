@@ -61,7 +61,7 @@ logger = getLogger(__name__)
 
 # mcdaniel nov-2019: to dynamically determine oauth backend name
 # this comes from common.djangoapps.third_party_auth.provider
-from third_party_auth.utils import preferred_querium_backend
+#from third_party_auth.utils import preferred_querium_backend
 
 RESET_COURSE_DEADLINES_NAME = 'reset_course_deadlines'
 RENDER_XBLOCK_NAME = 'render_xblock'
@@ -95,6 +95,7 @@ if not redirect_url and settings.SESSION_COOKIE_DOMAIN is not None:
     redirect_url = 'am.' + settings.SESSION_COOKIE_DOMAIN
 
 def am_redirect():
+    """
     backend = preferred_querium_backend()
     scheme = u"https" if settings.HTTPS == "on" else u"http"
     url = u'{scheme}://{url}/'.format(
@@ -108,6 +109,8 @@ def am_redirect():
                 )
     logger.debug('am_redirect() - {}'.format(url))
     return url
+    """
+    return null
 
 # Custom error pages
 # These are used by Django to render these error codes. Do not remove.
@@ -148,7 +151,7 @@ urlpatterns = [
     #
     # -- [sigh] --
     #
-    url(r'^home/$', RedirectView.as_view(url=am_redirect() , permanent=False)),
+    #url(r'^home/$', RedirectView.as_view(url=am_redirect() , permanent=False)),
 
     url(r'^$', branding_views.index, name='root'),   # Main marketing page, or redirect to courseware
 
