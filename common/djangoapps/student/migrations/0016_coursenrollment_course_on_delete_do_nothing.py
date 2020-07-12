@@ -18,4 +18,9 @@ class Migration(migrations.Migration):
             name='course',
             field=models.ForeignKey(db_constraint=False, on_delete=django.db.models.deletion.DO_NOTHING, to='course_overviews.CourseOverview'),
         ),
+        migrations.AddField(
+            model_name='userprofile',
+            name='faculty_status',
+            field=models.CharField(blank=True, db_index=True, max_length=255, null=True),
+        ),
     ]
