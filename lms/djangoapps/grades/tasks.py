@@ -37,8 +37,8 @@ from .transformer import GradesTransformer
 
 # mcdaniel dec-2019
 # Willo Labs Grade Sync
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.tasks import post_grades
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.utils import is_lti_gradesync_enabled
+from common.djangoapps.third_party_auth.lti_consumers.tasks import post_grades
+from common.djangoapps.third_party_auth.lti_consumers.utils import is_lti_gradesync_enabled
 
 log = getLogger(__name__)
 
@@ -348,12 +348,12 @@ def _update_subsection_grades(
                     subsection_grade=subsection_grade,
                 )
                 """
-                mcdaniel dec-2019 
+                mcdaniel dec-2019
                 Willo Labs LTI Grade Sync
-                
+
                 convert each object into its PK id value to avoid serializing the contents in
                 RabbitMQ. We'll re-instantiate each object from inside the Celery task.
-                
+
                 example inputs:
                 username - __123456__
                 course_id_string - course-v1:ABC+OS9471721_9626+01

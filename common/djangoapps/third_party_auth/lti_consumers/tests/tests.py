@@ -16,9 +16,9 @@ from django.test import TestCase
 
 from third_party_auth.tests.testutil import ThirdPartyAuthTestMixin
 from django.contrib.auth import get_user_model
-from third_party_auth.lti_consumers.willolabs.provisioners import CourseProvisioner
-from third_party_auth.lti_consumers.willolabs.tasks import post_grades
-from third_party_auth.lti_consumers.willolabs.lti_params import is_willo_lti
+from third_party_auth.lti_consumers.provisioners import CourseProvisioner
+from third_party_auth.lti_consumers.tasks import post_grades
+from third_party_auth.lti_consumers.lti_params import is_willo_lti
 from opaque_keys.edx.keys import CourseKey, UsageKey
 
 LTI_PARAMS_KEY = 'tpa-lti-params'
@@ -55,8 +55,8 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         lti_params = self.lti_params
 
         self.provisioner = CourseProvisioner(
-            user=user, 
-            lti_params=lti_params, 
+            user=user,
+            lti_params=lti_params,
             course_id=course_id
             )
         self.provisioner.check_enrollment()
@@ -79,7 +79,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
         self.assertEquals(self.provisioner.lti_params['context_id'], u'e14751571da04dd3a2c71a311dda2e1b')
         self.assertEquals(self.provisioner.lti_params['tool_consumer_info_product_family_code'], u'canvas')
         self.assertEquals(self.provisioner.lti_params['lis_person_contact_email_primary'], u'rover_student@willolabs.com')
-        
+
     def test_user(self):
         self.assertEquals(user, self.provisioner.user)
 
@@ -94,7 +94,7 @@ class UnitTestLTIWilloLabGradeSync(TestCase):
     def is_not_willo_lti(self):
         self.init()
 
-        if 'ext_wl_launch_url' in lti_params: 
+        if 'ext_wl_launch_url' in lti_params:
             del lti_params['ext_wl_launch_url']
 
         is_willo = is_willo_lti(lti_params)

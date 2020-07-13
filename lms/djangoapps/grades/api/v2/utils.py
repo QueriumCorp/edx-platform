@@ -7,7 +7,7 @@ from lms.djangoapps.grades.course_data import CourseData
 
 
 from opaque_keys.edx.keys import CourseKey, UsageKey
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.exceptions import LTIBusinessRuleError
+from common.djangoapps.third_party_auth.lti_consumers.exceptions import LTIBusinessRuleError
 
 
 import logging
@@ -15,10 +15,10 @@ log = logging.getLogger(__name__)
 
 def parent_usagekey(
     user,
-    course_id=None, 
+    course_id=None,
     course_key=None,
-    usage_id=None, 
-    usage_key=None, 
+    usage_id=None,
+    usage_key=None,
     usage_key_string=None
     ):
     """
@@ -32,9 +32,9 @@ def parent_usagekey(
     example return:
     {
         'grades': {
-            'section_attempted_graded': True, 
-            'section_grade_possible': 17.0, 
-            'section_grade_earned': 0.0, 
+            'section_attempted_graded': True,
+            'section_grade_possible': 17.0,
+            'section_grade_earned': 0.0,
             'section_grade_percent': 0.0
             },
         'url': u'https://dev.roverbyopenstax.org/courses/course-v1:ABC+OS9471721_9626+01/courseware/c0a9afb73af311e98367b7d76f928163/c8bc91313af211e98026b7d76f928163'
@@ -58,28 +58,28 @@ def parent_usagekey(
     problem_key_string = 'block-v1:' + usage_key._to_string()
 
     course_data = CourseData(
-        user=user, 
-        course=None, 
-        collected_block_structure=None, 
-        structure=None, 
+        user=user,
+        course=None,
+        collected_block_structure=None,
+        structure=None,
         course_key=course_key
         )
-    
+
     course_grade = CourseGradeFactory().read(
-        user=user, 
+        user=user,
         course_key=course_key
         )
 
     for chapter in course_grade.chapter_grades.itervalues():
         for section in chapter['sections']:
             grades_factory = SubsectionGradeFactory(
-                student=user, 
-                course=None, 
-                course_structure=None, 
+                student=user,
+                course=None,
+                course_structure=None,
                 course_data=course_data
                 )
             subsection_grades = grades_factory.create(
-                subsection=section, 
+                subsection=section,
                 read_only=True
                 )
 

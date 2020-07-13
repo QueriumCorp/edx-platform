@@ -23,7 +23,7 @@ from social_core.backends.base import BaseAuth
 from social_core.exceptions import AuthFailed
 from social_core.utils import sanitize_redirect
 
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.lti_params import LTIParams
+from common.djangoapps.third_party_auth.lti_consumers.lti_params import LTIParams
 
 log = logging.getLogger(__name__)
 LTI_PARAMS_KEY = 'tpa-lti-params'

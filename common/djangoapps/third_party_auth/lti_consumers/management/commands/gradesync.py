@@ -16,19 +16,19 @@ u"""
 
 """
 from django.core.management.base import BaseCommand
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.gradesync import LTIGradeSync
+from common.djangoapps.third_party_auth.lti_consumers.gradesync import LTIGradeSync
 
 class Command(BaseCommand):
     help = u"Willo Labs Grade Sync. Sync Rover grades to Host LMS via Willo Labs for all students, all assignments. Includes all active Willo Labs Grade Sync-supported courses."
 
     def add_arguments(self, parser):
         parser.add_argument(
-            u'-c', 
-            u'--course_id', 
+            u'-c',
+            u'--course_id',
             type=str,
             help=u'A string representation of a CourseKey. Example: course-v1:ABC+OS9471721_9626+01'
             )
-                    
+
 
     def handle(self, *args, **kwargs):
         """

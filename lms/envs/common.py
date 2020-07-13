@@ -2355,7 +2355,7 @@ INSTALLED_APPS = [
 
     # mcdaniel dec-2019
     # add Willo Labs LTI Grade Sync module
-    'common.djangoapps.third_party_auth.lti_consumers.willolabs',
+    'common.djangoapps.third_party_auth.lti_consumers',
 
     # System Wide Roles
     'openedx.core.djangoapps.system_wide_roles',
