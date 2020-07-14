@@ -25,6 +25,8 @@ from lms.djangoapps.courseware.fields import UnsignedBigIntAutoField
 from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
+
+from .constants import LTI_CACHE_TABLES
 """
 https://github.com/edx/opaque-keys
 https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
@@ -79,13 +81,7 @@ class LTIConfigurationParams(TimeStampedModel):
     table_name = models.CharField(
         help_text="Example: LTIExternalCourseEnrollment",
         max_length=255,
-        choices=[
-            ('LTIExternalCourse', 'LTIExternalCourse'),
-            ('LTIExternalCourseEnrollment', 'LTIExternalCourseEnrollment'),
-            ('LTIExternalCourseEnrollmentGrades', 'LTIExternalCourseEnrollmentGrades'),
-            ('LTIExternalCourseAssignments', 'LTIExternalCourseAssignments'),
-            ('LTIExternalCourseAssignmentProblems', 'LTIExternalCourseAssignmentProblems'),
-        ],
+        choices=LTI_CACHE_TABLES,
         blank=True,
         null=False,
         )
@@ -154,13 +150,15 @@ class LTIInternalCourse(TimeStampedModel):
            ValidationError: [description]
        """
         try:
-            is_this_a_valid_course_key = CourseKey.(self.course_id)
+            is_this_a_valid_course_key = CourseKey.from_string(self.course_id)
         except InvalidKeyError:
             raise ValidationError('Not a valid course key.')
         super(LTIInternalCourse, self).clean(*args, **kwargs)
 
 """
+---------------------------------------------------------------------------------------------------------
 LTI Grade Sync - Phase I models
+---------------------------------------------------------------------------------------------------------
 """
 class LTIExternalCourse(TimeStampedModel):
     """

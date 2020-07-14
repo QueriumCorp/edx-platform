@@ -19,9 +19,16 @@ from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
 from .exceptions import LTIBusinessRuleError
-from .constants import WILLO_INSTRUCTOR_ROLES, WILLO_DOMAINS, LTI_CACHE_TABLES
-from .cache_config import parser
+from .constants import (
+    LTI_PARAMS_DEFAULT_CONFIGURATION,
+    WILLO_INSTRUCTOR_ROLES,
+    WILLO_DOMAINS,
+    LTI_CACHE_TABLES
+    )
 from .models import (
+    LTIInternalCourse,
+    LTIConfigurations,
+    LTIConfigurationParams,
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
     LTIExternalCourseAssignments,
@@ -36,12 +43,12 @@ class LTIParams(object):
     elements to class property names. Also handles all lti_params
     validations.
     """
-    
+
     def __init__(self, lti_params):
         """Bootstrap this class. is_valid and set lti_params
-        
+
         Arguments:
-            lti_params {dict} -- a Python dictionary provided in the 
+            lti_params {dict} -- a Python dictionary provided in the
             http response body of LTI authentication request.
             see https://readthedocs.roverbyopenstax.org/en/latest/how_to/lti.html#tpa-lti-params
 
@@ -62,7 +69,7 @@ class LTIParams(object):
     @property
     def dictionary(self):
         """a dump of the original lti_params dictionary
-        
+
         Returns:
             [dict] -- the lti_params dictionary passed to __init__()
         """
@@ -74,11 +81,11 @@ class LTIParams(object):
 
     def __getattr__(self, attr):
         """generic getter. Dynamic properties for lti_params elements.
-        
+
         Arguments:
             attr {string} -- a lti_params element
         """
-        # recursion buster        
+        # recursion buster
         if attr == '_lti_params':
             return
 
@@ -102,12 +109,9 @@ class LTIParams(object):
         Example:
         =======================
         roles_param = (
-            'Learner',
-            'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
-            'Instructor',
-            'Instructor,urn:lti:sysrole:ims/lis/Administrator,urn:lti:instrole:ims/lis/Administrator',
-            'TeachingAssistant',
-            'urn:lti:instrole:ims/lis/Administrator'
+            'Learner', 'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
+            'Instructor', 'Instructor,urn:lti:sysrole:ims/lis/Administrator,urn:lti:instrole:ims/lis/Administrator',
+            'TeachingAssistant', 'urn:lti:instrole:ims/lis/Administrator'
         )
 
         "roles": "urn:lti:role:ims/lis/Learner"
@@ -162,7 +166,7 @@ class LTIParams(object):
     def is_willolabs(self):
         """Determine if the lti_params dictionary provided to __init__
         came from Willo Labs.
-        
+
         Returns:
             [Boolean] -- True if the dictionary came from Willo Labs.
                          False otherwise.
@@ -194,7 +198,7 @@ class LTIParams(object):
             return False
 
         if DEBUG: log.info('LTIParams.is_willolabs() returning True')
-        return True       
+        return True
 
     @property
     def is_valid(self):
@@ -202,7 +206,7 @@ class LTIParams(object):
         Determine from data in the lti_params json object returns by LTI authentication
         whether the session originated from Willo Labs.
 
-        True if there is a parameter named "ext_wl_launch_url" and the value is a 
+        True if there is a parameter named "ext_wl_launch_url" and the value is a
         valid URL, and the hostname of the URL is contained in the set WILLO_DOMAINS
         """
 
@@ -229,11 +233,11 @@ class LTIParams(object):
             return False
 
         if not self.lis_person_name_given:
-            if DEBUG: log.info('LTIParams.is_valid() - no . returning False')
+            if DEBUG: log.info('LTIParams.is_valid() - no lis_person_name_given. returning False')
             return False
 
         if not self.lis_person_name_family:
-            if DEBUG: log.info('LTIParams.is_valid() - no . returning False')
+            if DEBUG: log.info('LTIParams.is_valid() - no lis_person_name_family. returning False')
             return False
 
         if DEBUG: log.info('LTIParams.is_valid() - lti_params are validated.')
@@ -242,8 +246,7 @@ class LTIParams(object):
 
 class LTIParamsFieldMap(object):
     """Provides a means of dynamically mapping LTI cache field names
-    to cache_config.ini field mapping parameters.
-    
+
     Arguments:
         table {string} -- name of a LTI Cache table
 
@@ -252,13 +255,13 @@ class LTIParamsFieldMap(object):
 
     def __init__(self, lti_params, table):
         """Bootstrap this class
-        
+
         Arguments:
             lti_params {dict or LTIParams} -- a lti_params dictionary or object
-        
+
         Keyword Arguments:
             table {string} -- (default: {None}) a string representing an LTI cache table name
-        
+
         Raises:
             ValidationError: [description]
             LTIBusinessRuleError: [description]
@@ -281,11 +284,52 @@ class LTIParamsFieldMap(object):
         self.dictionary = lti_params.dictionary
         self.table = table
 
+        """
+        mcdaniel july-2020
+        Phase II field mapping
+        """
+        # extract the Rover course identifier embedded in the tpa_next URL string
+        course_id = get_course_id_from_tpa_next(self.dictionary)
+
+        # convert the course_id string into a CourseKey object
+        course_key = CourseKey.from_string(course_id)
+
+        # use the CourseKey object to identify the LTI Internal Course record
+        internal_course = LTIInternalCourse.objects.filter(course_id=course_key).first()
+
+        lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration).first()
+
+        # retrieve the field-level LTI Grade Sync mapping configuration for this course.
+        lti_configuration_params = LTIConfigurationParams.objects.filter(
+            configuration=internal_course.lti_configuration,
+            table_name=table
+            )
+
+        # build a params configuration dict
+        #
+        # first, lets ensure that we have a complete field list by initializing
+        # to the generic default mapping.
+        self.configuration_parameters = LTI_PARAMS_DEFAULT_CONFIGURATION.get(table)
+
+        # next, we iterate lti_configuration_params
+        for param in lti_configuration_params:
+            self.configuration_parameters[param.internal_field] = param.external_field
+
+        if DEBUG:
+            log.info('LTIParamsFieldMap.__init__() - course_id: {course_id}, internal_course: {internal_course}, lti_configuration: {lti_configuration}, table: {table}, lti_configuration_params: {lti_configuration_params}, configuration_parameters: {configuration_parameters}'.format(
+                course_id=course_id,
+                internal_course=internal_course,
+                lti_configuration=lti_configuration,
+                table=table,
+                lti_configuration_params=lti_configuration_params.objects.count(),
+                configuration_parameters=self.configuration_parameters
+            ))
+
 
     @property
     def table(self):
         return self._table
-    
+
     @table.setter
     def table(self, value):
         self._table = value
@@ -293,7 +337,7 @@ class LTIParamsFieldMap(object):
     @property
     def dictionary(self):
         """a dump of the original lti_params dictionary
-        
+
         Returns:
             [dict] -- the lti_params dictionary passed to __init__()
         """
@@ -304,23 +348,23 @@ class LTIParamsFieldMap(object):
         self._lti_params = value
 
     def __getattr__(self, attr):
-        """Implement dynamic attributes. 
-        
+        """Implement dynamic attributes.
+
         Arguments:
             attr {string} -- string representation of a class attribute
-        
+
         Returns:
-            String -- Returns corresponding cache_config value, if it exists.
+            String -- Returns corresponding field mapping value from LTIConfigurationParams, if it exists.
         """
 
-        # recursion buster        
+        # recursion buster
         if attr in ['_lti_params', '_table']:
             return
 
         if not self.dictionary:
             return None
-        
-        param_key = parser.get(self.table, attr)
+
+        param_key = self.configuration_parameters.get(attr)
         value = self.dictionary.get(param_key)
         if DEBUG:
             log.info('get_lti_param() - table: {table}, attr: {attr}, param_key: {param_key}, value: {value}'.format(
@@ -337,19 +381,24 @@ class LTIParamsFieldMap(object):
             table=self.table
         )
 
+"""
+------------------------------------------------------------------------------------------------------------------
+Utility functions.
+------------------------------------------------------------------------------------------------------------------
+"""
 def get_cached_course_id(context_id):
     """Queries the cache and returns the course_id associated
     with a context_id
-    
+
     Returns:
-        course_id -- 
+        course_id --
     """
     course = LTIExternalCourse.objects.filter(context_id=context_id).first()
 
     if course:
         log.info('LTIParams.get_cached_course_id() - found course_id: {course_id}'.format(
             course_id=course.course_id
-        ))        
+        ))
         return course.course_id
 
     log.info('LTIParams.get_cached_course_id() - did not find a course_id.')
@@ -361,10 +410,10 @@ def get_course_id_from_tpa_next(lti_params):
     in the lti_params dict, if it exists.
 
     example: "custom_tpa_next": "/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false"
-    
+
     Arguments:
         lti_params {[LTIParams] or [dict]}
-    
+
     Returns:
         [CourseKey]
     """
@@ -410,7 +459,7 @@ def get_lti_user_id(course_id, username, context_id=None):
             course_id=course_id,
             username=username
         ))
-    
+
 
     user = USER_MODEL.objects.get(username=username)
     course_key = CourseKey.from_string(course_id)
@@ -427,7 +476,7 @@ def get_lti_user_id(course_id, username, context_id=None):
                 pass
         else: return None
 
-    # if there's not a context_id then we still must 
+    # if there's not a context_id then we still must
     # take into consideration that course_id may not be unique
     # for LTIExternalCourse given that multiple external LMS'
     # could potentially share a common Rover course.
@@ -461,9 +510,9 @@ def get_ext_wl_outcome_service_url(course_id, context_id=None):
 
 def get_lti_cached_result_date(
             course_id,
-            username, 
+            username,
             section_url,
-            section_completed_date=None, 
+            section_completed_date=None,
             section_due_date=None
             ):
     """
@@ -476,7 +525,7 @@ def get_lti_cached_result_date(
     section_due_date: ditto.
     """
 
-    # need to consider that there might be more than one course with this course_id 
+    # need to consider that there might be more than one course with this course_id
     user = USER_MODEL.objects.get(username=username)
     course_key = CourseKey.from_string(course_id)
 
@@ -522,3 +571,12 @@ def is_lti_cached_user(user, context_id):
         return ret is not None
     except LTIExternalCourseEnrollment.DoesNotExist:
         return False
+
+"""
+For pre-populating / initializing new LTI Configurations
+
+format:
+LTI Table name
+    internal field: external field
+"""
+
