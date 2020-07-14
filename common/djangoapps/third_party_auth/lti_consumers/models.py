@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+#from __future__ import absolute_import
 # -*- coding: utf-8 -*-
 """
   LTI Integration for Willo Labs Grade Sync.
@@ -21,17 +21,112 @@ from model_utils.models import TimeStampedModel
 from lms.djangoapps.courseware.fields import UnsignedBigIntAutoField
 #-----------------
 
-from opaque_keys import InvalidKeyError
-from opaque_keys.edx.keys import CourseKey
 from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
-
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+#from opaque_keys import InvalidKeyError
+#from opaque_keys.edx.keys import CourseKey
+#from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
 import logging
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
 
+class LTIInternalCourse(TimeStampedModel):
+    """
+    Rover course master record. Manually populated. Fk to Open edX course in modulestore.
+
+    courses_summary = modulestore().get_course_summaries()
+    """
+    course_id = CourseKeyField(
+        max_length=255,
+        help_text="Rover Course Key (Opaque Key). " \
+            "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
+        blank=False,
+        primary_key=True
+        )
+
+    enabled = models.BooleanField(
+        default=False,
+        null=False,
+        blank=False,
+        help_text="True if LTI Grade Sync should be enabled for courses in this institution."
+        )
+
+    class Meta(object):
+        verbose_name = "LTI Internal Rover Course"
+        verbose_name_plural = verbose_name + "s"
+        unique_together = [['course_id']]
+        #ordering = ('-fetched_at', )
+
+    def __str__(self):
+        return self.course_id.html_id()
+
+class LTIConfigurations(TimeStampedModel):
+    """
+    LTI configuration master record for field-to-field mapping data.
+    """
+    id = models.AutoField(primary_key=True)
+
+    name = models.CharField(
+        help_text="Example: KU - Willo Labs - Blackboard",
+        max_length=255,
+        blank=True,
+        null=False,
+        )
+
+    class Meta(object):
+        verbose_name = "LTI Configurations"
+        verbose_name_plural = verbose_name
+        unique_together = [['id']]
+        #ordering = ('-fetched_at', )
+
+    def __str__(self):
+        return self.course_id.html_id()
+
+class LTIConfigurationParams(TimeStampedModel):
+    """
+    LTI configuration detail field-to-field mapping data.
+    """
+    id = models.AutoField(primary_key=True)
+
+    configuration = models.ForeignKey(LTIConfigurations, on_delete=models.CASCADE)
+
+    table_name = models.CharField(
+        help_text="Example: LTIExternalCourseEnrollment",
+        max_length=255,
+        choices=[
+            ('LTIExternalCourse', 'LTIExternalCourse'),
+            ('LTIExternalCourseEnrollment', 'LTIExternalCourseEnrollment'),
+            ('LTIExternalCourseEnrollmentGrades', 'LTIExternalCourseEnrollmentGrades'),
+            ('LTIExternalCourseAssignments', 'LTIExternalCourseAssignments'),
+            ('LTIExternalCourseAssignmentProblems', 'LTIExternalCourseAssignmentProblems'),
+        ],
+        blank=True,
+        null=False,
+        )
+
+    external_field = models.CharField(
+        help_text="Example: ext_wl_launch_key",
+        max_length=255,
+        blank=True,
+        null=False,
+        )
+
+    internal_field = models.CharField(
+        help_text="Example: ext_wl_launch_key",
+        max_length=255,
+        blank=True,
+        null=False,
+        )
+
+    class Meta(object):
+        verbose_name = "LTI Configurations"
+        verbose_name_plural = verbose_name
+        unique_together = [['id']]
+        #ordering = ('-fetched_at', )
+
+    def __str__(self):
+        return self.course_id.html_id()
 class LTIExternalCourse(TimeStampedModel):
     """
     Course data originating from Willo Labs LTI authentications by students entering Rover
