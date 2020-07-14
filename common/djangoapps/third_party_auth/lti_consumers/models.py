@@ -13,6 +13,7 @@
 
 from django.conf import settings
 from django.db import models
+from django.core.exceptions import ValidationError
 from model_utils.models import TimeStampedModel
 
 # mcdaniel may-2020: field was refactored in juniper.rc3
@@ -22,48 +23,28 @@ from lms.djangoapps.courseware.fields import UnsignedBigIntAutoField
 #-----------------
 
 from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
-#from opaque_keys import InvalidKeyError
-#from opaque_keys.edx.keys import CourseKey
-#from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+from opaque_keys import InvalidKeyError
+from opaque_keys.edx.keys import CourseKey
+"""
+https://github.com/edx/opaque-keys
+https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
+
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+courses_summary = modulestore().get_course_summaries()
+"""
 
 import logging
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
-
-class LTIInternalCourse(TimeStampedModel):
-    """
-    Rover course master record. Manually populated. Fk to Open edX course in modulestore.
-
-    courses_summary = modulestore().get_course_summaries()
-    """
-    course_id = CourseKeyField(
-        max_length=255,
-        help_text="Rover Course Key (Opaque Key). " \
-            "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
-        blank=False,
-        primary_key=True
-        )
-
-    enabled = models.BooleanField(
-        default=False,
-        null=False,
-        blank=False,
-        help_text="True if LTI Grade Sync should be enabled for courses in this institution."
-        )
-
-    class Meta(object):
-        verbose_name = "LTI Internal Rover Course"
-        verbose_name_plural = verbose_name + "s"
-        unique_together = [['course_id']]
-        #ordering = ('-fetched_at', )
-
-    def __str__(self):
-        return self.course_id.html_id()
-
+"""
+LTI Grade Sync - Phase II models
+"""
 class LTIConfigurations(TimeStampedModel):
     """
     LTI configuration master record for field-to-field mapping data.
+    Phase II model. provides a way to support multiple versions of
+    LTI integration field-level mapping.
     """
     id = models.AutoField(primary_key=True)
 
@@ -73,6 +54,8 @@ class LTIConfigurations(TimeStampedModel):
         blank=True,
         null=False,
         )
+
+    comments = models.TextField()
 
     class Meta(object):
         verbose_name = "LTI Configurations"
@@ -86,6 +69,8 @@ class LTIConfigurations(TimeStampedModel):
 class LTIConfigurationParams(TimeStampedModel):
     """
     LTI configuration detail field-to-field mapping data.
+    Phase II model. provides a way to support multiple versions of
+    LTI integration field-level mapping.
     """
     id = models.AutoField(primary_key=True)
 
@@ -119,6 +104,8 @@ class LTIConfigurationParams(TimeStampedModel):
         null=False,
         )
 
+    comments = models.TextField()
+
     class Meta(object):
         verbose_name = "LTI Configurations"
         verbose_name_plural = verbose_name
@@ -127,8 +114,57 @@ class LTIConfigurationParams(TimeStampedModel):
 
     def __str__(self):
         return self.course_id.html_id()
+
+class LTIInternalCourse(TimeStampedModel):
+    """
+    Rover course master record. Manually populated. Fk to Open edX course in modulestore.
+    Phase II model. provides a way to explicitly enable/disable courses for LTI grade sync,
+    and also provides a way to support independent per-course LTI integration field mapping.
+    """
+    course_id = CourseKeyField(
+        max_length=255,
+        help_text="Rover Course Key (Opaque Key). " \
+            "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
+        blank=False,
+        primary_key=True
+        )
+
+    enabled = models.BooleanField(
+        default=False,
+        null=False,
+        blank=False,
+        help_text="True if LTI Grade Sync should be enabled for courses in this institution."
+        )
+
+    lti_configuration = models.ForeignKey(LTIConfigurations, on_delete=models.SET_NULL)
+
+    class Meta(object):
+        verbose_name = "LTI Internal Rover Course"
+        verbose_name_plural = verbose_name + "s"
+        unique_together = [['course_id']]
+        #ordering = ('-fetched_at', )
+
+    def __str__(self):
+        return self.course_id.html_id()
+
+   def clean(self, *args, **kwargs):
+       """Improvising a way to do a Fk constraint on the course_id
+
+       Raises:
+           ValidationError: [description]
+       """
+        try:
+            is_this_a_valid_course_key = CourseKey.(self.course_id)
+        except InvalidKeyError:
+            raise ValidationError('Not a valid course key.')
+        super(LTIInternalCourse, self).clean(*args, **kwargs)
+
+"""
+LTI Grade Sync - Phase I models
+"""
 class LTIExternalCourse(TimeStampedModel):
     """
+    Phase I model
     Course data originating from Willo Labs LTI authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
     """
@@ -149,15 +185,11 @@ class LTIExternalCourse(TimeStampedModel):
         help_text="True if grade results for this course should be posted to Willo Labs Grade Sync API."
         )
 
-    course_id = CourseKeyField(
-        max_length=255,
-        db_index=True,
-        #verbose_name="Course Id",
+    course_id = ForeignKey(
+        LTIInternalCourse,
+        on_delete=models.SET_NULL
         help_text="Rover Course Key (Opaque Key). " \
             "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
-        default=None,
-        blank=False,
-        null=True
         )
 
     context_title = models.CharField(
@@ -341,6 +373,9 @@ class LTIExternalCourseAssignments(TimeStampedModel):
 
 
 class LTIExternalCourseAssignmentProblems(TimeStampedModel):
+    """
+    Phase I model
+    """
     course_assignment = models.ForeignKey(LTIExternalCourseAssignments, on_delete=models.CASCADE)
     usage_key = UsageKeyField(
         #verbose_name="Usage Key",
@@ -360,6 +395,7 @@ class LTIExternalCourseAssignmentProblems(TimeStampedModel):
 
 class LTIExternalCourseEnrollment(TimeStampedModel):
     """
+    Phase I model
     Course Enrollment data originating from Willo Labs LTI authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
@@ -470,6 +506,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
 class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     """
+    Phase I model
     Grade output from Course Enrollments originating from Willo Labs LTI authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
