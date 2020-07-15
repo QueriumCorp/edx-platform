@@ -102,7 +102,7 @@ class LTIConfigurationParams(TimeStampedModel):
     comments = models.TextField()
 
     class Meta(object):
-        verbose_name = "LTI Configurations"
+        verbose_name = "LTI Configuration Parameters"
         verbose_name_plural = verbose_name
         #ordering = ('-fetched_at', )
 

@@ -29,24 +29,31 @@ class LTIInternalCourseAdmin(admin.ModelAdmin):
     """
     list_display = (
         'course_id',
-        'enabled',
-        'lti_configuration',
         'created',
         'modified',
+        'enabled',
+        'lti_configuration',
     )
     readonly_fields=(u'created', u'modified' )
 
 admin.site.register(LTIInternalCourse, LTIInternalCourseAdmin)
 
+class ParamsInline(admin.TabularInline):
+    model = LTIConfigurationParams
+
 class LTIConfigurationsAdmin(admin.ModelAdmin):
     """
     LTI Grade Sync - Configurations
     """
-    list_disply = (
+    inlines = [
+        ParamsInline,
+    ]
+
+    list_display = (
         'id',
-        'name',
         'created',
         'modified',
+        'name',
         'comments',
     )
     readonly_fields=(u'created', u'modified' )
@@ -59,17 +66,17 @@ class LTIConfigurationParamsAdmin(admin.ModelAdmin):
     """
     list_display = (
         'id',
+        'created',
+        'modified',
         'configuration',
         'table_name',
         'internal_field',
         'external_field',
-        'created',
-        'modified',
         'comments',
     )
     readonly_fields=(u'created', u'modified' )
 
-admin.site.register(LTIConfigurationParams, LTIConfigurationParamsAdmin)
+#admin.site.register(LTIConfigurationParams, LTIConfigurationParamsAdmin)
 
 class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
