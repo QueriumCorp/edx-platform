@@ -9,14 +9,14 @@ import opaque_keys.edx.django.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('willolabs', '0005_ltiexternalcourse_enabled'),
+        ('lti_consumers', '0005_ltiexternalcourse_enabled'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='ltiexternalcourse',
             name='context_label',
-            field=models.CharField(blank=True, help_text=b'Example: willolabs-launch-test-ku-blackboard-rover-grade-testing', max_length=255, null=True),
+            field=models.CharField(blank=True, help_text=b'Example: lti_consumers-launch-test-ku-blackboard-rover-grade-testing', max_length=255, null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourse',
@@ -61,12 +61,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='ltiexternalcourse',
             name='ext_wl_launch_url',
-            field=models.URLField(blank=True, help_text=b'Example: https://stage.willolabs.com/launch/QcTz6q/8cmzcd', null=True),
+            field=models.URLField(blank=True, help_text=b'Example: https://stage.lti_consumers.com/launch/QcTz6q/8cmzcd', null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourse',
             name='ext_wl_outcome_service_url',
-            field=models.URLField(blank=True, help_text=b'Example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/', null=True),
+            field=models.URLField(blank=True, help_text=b'Example: https://stage.lti_consumers.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/', null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourse',

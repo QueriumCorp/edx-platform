@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('url', models.URLField(help_text=b'Open edX Course Assignment', max_length=255, verbose_name=b'Homework Section URL')),
                 ('display_name', models.CharField(help_text=b'Title text of the Rover assignment. Example: Chapter 5 Section 1 Quadratic Functions Sample Homework', max_length=255, verbose_name=b'Display Name')),
-                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='willolabs.LTIExternalCourse')),
+                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lti_consumers.LTIExternalCourse')),
             ],
             options={
                 'verbose_name': 'LTI External Course Assignments',
@@ -92,7 +92,7 @@ class Migration(migrations.Migration):
                 ('lis_person_name_family', models.CharField(blank=True, default=None, help_text=b'Example: Thornton', max_length=50, null=True, verbose_name=b'User Family Name')),
                 ('lis_person_name_full', models.CharField(blank=True, default=None, help_text=b'Example: Billy Bob Thornton', max_length=255, null=True, verbose_name=b'User Family Name')),
                 ('lis_person_name_given', models.CharField(blank=True, default=None, help_text=b'Example: Billy Bob', max_length=255, null=True, verbose_name=b'User Given Name')),
-                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='willolabs.LTIExternalCourse')),
+                ('course', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lti_consumers.LTIExternalCourse')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -113,8 +113,8 @@ class Migration(migrations.Migration):
                 ('possible_all', models.FloatField()),
                 ('earned_graded', models.FloatField()),
                 ('possible_graded', models.FloatField()),
-                ('course_assignment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='willolabs.LTIExternalCourseAssignments')),
-                ('course_enrollment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='willolabs.LTIExternalCourseEnrollment')),
+                ('course_assignment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lti_consumers.LTIExternalCourseAssignments')),
+                ('course_enrollment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lti_consumers.LTIExternalCourseEnrollment')),
             ],
             options={
                 'verbose_name': 'LTI External Course Enrollment Grades',
@@ -124,7 +124,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='ltiexternalcourseassignmentproblems',
             name='course_assignment',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='willolabs.LTIExternalCourseAssignments'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='lti_consumers.LTIExternalCourseAssignments'),
         ),
         migrations.AlterUniqueTogether(
             name='ltiexternalcourse',

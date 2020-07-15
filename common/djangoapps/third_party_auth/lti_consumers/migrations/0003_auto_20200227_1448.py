@@ -9,7 +9,7 @@ import opaque_keys.edx.django.models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('willolabs', '0002_auto_20200220_1718'),
+        ('lti_consumers', '0002_auto_20200220_1718'),
     ]
 
     operations = [
@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='ltiexternalcourse',
             name='context_label',
-            field=models.CharField(help_text=b'Example: willolabs-launch-test-ku-blackboard-rover-grade-testing', max_length=255, null=True),
+            field=models.CharField(help_text=b'Example: lti_consumers-launch-test-ku-blackboard-rover-grade-testing', max_length=255, null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourse',
@@ -83,12 +83,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='ltiexternalcourse',
             name='ext_wl_launch_url',
-            field=models.URLField(help_text=b'Example: https://stage.willolabs.com/launch/QcTz6q/8cmzcd', null=True),
+            field=models.URLField(help_text=b'Example: https://stage.lti_consumers.com/launch/QcTz6q/8cmzcd', null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourse',
             name='ext_wl_outcome_service_url',
-            field=models.URLField(help_text=b'Example: https://stage.willolabs.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/', null=True),
+            field=models.URLField(help_text=b'Example: https://stage.lti_consumers.com/api/v1/outcomes/QcTz6q/e14751571da04dd3a2c71a311dda2e1b/', null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourse',
@@ -168,7 +168,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='ltiexternalcourseenrollment',
             name='lis_person_contact_email_primary',
-            field=models.EmailField(help_text=b'Example: rover_student@willolabs.com', max_length=254, null=True),
+            field=models.EmailField(help_text=b'Example: rover_student@lti_consumers.com', max_length=254, null=True),
         ),
         migrations.AlterField(
             model_name='ltiexternalcourseenrollment',

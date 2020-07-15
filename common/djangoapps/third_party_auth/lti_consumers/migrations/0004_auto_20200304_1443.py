@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('willolabs', '0003_auto_20200227_1448'),
+        ('lti_consumers', '0003_auto_20200227_1448'),
     ]
 
     operations = [
