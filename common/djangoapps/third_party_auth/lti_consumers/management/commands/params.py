@@ -1,4 +1,4 @@
-u"""
+"""
   Written by:   mcdaniel
                 lpm0073@gmail.com
                 https://lawrencemcdaniel.com
@@ -8,14 +8,15 @@ u"""
   LTI Grade Sync.
   Utilities for creating and maintaining LTI Configurations
 
-  Run from the command line like this:
-  cd /edx/app/edxapp/edx-platform
-          sudo -u www-data /edx/bin/python.edxapp ./manage.py lms --settings=production params initialize "THE NAME OF YOUR NEW CONFIGURATION"
-
+  Usage:
+    sudo -H -u edxapp bash
+    cd ~
+    source edxapp_env
+    source venvs/edxapp/bin/activate
+    cd edx-platform
+    python manage.py lms params initialize "Canvas via Willo for ABC University"
 """
-import json
 from django.core.management.base import BaseCommand
-from common.djangoapps.third_party_auth.lti_consumers.gradesync import LTIGradeSync
 from common.djangoapps.third_party_auth.lti_consumers.constants import (
     LTI_CACHE_TABLES,
     LTI_PARAMS_DEFAULT_CONFIGURATION
@@ -34,7 +35,7 @@ class Command(BaseCommand):
       parser.add_argument(
             'command',
             type=str,
-            help='LTI Grade Sync command: initialize'
+            help='LTI Grade Sync commands: initialize'
             )
 
       parser.add_argument(
@@ -47,6 +48,11 @@ class Command(BaseCommand):
         cmd = kwargs['command'].lower()
         name = kwargs['name']
 
+        print('Received these parameters. command: {command}, name: {name}'.format(
+            command=cmd,
+            name=name
+        ))
+
         if cmd not in VALID_COMMANDS:
             print('Valid commands include: {commands}'.format(
                 commands=json.dumps(VALID_COMMANDS)
@@ -54,20 +60,26 @@ class Command(BaseCommand):
             return
 
         if cmd == 'initialize':
-            self.params_initialize()
+            self.params_initialize(name)
             return
 
-    def params_initialize()
+    def params_initialize(self, name):
 
         configuration = LTIConfigurations(
             name=name,
-            comment='auto-initialized by manage.py'
+            comments='auto-initialized by manage.py'
         )
         configuration.save()
 
-        for table in LTI_CACHE_TABLES:
-            params = LTI_CACHE_TABLES[table]
+        for table in LTI_PARAMS_DEFAULT_CONFIGURATION:
+            print('table: {table}'.format(table=table))
+            params = LTI_PARAMS_DEFAULT_CONFIGURATION[table]
             for param in params:
+                print('inserting: {table}, {param}, {value}'.format(
+                    table=table,
+                    param=param,
+                    value=params[param]
+                ))
                 configuration_parameter = LTIConfigurationParams(
                     configuration=configuration,
                     table_name=table,
