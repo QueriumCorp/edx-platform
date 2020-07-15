@@ -62,11 +62,10 @@ class LTIConfigurations(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI Configurations"
         verbose_name_plural = verbose_name
-        unique_together = [['id']]
         #ordering = ('-fetched_at', )
 
     def __str__(self):
-        return self.course_id.html_id()
+        return self.name
 
 class LTIConfigurationParams(TimeStampedModel):
     """
@@ -86,14 +85,14 @@ class LTIConfigurationParams(TimeStampedModel):
         null=False,
         )
 
-    external_field = models.CharField(
+    internal_field = models.CharField(
         help_text="Example: ext_wl_launch_key",
         max_length=255,
         blank=True,
         null=False,
         )
 
-    internal_field = models.CharField(
+    external_field = models.CharField(
         help_text="Example: ext_wl_launch_key",
         max_length=255,
         blank=True,
@@ -105,11 +104,10 @@ class LTIConfigurationParams(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI Configurations"
         verbose_name_plural = verbose_name
-        unique_together = [['id']]
         #ordering = ('-fetched_at', )
 
     def __str__(self):
-        return self.course_id.html_id()
+        return self.table_name + '.' + self.internal_field
 
 class LTIInternalCourse(TimeStampedModel):
     """
@@ -137,7 +135,6 @@ class LTIInternalCourse(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI Internal Rover Course"
         verbose_name_plural = verbose_name + "s"
-        unique_together = [['course_id']]
         #ordering = ('-fetched_at', )
 
     def __str__(self):

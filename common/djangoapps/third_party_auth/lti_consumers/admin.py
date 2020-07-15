@@ -12,6 +12,10 @@ from __future__ import absolute_import
 from django.contrib import admin
 
 from .models import (
+    LTIInternalCourse,
+    LTIConfigurations,
+    LTIConfigurationParams,
+
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
     LTIExternalCourseEnrollmentGrades,
@@ -19,10 +23,57 @@ from .models import (
     LTIExternalCourseAssignmentProblems,
     )
 
+class LTIInternalCourseAdmin(admin.ModelAdmin):
+    """
+    LTI Grade Sync - Internal Course
+    """
+    list_display = (
+        'course_id',
+        'enabled',
+        'lti_configuration',
+        'created',
+        'modified',
+    )
+    readonly_fields=(u'created', u'modified' )
+
+admin.site.register(LTIInternalCourse, LTIInternalCourseAdmin)
+
+class LTIConfigurationsAdmin(admin.ModelAdmin):
+    """
+    LTI Grade Sync - Configurations
+    """
+    list_disply = (
+        'id',
+        'name',
+        'created',
+        'modified',
+        'comments',
+    )
+    readonly_fields=(u'created', u'modified' )
+
+admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
+
+class LTIConfigurationParamsAdmin(admin.ModelAdmin):
+    """
+    LTI Grade Sync - Configuration Parameters
+    """
+    list_display = (
+        'id',
+        'configuration',
+        'table_name',
+        'internal_field',
+        'external_field',
+        'created',
+        'modified',
+        'comments',
+    )
+    readonly_fields=(u'created', u'modified' )
+
+admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
 
 class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
-    LTI Willo Labs - Course
+    LTI Grade Sync - Course
     """
     list_display = (
         'context_id',
@@ -51,7 +102,7 @@ admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
 
 class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
     """
-    LTI Willo Labs - Course Enrollment
+    LTI Grade Sync - Course Enrollment
     """
     list_display = (
         'course',
@@ -68,14 +119,14 @@ class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
         'lis_person_name_family',
         'lis_person_name_full',
         'lis_person_name_given',
-    )      
+    )
     readonly_fields=(u'created', u'modified' )
 
 admin.site.register(LTIExternalCourseEnrollment, LTIExternalCourseEnrollmentAdmin)
 
 class LTIExternalCourseEnrollmentGradesAdmin(admin.ModelAdmin):
     """
-    LTI Willo Labs - Course Enrollment, Grades
+    LTI Grade Sync - Course Enrollment, Grades
     """
     list_display = (
         'id',
@@ -97,7 +148,7 @@ admin.site.register(LTIExternalCourseEnrollmentGrades, LTIExternalCourseEnrollme
 
 class LTIExternalCourseAssignmentProblemsAdmin(admin.ModelAdmin):
     """
-    LTI Willo Labs - Course Assignment Problems
+    LTI Grade Sync - Course Assignment Problems
     """
     list_display = (
         'course_assignment',
@@ -111,7 +162,7 @@ admin.site.register(LTIExternalCourseAssignmentProblems, LTIExternalCourseAssign
 
 class LTIExternalCourseAssignmentsAdmin(admin.ModelAdmin):
     """
-    LTI Willo Labs - Course Assignments
+    LTI Grade Sync - Course Assignments
     """
     list_display = (
         'course',
