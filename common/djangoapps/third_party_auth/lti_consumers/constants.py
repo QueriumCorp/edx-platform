@@ -60,6 +60,13 @@ LTI_CACHE_TABLES = (
     'LTIExternalCourseAssignments',
     'LTIExternalCourseAssignmentProblems'
 )
+LTI_CACHE_TABLES_LIST = [
+            ('LTIExternalCourse', 'LTIExternalCourse'),
+            ('LTIExternalCourseEnrollment', 'LTIExternalCourseEnrollment'),
+            ('LTIExternalCourseEnrollmentGrades', 'LTIExternalCourseEnrollmentGrades'),
+            ('LTIExternalCourseAssignments', 'LTIExternalCourseAssignments'),
+            ('LTIExternalCourseAssignmentProblems', 'LTIExternalCourseAssignmentProblems'),
+        ]
 
 LTI_PARAMS_DEFAULT_CONFIGURATION = {
     "LTIExternalCourse": {

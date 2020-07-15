@@ -51,7 +51,7 @@ class LTIConfigurationsAdmin(admin.ModelAdmin):
     )
     readonly_fields=(u'created', u'modified' )
 
-admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
+admin.site.register(LTIConfigurations, LTIConfigurationsAdmin)
 
 class LTIConfigurationParamsAdmin(admin.ModelAdmin):
     """
@@ -69,7 +69,7 @@ class LTIConfigurationParamsAdmin(admin.ModelAdmin):
     )
     readonly_fields=(u'created', u'modified' )
 
-admin.site.register(LTIExternalCourse, LTIExternalCourseAdmin)
+admin.site.register(LTIConfigurationParams, LTIConfigurationParamsAdmin)
 
 class LTIExternalCourseAdmin(admin.ModelAdmin):
     """

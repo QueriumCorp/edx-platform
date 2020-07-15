@@ -26,7 +26,7 @@ from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
-from .constants import LTI_CACHE_TABLES
+from .constants import LTI_CACHE_TABLES_LIST
 """
 https://github.com/edx/opaque-keys
 https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
@@ -80,7 +80,7 @@ class LTIConfigurationParams(TimeStampedModel):
     table_name = models.CharField(
         help_text="Example: LTIExternalCourseEnrollment",
         max_length=255,
-        choices=LTI_CACHE_TABLES,
+        choices=LTI_CACHE_TABLES_LIST,
         blank=True,
         null=False,
         )
@@ -120,6 +120,7 @@ class LTIInternalCourse(TimeStampedModel):
         help_text="Rover Course Key (Opaque Key). " \
             "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
         blank=False,
+        default=None,
         primary_key=True
         )
 
@@ -130,7 +131,12 @@ class LTIInternalCourse(TimeStampedModel):
         help_text="True if LTI Grade Sync should be enabled for courses in this institution."
         )
 
-    lti_configuration = models.ForeignKey(LTIConfigurations, on_delete=models.SET_NULL)
+    lti_configuration = models.ForeignKey(
+        LTIConfigurations,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text="Field mapping configuration to use for this Rover course."
+        )
 
     class Meta(object):
         verbose_name = "LTI Internal Rover Course"
@@ -140,17 +146,17 @@ class LTIInternalCourse(TimeStampedModel):
     def __str__(self):
         return self.course_id.html_id()
 
-   def clean(self, *args, **kwargs):
-       """Improvising a way to do a Fk constraint on the course_id
+    def clean(self, *args, **kwargs):
+        """Improvising a way to do a Fk constraint on the course_id
 
-       Raises:
-           ValidationError: [description]
-       """
+        Raises:
+            ValidationError: [description]
+        """
+        super(LTIInternalCourse, self).clean(*args, **kwargs)
         try:
             is_this_a_valid_course_key = CourseKey.from_string(self.course_id)
         except InvalidKeyError:
             raise ValidationError('Not a valid course key.')
-        super(LTIInternalCourse, self).clean(*args, **kwargs)
 
 """
 ---------------------------------------------------------------------------------------------------------
@@ -180,11 +186,12 @@ class LTIExternalCourse(TimeStampedModel):
         help_text="True if grade results for this course should be posted to Willo Labs Grade Sync API."
         )
 
-    course_id = ForeignKey(
+    course_id = models.ForeignKey(
         LTIInternalCourse,
-        on_delete=models.SET_NULL
+        null=True,
+        on_delete=models.SET_NULL,
         help_text="Rover Course Key (Opaque Key). " \
-            "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
+            "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course"
         )
 
     context_title = models.CharField(
