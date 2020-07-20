@@ -304,14 +304,14 @@ def willo_api_get(url, assignment_id, user_id):
 
     return None
 
-def willo_api_authorization_token():
+def LTI_CONSUMER_API_AUTHORIZATION_TOKEN():
     """
      Returns a Willo Labs api authentication token
      example: qHT28EAgrxa1234567890abcdefghij2eRC8hdua
     """
-    if DEBUG: log.info('willo_api_authorization_token()')
+    if DEBUG: log.info('LTI_CONSUMER_API_AUTHORIZATION_TOKEN()')
 
-    token = settings.WILLO_API_AUTHORIZATION_TOKEN
+    token = settings.LTI_CONSUMER_API_AUTHORIZATION_TOKEN
     return token
 
 def willo_api_headers(key, value):
@@ -320,7 +320,7 @@ def willo_api_headers(key, value):
     """
     headers = {}
     headers['Authorization'] = 'Token {secret}'.format(
-            secret = willo_api_authorization_token()
+            secret = LTI_CONSUMER_API_AUTHORIZATION_TOKEN()
         )
     headers[key] = value
 

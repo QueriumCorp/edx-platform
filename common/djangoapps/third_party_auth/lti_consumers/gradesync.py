@@ -151,7 +151,7 @@ class LTIGradeSync:
             return None
 
         # iterate the chapters and sections of the course, post
-        # assignments to LTI Consumer Grade sync if the assignment meets all criteria.
+        # assignments to LTI Grade Sync if the assignment meets all criteria.
         #
         # chapters and chapter sections are both stored as dictionaries of key/value pairs,
         # with the "value" itself being a dictionary.
@@ -172,7 +172,7 @@ class LTIGradeSync:
 
     def prepare_and_post_grade(self, student, section):
         """
-         Transform the section grade data into a LTI Consumer grade sync payload dictionary, then post the grade.
+         Transform the section grade data into a LTI Grade Sync payload dictionary, then post the grade.
         """
         section_grade = section.get('section_grade')
         url = get_ext_wl_outcome_service_url(self.course_id, self.context_id)
@@ -378,12 +378,12 @@ class LTIGradeSync:
         msg += u'\r\n'
         msg += u'\r\n'
         msg += color.BOLD
-        msg += u'     Using Willo Labs api token: ' + color.DARKCYAN + settings.WILLO_API_AUTHORIZATION_TOKEN + color.END
+        msg += u'     Using Willo Labs api token: ' + color.DARKCYAN + settings.LTI_CONSUMER_API_AUTHORIZATION_TOKEN + color.END
         msg += u'\r\n'
         msg += u'\r\n'
         msg += u'     This api token is provided directly by Willo Labs staff. It is\n\r'
         msg += u'     referenced in the source code as\n\r'
-        msg += u'              WILLO_API_AUTHORIZATION_TOKEN\n\r'
+        msg += u'              LTI_CONSUMER_API_AUTHORIZATION_TOKEN\n\r'
         msg += u'     and is stored in the following two Python settings files:\n\r'
         msg += u'     /edx/app/edxapp/edx-platform/lms/envs/production.py\n\r'
         msg += u'     /edx/app/edxapp/edx-platform/cms/envs/production.py\n\r'

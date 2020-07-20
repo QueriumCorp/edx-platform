@@ -392,7 +392,7 @@ class CourseProvisioner(object):
 
     @property
     def session(self):
-        """Cache manager for LTI Consumer Grade Sync cache.
+        """Cache manager for LTI Grade Sync cache.
 
         Raises:
             LTIBusinessRuleError: raises exception if lti_params, user or course_id is None.

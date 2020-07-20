@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-LTI Consumer Grade Sync
+LTI Grade Sync
 
 Written by: mcdaniel
             https://lawrencemcdaniel.com

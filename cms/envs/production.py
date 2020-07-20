@@ -605,7 +605,7 @@ ROVERBYOPENSTAX_BACKEND_USER_QUERY = 'https://roverbyopenstax.org/o/api/users?'
 ROVERBYOPENSTAX_BACKEND_USERS_QUERY = 'https://roverbyopenstax.org/o/api/users?'
 
 # mcdaniel jan-2020: Fixed Willo api token assigned by Willo Labs staff.
-WILLO_API_AUTHORIZATION_TOKEN = roversecrets.WILLO_API_AUTHORIZATION_TOKEN
+LTI_CONSUMER_API_AUTHORIZATION_TOKEN = roversecrets.WILLO_API_AUTHORIZATION_TOKEN
 
 """
 mcdaniel aug-2019
