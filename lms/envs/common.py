@@ -1154,7 +1154,10 @@ SESSION_COOKIE_NAME = 'sessionid'
 
 # django-session-cookie middleware
 DCS_SESSION_COOKIE_SAMESITE = 'None'
-DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = True
+
+# mcdaniel: switched from True to False bc this breaks oauth
+# via OpenStax
+DCS_SESSION_COOKIE_SAMESITE_FORCE_ALL = False
 
 # CMS base
 CMS_BASE = 'localhost:18010'
