@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-  Willo LTI Grade Sync tables
+  LTI Grade Sync tables
 
   Written by:   mcdaniel
                 lpm0073@gmail.com

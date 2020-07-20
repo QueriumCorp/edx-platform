@@ -1,4 +1,4 @@
-"""Willo Labs Grade Sync API calls
+"""LTI Grade Sync API calls
 and convenience functions.
 """
 
@@ -37,7 +37,7 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
     if type(dte) == datetime.datetime: return dte.isoformat()
 
     if type(dte) == str: return datetime.datetime.strptime(date_string=dte, format=format).isoformat()
-        
+
     log.error('willo_date() - received an expected data type: {type}, value: {value}'.format(
         type=type(dte),
         value=dte
@@ -57,11 +57,11 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
     """
         Payload format:
             data = {
-                'due_date': '2020-04-29T04:59:00+00:00', 
-                'description': u'Lesson 4.5', 
-                'title': u'Lesson 4.5', 
-                'points_possible': 5.0, 
-                'type': , 
+                'due_date': '2020-04-29T04:59:00+00:00',
+                'description': u'Lesson 4.5',
+                'title': u'Lesson 4.5',
+                'points_possible': 5.0,
+                'type': ,
                 'id': u'd7f67eb52e424909ba5ae7154d767a13'
             }
 
@@ -80,7 +80,7 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
 
     if not ext_wl_outcome_service_url:
         raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: ext_wl_outcome_service_url has not been set for this course. Cannot continue.')
-    
+
     if not data:
         raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: data dict is missing or null. Cannot continue.')
 
@@ -117,36 +117,36 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
 def willo_api_create_column(ext_wl_outcome_service_url, data):
     """
      Willo Grade Sync api.
-     Add a new grade column to the LMS grade book. 
+     Add a new grade column to the LMS grade book.
      returns True if the return code is 200 or 201, False otherwise.
 
-    ext_wl_outcome_service_url: 
+    ext_wl_outcome_service_url:
         Provided by tpa_params dictionary from an LTI authentication, and cached in LTIExternalCourse.
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
         example:  https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
 
     Payload format:
         data = {
-            'due_date': '2020-04-29T04:59:00+00:00', 
-            'description': u'Lesson 4.5', 
-            'title': u'Lesson 4.5', 
-            'points_possible': 5.0, 
-            'type': , 
+            'due_date': '2020-04-29T04:59:00+00:00',
+            'description': u'Lesson 4.5',
+            'title': u'Lesson 4.5',
+            'points_possible': 5.0,
+            'type': ,
             'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
     Curl equivalent:
-    -------------------------     
+    -------------------------
     curl -v -X POST https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/ \
         -H "Content-Type: application/vnd.willolabs.outcome.activity+json" \
         -H "Authorization: Token sampleaccesstoken" \
         -d \
     '{
-            'due_date': '2020-04-29T04:59:00+00:00', 
-            'description': u'Lesson 4.5', 
-            'title': u'Lesson 4.5', 
-            'points_possible': 5.0, 
-            'type': 'activity', 
+            'due_date': '2020-04-29T04:59:00+00:00',
+            'description': u'Lesson 4.5',
+            'title': u'Lesson 4.5',
+            'points_possible': 5.0,
+            'type': 'activity',
             'id': u'd7f67eb52e424909ba5ae7154d767a13'
     }'
 
@@ -157,7 +157,7 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
 
     if not ext_wl_outcome_service_url:
         raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: ext_wl_outcome_service_url has not been set for this course. Cannot continue.')
-    
+
     if not data:
         raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing or null. Cannot continue.')
 
@@ -206,7 +206,7 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
     Willo api returns 200 if the grade was posted.
     returns True if the return code is 200, False otherwise.
 
-    ext_wl_outcome_service_url: 
+    ext_wl_outcome_service_url:
         Provided by tpa_params dictionary from an LTI authentication, and cached in LTIExternalCourse.
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
         example: https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
@@ -214,12 +214,12 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
 
     Payload format:
         data = {
-            'activity_id': u'lesson45', 
-            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce', 
-            'points_possible': 5.0, 
-            'score': 0.5, 
-            'result_date': '2020-04-24T19:12:19.454723+00:00', 
-            'type': 'result', 
+            'activity_id': u'lesson45',
+            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce',
+            'points_possible': 5.0,
+            'score': 0.5,
+            'result_date': '2020-04-24T19:12:19.454723+00:00',
+            'type': 'result',
             'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
@@ -238,7 +238,7 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
             "type": "result",
             "user_id": "7010d877b3b74f39a6cbf89f9c3819ce"
         }'
-    
+
     """
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_post_grade()')
 
@@ -262,7 +262,7 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
 
     return response.status_code
 
-    
+
 def willo_api_get(url, assignment_id, user_id):
     """
      Willo Grade Sync api.

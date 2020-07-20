@@ -21,8 +21,8 @@ from opaque_keys.edx.keys import CourseKey
 from .exceptions import LTIBusinessRuleError
 from .constants import (
     LTI_PARAMS_DEFAULT_CONFIGURATION,
-    WILLO_INSTRUCTOR_ROLES,
-    WILLO_DOMAINS,
+    LTI_INSTRUCTOR_ROLES,
+    LTI_DOMAINS,
     LTI_CACHE_TABLES
     )
 from .models import (
@@ -129,7 +129,7 @@ class LTIParams(object):
                 user_roles = {x.strip() for x in role_param.split(',')}
                 # check if the lti_params represent an instructor
                 # use python set intersection operator "&" to simplify the check
-                is_instructor = bool(user_roles & WILLO_INSTRUCTOR_ROLES)
+                is_instructor = bool(user_roles & LTI_INSTRUCTOR_ROLES)
                 if is_instructor:
                     return "confirmed_faculty"
 
@@ -143,7 +143,7 @@ class LTIParams(object):
             log.info('LTIParams.faculty_status - found roles: {roles}'.format(
                 roles=self.roles
                 ))
-            if self.roles in WILLO_INSTRUCTOR_ROLES:
+            if self.roles in LTI_INSTRUCTOR_ROLES:
                 return "confirmed_faculty"
 
 
@@ -157,7 +157,7 @@ class LTIParams(object):
             log.info('LTIParams.faculty_status - found ext_roles: {roles}'.format(
                 roles=self.ext_roles
                 ))
-            if self.ext_roles in WILLO_INSTRUCTOR_ROLES:
+            if self.ext_roles in LTI_INSTRUCTOR_ROLES:
                 return "confirmed_faculty"
 
         return "no_faculty_info"
@@ -191,7 +191,7 @@ class LTIParams(object):
             pass
             return False
 
-        if not launch_domain in WILLO_DOMAINS:
+        if not launch_domain in LTI_DOMAINS:
             if DEBUG: log.info('LTIParams.is_willolabs() - invalid launch_domain {launch_domain}. returning False'.format(
                 launch_domain=launch_domain
             ))
@@ -207,7 +207,7 @@ class LTIParams(object):
         whether the session originated from Willo Labs.
 
         True if there is a parameter named "ext_wl_launch_url" and the value is a
-        valid URL, and the hostname of the URL is contained in the set WILLO_DOMAINS
+        valid URL, and the hostname of the URL is contained in the set LTI_DOMAINS
         """
 
         if DEBUG: log.info('LTIParams.is_valid() - beginning validation')

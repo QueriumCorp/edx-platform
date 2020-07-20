@@ -12,13 +12,13 @@
 from __future__ import absolute_import
 import os
 
-WORKING_PATH = os.path.dirname(os.path.abspath(__file__))
+#WORKING_PATH = os.path.dirname(os.path.abspath(__file__))
 
 # from the LTI role vocabulary
 # https://www.imsglobal.org/specs/ltiv1p1/implementation-guide#toc-8
 # you need to decide which roles you'll treat as instructor, but here is
 # a reasonable starting point
-WILLO_INSTRUCTOR_ROLES = set((
+LTI_INSTRUCTOR_ROLES = set((
     'Instructor',
     'urn:lti:role:ims/lis/Instructor',
     'urn:lti:instrole:ims/lis/Instructor',
@@ -36,7 +36,7 @@ WILLO_INSTRUCTOR_ROLES = set((
 
 # each of the following is an example of what can be expected in
 # a single LTI message
-WILLO_ROLES_PARAM_EXAMPLES = (
+LTI_ROLES_PARAM_EXAMPLES = (
     'Learner',
     'urn:lti:instrole:ims/lis/Student,Student,urn:lti:instrole:ims/lis/Learner,Learner',
     'Instructor',
@@ -45,7 +45,7 @@ WILLO_ROLES_PARAM_EXAMPLES = (
     'urn:lti:instrole:ims/lis/Administrator'
 )
 
-WILLO_DOMAINS = (
+LTI_DOMAINS = (
     'test.willolabs.com',
     'stage.willolabs.com',
     'app.willolabs.com',

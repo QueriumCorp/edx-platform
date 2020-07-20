@@ -876,8 +876,8 @@ class LTISession(object):
 
         # property initializations from lti_params
         if self._lti_params is not None:
-            self._context_id = self._lti_params.context_id          # uniquely identifies course in Willo
-            self.user_id = self._lti_params.user_id                 # uniquely identifies user in Willo
+            self._context_id = self._lti_params.context_id          # uniquely identifies course in LTI Consumer
+            self.user_id = self._lti_params.user_id                 # uniquely identifies user in LTI Consumer
 
 
     @property

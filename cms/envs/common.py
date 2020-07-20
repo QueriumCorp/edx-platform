@@ -1437,7 +1437,7 @@ INSTALLED_APPS = [
     'oauth2_provider',
 
     # mcdaniel dec-2019
-    # add Willo Labs LTI Grade Sync module
+    # add LTI Grade Sync module
     'common.djangoapps.third_party_auth.lti_consumers',
 
     # These are apps that aren't strictly needed by Studio, but are imported by
