@@ -150,7 +150,7 @@ class LTIParams(object):
         # 3. check for ext_roles list
         """
         mcdaniel feb-2020
-        example from Willo Labs
+        example:
         "ext_roles": "urn:lti:instrole:ims/lis/Student,urn:lti:role:ims/lis/Learner,urn:lti:sysrole:ims/lis/User",
         """
         if self.ext_roles:
@@ -450,7 +450,7 @@ def get_course_id_from_tpa_next(lti_params):
 
 def get_lti_user_id(course_id, username, context_id=None):
     """
-    Retrieve the Willo Labs user_id assigned to Rover username for course_id.
+    Retrieve the LTI Consumer user_id assigned to Rover username for course_id.
     This is passed in tpa_params during LTI authentication and cached.
     """
 
@@ -495,7 +495,7 @@ def get_lti_user_id(course_id, username, context_id=None):
 
 def get_ext_wl_outcome_service_url(course_id, context_id=None):
     """
-    Retrieve a Willo Labs outcome service URL from the LTI cache.
+    Retrieve an LTI Consumer outcome service URL from the LTI cache.
     This is passed in tpa_params during LTI authentication and cached.
     """
     if context_id is not None:

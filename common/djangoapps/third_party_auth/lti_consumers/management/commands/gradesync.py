@@ -5,7 +5,7 @@ u"""
 
   Date:         Jan-2020
 
-  Willo Labs Grade Sync.
+  LTI Grade Sync
   Process all assignment grades from all students enrolled in course_id
 
   https://dev.roverbyopenstax.org/grades_api/v2/courses/course-v1:ABC+OS9471721_9626+01/
@@ -19,7 +19,7 @@ from django.core.management.base import BaseCommand
 from common.djangoapps.third_party_auth.lti_consumers.gradesync import LTIGradeSync
 
 class Command(BaseCommand):
-    help = u"Willo Labs Grade Sync. Sync Rover grades to Host LMS via Willo Labs for all students, all assignments. Includes all active Willo Labs Grade Sync-supported courses."
+    help = u"LTI Grade Sync. Sync Rover grades to LTI Consumer for all students, all assignments. Includes all active Willo Labs Grade Sync-supported courses."
 
     def add_arguments(self, parser):
         parser.add_argument(

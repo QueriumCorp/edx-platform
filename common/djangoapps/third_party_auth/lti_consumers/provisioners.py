@@ -46,26 +46,26 @@ DEBUG = settings.ROVER_DEBUG
 class CourseProvisioner(object):
     """Instantiated during LTI authentication. Try to enroll user in a Rover course
     based on information received in the lti_params object from LTI authentication http response.
-    
+
     Arguments:
         object {object} -- this is required to implement properties.
-    
+
     Raises:
         LTIBusinessRuleError
-    
+
     """
     def __init__(self, user, lti_params, course_id=None):
         """Bootstrap the class initialization by validating and setting lti_params
         and then using its contents to set other properties in the class.
-        
+
         Arguments:
             user {User} -- CourseProvisioner is intended to be called from third_party_auth.pipeline
             at a point where authentication has completed and the User object has been
-            assigned. 
+            assigned.
 
             lti_params {dict} -- received during LTI authentication.
             see https://readthedocs.roverbyopenstax.org/en/latest/how_to/lti.html#tpa-lti-params
-        
+
         Keyword Arguments:
             course_id {string} - (default: {None}). course_id can usually be retrieved from the LTI cache
             using context_id. Alternatively, we can also check the user's enrollment data.
@@ -110,7 +110,7 @@ class CourseProvisioner(object):
     def check_enrollment(self):
         """Verify that the student is enrolled in the Rover course corresponding to the context_id
         in lti_params. If not, then automatically enroll the student in the course.
-        
+
         Returns:
             [Boolean] -- returns True if the student is (or just became) enrolled
             in course_id
@@ -121,7 +121,7 @@ class CourseProvisioner(object):
 
         if DEBUG: log.info('CourseProvisioner.check_enrollment() course_id is set. continuing.')
 
-        # if we have a course_id for the user and 
+        # if we have a course_id for the user and
         if not CourseEnrollment.is_enrolled(self.user, self.course_id):
             retval = CourseEnrollment.enroll(self.user, self.course_id)
             if not retval:
@@ -142,7 +142,7 @@ class CourseProvisioner(object):
                     course_id=self.course_id
                 ))
 
-        # cache our mappings between 
+        # cache our mappings between
         #   Rover course_id and the LTI context_id
         #   Rover username and LTI user_id
         self.session.register_enrollment()
@@ -165,11 +165,11 @@ class CourseProvisioner(object):
     @lti_params.setter
     def lti_params(self, value):
         """ensure that this object is being instantiated with data that originated
-        from an LTI authentication from Willo Labs.
-        
+        from an LTI authentication.
+
         Arguments:
             value {dict or LTIParams}
-        
+
         Raises:
             LTIBusinessRuleError
         """
@@ -196,8 +196,8 @@ class CourseProvisioner(object):
         else:
             self._lti_params = None
 
-        # if we're initialized then pre-populate anything that can 
-        # originate from the lti_params dictionary. note that 
+        # if we're initialized then pre-populate anything that can
+        # originate from the lti_params dictionary. note that
         # we we're not calling the setters in order to avoid
         # potential thrashing.
         if self.lti_params:
@@ -207,7 +207,7 @@ class CourseProvisioner(object):
     @property
     def context_id(self):
         """read-only context_id
-        
+
         Returns:
             [string]
         """
@@ -216,10 +216,10 @@ class CourseProvisioner(object):
     @context_id.setter
     def context_id(self, value):
         """read-only context_id
-        
+
         Arguments:
             value {any}
-        
+
         Raises:
             LTIBusinessRuleError: raises an exception if called
         """
@@ -233,10 +233,10 @@ class CourseProvisioner(object):
     @user.setter
     def user(self, value):
         """Verify that value passed is an instace of the User class. The set the value.
-        
+
         Arguments:
             value {User} -- Modified Django User class from common.student.models
-        
+
         Raises:
             LTIBusinessRuleError: raises an exception on type mismatch.
         """
@@ -249,7 +249,7 @@ class CourseProvisioner(object):
             raise LTIBusinessRuleError('CourseProvisioner.set_user() was expecting a User object but received an object of type {dtype}'.format(
                 dtype=type(value)
             ))
-            
+
         # if user is not yet logged in then we'll receive an Anonymous user object type
         # that is not iterable and has no enrollments.
         if value.is_anonymous:
@@ -270,12 +270,12 @@ class CourseProvisioner(object):
         student's enrollment information; but only if the student is currently
         enrolled in exactly 1 course. Otherwise look for the course in the LTI cache
         using the LTI context_id.
-        
+
         Returns:
             [course_id] -- a string representation of a CourseKey
         """
         if self._course_id is not None:
-            return self._course_id 
+            return self._course_id
 
         # NOTE: in a normal use case none of these initialization methods will be utilized.
         # course_id is set in __init__() from lti_params. thus, if we find ourselves here
@@ -327,16 +327,16 @@ class CourseProvisioner(object):
 
         Arguments:
             value {string} -- a string representation of a CourseKey
-        
+
         Raises:
             LTIBusinessRuleError: raises exception if course_id is not a valid CourseKey.
         """
         if DEBUG: log.info('CourseProvisioner.set_course_id()')
         if value is None:
-            self._course_id = None 
+            self._course_id = None
             self._session = None
-            return 
-        
+            return
+
         if value == self._course_id:
             return
 
@@ -359,13 +359,13 @@ class CourseProvisioner(object):
     @property
     def enrollments(self):
         """a list of active Rover courses which the user is currently enrolled.
-        Uses common.student.models.CourseEnrollment 
+        Uses common.student.models.CourseEnrollment
 
         Returns:
             [list] -- List of courses in which the student is currently enrolled.
         """
         if self._enrollments is not None:
-            return self._enrollments 
+            return self._enrollments
 
         if DEBUG: log.info('CourseProvisioner.get_enrollments() -- trying to self-initialize...')
 
@@ -383,7 +383,7 @@ class CourseProvisioner(object):
                 err=e.description
             ))
             pass
-        
+
         return None
 
     @enrollments.setter
@@ -392,11 +392,11 @@ class CourseProvisioner(object):
 
     @property
     def session(self):
-        """Cache manager for Willo Lab LTI cache.
-        
+        """Cache manager for LTI Consumer Grade Sync cache.
+
         Raises:
             LTIBusinessRuleError: raises exception if lti_params, user or course_id is None.
-        
+
         Returns:
             [LTISession]
         """
@@ -406,7 +406,7 @@ class CourseProvisioner(object):
 
         if DEBUG: log.info('CourseProvisioner.get_session() -- creating a new LTISession')
 
-        
+
         if not self.lti_params:
             raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTISession but lti_params is not set.')
 
@@ -418,7 +418,7 @@ class CourseProvisioner(object):
 
         self._session = LTISession(
             lti_params = self.lti_params.dictionary,
-            user = self.user, 
+            user = self.user,
             course_id = self.course_id
             )
         return self._session
@@ -426,10 +426,10 @@ class CourseProvisioner(object):
     @session.setter
     def session(self, value):
         """Make session a read-only property
-        
+
         Arguments:
             value {any}
-        
+
         Raises:
             LTIBusinessRuleError: raises exception if called.
         """

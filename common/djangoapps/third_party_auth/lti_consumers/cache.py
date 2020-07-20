@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Manages cached course and enrollment relationship data between Rover
-and External platforms like Canvas, Blackboard and Moodle via Willo Labs
+and External platforms like Canvas, Blackboard and Moodle
 
 Raises:
     LTIBusinessRuleError
@@ -43,11 +43,11 @@ DEBUG = settings.ROVER_DEBUG
 
 class LTISession(object):
     """Used during LTI authentication from external platforms connecting to Rover via
-    Willo Labs. Persists external course and enrollment data provided during LTI authentication
+    LTI authentication. Persists external course and enrollment data provided during LTI authentication
     in the http response body, in a json object named lti_params. Establishes the
     relationships between external courses/users and the corresponding Rover courses/users.
     These relationships are required by Rover's Grade Sync, so that we can send
-    Grade Sync requests to the Willo Lab api.
+    Grade Sync requests to the LTI Consumer.
 
     Arguments:
         object {object} -- required to implement Python properties

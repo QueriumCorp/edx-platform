@@ -36,7 +36,7 @@ from .subsection_grade_factory import SubsectionGradeFactory
 from .transformer import GradesTransformer
 
 # mcdaniel dec-2019
-# Willo Labs Grade Sync
+# LTI Grade Sync
 from common.djangoapps.third_party_auth.lti_consumers.tasks import post_grades
 from common.djangoapps.third_party_auth.lti_consumers.utils import is_lti_gradesync_enabled
 

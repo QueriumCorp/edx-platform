@@ -1,7 +1,7 @@
 #from __future__ import absolute_import
 # -*- coding: utf-8 -*-
 """
-  LTI Integration for Willo Labs Grade Sync.
+  LTI Integration for Grade Sync.
   Models used to implement LTI External support in third_party_auth
 
   Written by:   mcdaniel
@@ -166,12 +166,12 @@ LTI Grade Sync - Phase I models
 class LTIExternalCourse(TimeStampedModel):
     """
     Phase I model
-    Course data originating from Willo Labs LTI authentications by students entering Rover
+    Course data originating from LTI Consumer authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
     """
     context_id = models.CharField(
         #verbose_name="Context ID",
-        help_text="This is the unique identifier of the Willo Labs integration, passed via" \
+        help_text="This is the unique identifier of the LTI Consumer integration, passed via" \
             "from tpa-lti-params. Course runs from external LMS' are intended to be unique." \
             "Example: e14751571da04dd3a2c71a311dda2e1b",
         max_length=255,
@@ -183,7 +183,7 @@ class LTIExternalCourse(TimeStampedModel):
         default=False,
         null=False,
         blank=False,
-        help_text="True if grade results for this course should be posted to Willo Labs Grade Sync API."
+        help_text="True if grade results for this course should be posted to LTI Grade Sync API."
         )
 
     course_id = models.ForeignKey(
@@ -196,7 +196,7 @@ class LTIExternalCourse(TimeStampedModel):
 
     context_title = models.CharField(
         #verbose_name="Context Title",
-        help_text="Name of the Willo Lab integration. Example: Willo Labs Test Launch for KU Blackboard Rover Grade Testing",
+        help_text="Name of the LTI Consumer integration. Example: Willo Labs Test Launch for KU Blackboard Rover Grade Testing",
         max_length=255,
         default=None,
         blank=True,
@@ -398,7 +398,7 @@ class LTIExternalCourseAssignmentProblems(TimeStampedModel):
 class LTIExternalCourseEnrollment(TimeStampedModel):
     """
     Phase I model
-    Course Enrollment data originating from Willo Labs LTI authentications by students entering Rover
+    Course Enrollment data originating from LTI Consumer authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
     """
@@ -413,7 +413,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     custom_user_id = models.CharField(
         #verbose_name="Canvas User ID",
-        help_text="User ID provided to Willo Labs. Example: 394",
+        help_text="User ID provided to LTI Consumer. Example: 394",
         max_length=25,
         default=None,
         blank=True,
@@ -422,7 +422,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     custom_user_login_id = models.CharField(
         #verbose_name="Canvas Username",
-        help_text="Login ID provided to Willo Labs. Example: rover_student",
+        help_text="Login ID provided to LTI Consumer. Example: rover_student",
         max_length=50,
         default=None,
         blank=True,
@@ -431,7 +431,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     custom_person_timezone = models.CharField(
         #verbose_name="Canvas user time zone",
-        help_text="Source system time zone from user's profile, provided to Willo Labs. Example: America/New_York",
+        help_text="Source system time zone from user's profile, provided to LTI Consumer. Example: America/New_York",
         max_length=50,
         default=None,
         blank=True,
@@ -449,7 +449,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 
     ext_wl_privacy_mode = models.CharField(
         #verbose_name="External WilloLab Privacy Mode",
-        help_text="Privacy settings from external system, provided to Willo Lab. Example: allow-pii-all",
+        help_text="Privacy settings from external system, provided to LTI Consumer. Example: allow-pii-all",
         max_length=50,
         default=None,
         blank=True,
@@ -509,7 +509,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
 class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     """
     Phase I model
-    Grade output from Course Enrollments originating from Willo Labs LTI authentications by students entering Rover
+    Grade output from Course Enrollments originating from LTI Consumer authentications by students entering Rover
     from a third party LMS like Canvas, Moodle, Blackboard, etc.
 
     This schema is modeled around grades.models.PersistentSubsectionGrade
@@ -521,7 +521,7 @@ class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     # First, insert the record. If we get a 200 response then update the record with the posting date.
     synched = models.DateTimeField(
         #verbose_name="Willo Posting Date",
-        help_text="The timestamp when this grade record was successfully posted to Willo Grade Sync.",
+        help_text="The timestamp when this grade record was successfully posted to LTI Grade Sync.",
         null=True,
         blank=True,
         )

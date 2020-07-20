@@ -66,13 +66,13 @@ class LTIGradeSync:
     """
     course_id = None        # a string. Example: course-v1:ABC+OS9471721_9626+01
     course_key = None       # a opaque_keys.edx.keys.CourseKey
-    context_id = None       # Willo Labs course identifier. Only used in cases where course_id is not unique. Example: e14751571da04dd3a2c71a311dda2e1b
+    context_id = None       # LTI consumer course identifier. Only used in cases where course_id is not unique. Example: e14751571da04dd3a2c71a311dda2e1b
 
     def __init__(self, course_id=None):
         if course_id is not None:
             self.course_id = course_id
             self.course_key = self.get_validated_coursekey()
-    
+
     def iterate_courses(self):
         """
          Iterate thru all LTI cached courses.
@@ -82,12 +82,12 @@ class LTIGradeSync:
         for course in self.get_courses():
             """
             set course_id and course_key from the CourseKey object in LTIExternalCourse
-            
+
             You can read more here about why the syntax below works:
             https://github.com/edx/edx-platform/wiki/Opaque-Keys-(Locators)
 
-            Note: we'll skip calling get_validated_coursekey() bc in this case we're beginning 
-            with a CourseKey from a confirmed Willo Labs LTI supported course
+            Note: we'll skip calling get_validated_coursekey() bc in this case we're beginning
+            with a CourseKey from a confirmed LTI Consumer supported course
             (since the course came directly from the LTI course cache.)
             """
             course_id = "{}".format(course.course_id)
@@ -100,7 +100,7 @@ class LTIGradeSync:
     def iterate_students(self):
         """
          Iterate thru collection of students enrolled in course_id.
-         Post grades to Willo Labs api.
+         Post grades to LTI Consumer.
         """
         if not self.course_key: raise LTIBusinessRuleError("course_id has not been set.")
 
@@ -122,19 +122,19 @@ class LTIGradeSync:
         """
          Retrieve a json object of grade data for student.
          Iterate through chapters / assignments for the course.
-         Post each assignment grade to Willo Labs api.
+         Post each assignment grade to LTI Consumer api.
         """
 
         if not self.course_key: raise LTIBusinessRuleError("CourseKey has not been set.")
         """
-         Prior to calling InternalCourseGradeView().get() we should to a sanity check on the 
+         Prior to calling InternalCourseGradeView().get() we should to a sanity check on the
          LTI cache data to see if this Rover user has ever authenticated via LTI. If not then
          we should just exit since we won't know the LTI user credentials.
         """
         if not is_lti_cached_user(student, self.context_id):
             self.console_output(u'    No LTI cache data for this user. Skipping.')
             return None
-        
+
         results = InternalCourseGradeView().get(course_id=self.course_id, username=student.username)
         self.console_output(u'    post_student_grades() - retrieved grades for {username} / {course_id}'.format(
             username=student.username,
@@ -151,7 +151,7 @@ class LTIGradeSync:
             return None
 
         # iterate the chapters and sections of the course, post
-        # assignments to Willo Labs Grade sync if the assignment meets all criteria.
+        # assignments to LTI Consumer Grade sync if the assignment meets all criteria.
         #
         # chapters and chapter sections are both stored as dictionaries of key/value pairs,
         # with the "value" itself being a dictionary.
@@ -169,27 +169,27 @@ class LTIGradeSync:
                         )
                         self.console_output(msg, text_style=style.ERROR)
 
-    
+
     def prepare_and_post_grade(self, student, section):
         """
-         Transform the section grade data into a Willo Labs grade sync payload dictionary, then post the grade.
+         Transform the section grade data into a LTI Consumer grade sync payload dictionary, then post the grade.
         """
         section_grade = section.get('section_grade')
         url = get_ext_wl_outcome_service_url(self.course_id, self.context_id)
         lti_user_id = get_lti_user_id(
-            course_id=self.course_id, 
-            username=student.username, 
+            course_id=self.course_id,
+            username=student.username,
             context_id=self.context_id
             )
         if lti_user_id is None: raise LTIBusinessRuleError('Did not find a cached LTI user_id for Rover user {username}.'.format(
             username=student.username
         ))
-        
+
         result_date = get_lti_cached_result_date(
             course_id=self.course_id,
             username=student.username,
             section_url=section.get('section_url'),
-            section_completed_date=section.get('section_completed_date'), 
+            section_completed_date=section.get('section_completed_date'),
             section_due_date=section.get('section_due_date')
         )
 
@@ -272,7 +272,7 @@ class LTIGradeSync:
         try:
             due_date = section.get('section_due_date')
             if due_date is not None:
-                if due_date < utc.localize(datetime.datetime.now()): 
+                if due_date < utc.localize(datetime.datetime.now()):
                     self.console_output(u'    - Yes. Section Due date has passed.', important=False)
                     return True
             else:
@@ -288,8 +288,8 @@ class LTIGradeSync:
         # evaluate whether the assignment has been graded yet.
         try:
             section_graded = section.get('section_graded')
-            if type(section_graded) == bool: 
-                if section_graded: 
+            if type(section_graded) == bool:
+                if section_graded:
                     self.console_output(u'    - Yes. Section has been graded.', important=False)
                     return True
                 else:
@@ -326,7 +326,7 @@ class LTIGradeSync:
     def get_validated_coursekey(self):
         """
           Set the CourseKey based on the course_id provided.
-          Verify that the course supports Willo Labs LTI Grade Sync.
+          Verify that the course supports LTI Grade Sync.
         """
         # validate the course_id provided
         if not is_valid_course_id(course_id=self.course_id):
@@ -335,8 +335,8 @@ class LTIGradeSync:
             )
             raise LTIBusinessRuleError(msg)
 
-        # verify that the course is a Willo Labs LTI course. If its a valid Willo Labs LTI course then
-        # we'll find a cached course record.
+        # verify that the course is registered as an LTI consumer course.
+        # Find a cached course record.
         key = CourseKey.from_string(self.course_id)
         course = LTIExternalCourse.objects.filter(
             course_id=key
@@ -363,14 +363,14 @@ class LTIGradeSync:
     def write_console_banner(self):
 
         msg = color.BOLD + u'\r\n'
-        msg += '=' * 80 
+        msg += '=' * 80
         msg += '\r\n' + color.END
         msg += u'     ' + color.BOLD + color.UNDERLINE + 'Willo Labs Grade Sync API.\r\n'
         msg += color.END + color.END
         msg += u'\r\n'
         msg += color.RED + color.BOLD
         msg += u'     BE AWARE:\r\n'
-        msg += u'     YOU ARE TRANSMITTING LIVE GRADE DATA FROM ROVER TO WILLO LABS.\r\n'
+        msg += u'     YOU ARE TRANSMITTING LIVE GRADE DATA FROM ROVER TO AN LTI CONSUMER.\r\n'
         msg += u'     THIS OPERATION WILL POTENTIALLY MODIFY STUDENT GRADES IN A REMOTE LMS.\r\n'
         msg += u'     MODIFICATIONS TO STUDENT DATA TAKE EFFECT IMMEDIATELY AND CAN BE VIEWED AT\r\n'
         msg += u'     https://willowlabs.instructure.com/.\r\n'
@@ -385,8 +385,8 @@ class LTIGradeSync:
         msg += u'     referenced in the source code as\n\r'
         msg += u'              WILLO_API_AUTHORIZATION_TOKEN\n\r'
         msg += u'     and is stored in the following two Python settings files:\n\r'
-        msg += u'     /edx/app/edxapp/edx-platform/lms/envs/aws.py\n\r'
-        msg += u'     /edx/app/edxapp/edx-platform/cms/envs/aws.py\n\r'
+        msg += u'     /edx/app/edxapp/edx-platform/lms/envs/production.py\n\r'
+        msg += u'     /edx/app/edxapp/edx-platform/cms/envs/production.py\n\r'
         msg += color.END
         msg += u'\r\n'
         msg += u'\r\n'
@@ -407,9 +407,9 @@ class LTIGradeSync:
         context_str = color.DARKCYAN + '{context_id}'.format(context_id=self.context_id) + color.END
 
         if not done:
-            msg = u'Willo Labs Grade Sync -- PROCESSING COURSE'
+            msg = u'LTI Grade Sync -- PROCESSING COURSE'
         else:
-            msg = u'Willo Labs Grade Sync -- DONE PROCESSING COURSE'
+            msg = u'LTI Grade Sync -- DONE PROCESSING COURSE'
 
         self.console_output(style.BOLD + u'\n\r' + (u'=' * 80) + style.END)
         msg += u'\r\ncourse_id: ' + course_str + '\r\ncontext_id: ' + context_str

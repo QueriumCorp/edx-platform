@@ -62,7 +62,7 @@ def apply_settings(django_settings):
         #'third_party_auth.pipeline.user_details_force_sync',
         # mcdaniel: 2019 set faculty status
         'third_party_auth.pipeline.set_id_verification_status',
-        # mcdaniel: jan-2020 auto enroll Willo LTI integrated students
+        # mcdaniel: jan-2020 to auto enroll LTI integrated students
         'third_party_auth.pipeline.lti_consumer_provisioner',
 
         'third_party_auth.pipeline.set_logged_in_cookies',
