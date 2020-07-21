@@ -149,14 +149,22 @@ class LTIInternalCourse(TimeStampedModel):
     def clean(self, *args, **kwargs):
         """Improvising a way to do a Fk constraint on the course_id
 
+        mcdaniel july-2020: this raises a funky error inside of OpaqueKey.
+        Appears that we might be trying to validate an already-validated key.
+
         Raises:
             ValidationError: [description]
         """
         super(LTIInternalCourse, self).clean(*args, **kwargs)
+        """
         try:
+            log.info('LTIInternalCourse.clean() - {course_id}'.format(
+                course_id=self.course_id
+            ))
             is_this_a_valid_course_key = CourseKey.from_string(self.course_id)
         except InvalidKeyError:
             raise ValidationError('Not a valid course key.')
+        """
 
 """
 ---------------------------------------------------------------------------------------------------------
