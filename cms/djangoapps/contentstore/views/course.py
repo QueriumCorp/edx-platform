@@ -393,7 +393,7 @@ def _accessible_courses_summary_iter(request, org=None):
             string will result in no courses, and otherwise only courses with the
             specified org will be returned. The default value is None.
     """
-    log.info('_accessible_courses_summary_iter()')
+    #log.info('_accessible_courses_summary_iter()')
     def course_filter(course_summary):
         """
         Filter out unusable and inaccessible courses
@@ -416,7 +416,7 @@ def _accessible_courses_iter(request):
     """
     List all courses available to the logged in user by iterating through all the courses.
     """
-    log.info('_accessible_courses_iter() - request {}'.format(request))
+    #log.info('_accessible_courses_iter() - request {}'.format(request))
     def course_filter(course):
         """
         Filter out unusable and inaccessible courses
@@ -473,7 +473,7 @@ def _accessible_courses_list_from_groups(request):
     """
     List all courses available to the logged in user by reversing access group names
     """
-    log.info('_accessible_courses_list_from_groups()')
+    #log.info('_accessible_courses_list_from_groups()')
     def filter_ccx(course_access):
         """ CCXs cannot be edited in Studio and should not be shown in this dashboard """
         return not isinstance(course_access.course_id, CCXLocator)
@@ -522,7 +522,7 @@ def course_listing(request):
     List all courses and libraries available to the logged in user
     """
 
-    log.info('course_listing()'.format(request))
+    #log.info('course_listing()'.format(request))
     optimization_enabled = GlobalStaff().has_user(request.user) and \
         WaffleSwitchNamespace(name=WAFFLE_NAMESPACE).is_enabled(u'enable_global_staff_optimization')
 
@@ -750,7 +750,7 @@ def get_courses_accessible_to_user(request, org=None):
      iterating through the courses, noting however that this might bottleneck at
      scale.
     """
-    log.info('get_courses_accessible_to_user()')
+    #log.info('get_courses_accessible_to_user()')
 
     # mcdaniel mar-2019: some housekeeping: if the user is confirmed_faculty
     # based on an openstax oauth login then we should add them to course_creators
@@ -863,14 +863,14 @@ def _create_or_rerun_course(request):
     Returns the destination course_key and overriding fields for the new course.
     Raises DuplicateCourseError and InvalidKeyError
     """
-    log.info('_create_or_rerun_course()')
+    #log.info('_create_or_rerun_course()')
     # mcdaniel mar-2019
     # these ORDINARILY would return the same value except that we're
     # decisioning _get_course_creator_status() based on a meta data value
     # returned by the OpenStax oauth process.
     #if not auth.user_has_role(request.user, CourseCreatorRole()):
     if not _get_course_creator_status(request.user) == 'granted':
-        log.info('_create_or_rerun_course() - permission denied.')
+        #log.info('_create_or_rerun_course() - permission denied.')
         raise PermissionDenied()
 
     try:
