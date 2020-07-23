@@ -43,8 +43,10 @@ from xmodule.x_module import (
 from .exceptions import ItemNotFoundError
 from .inheritance import InheritanceKeyValueStore, compute_inherited_metadata, inheriting_field_data
 
+# fuka june-2020 can't leave strip_cdata=True (the default) or else <problem> blocks with embedded Python code as CDATA
+#                 will lose their CDATA wrapper on course export or import
 edx_xml_parser = etree.XMLParser(dtd_validation=False, load_dtd=False,
-                                 remove_comments=True, remove_blank_text=True)
+                                 remove_comments=True, remove_blank_text=True, strip_cdata=False)
 
 etree.set_default_parser(edx_xml_parser)
 
