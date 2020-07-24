@@ -61,4 +61,10 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'LTI Configuration Parameters',
             },
         ),
+        migrations.AlterField(
+            model_name='ltiexternalcourse',
+            name='course_id',
+            field=models.ForeignKey(help_text='Rover Course Key (Opaque Key). Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course', null=True, on_delete=django.db.models.deletion.SET_NULL, to='lti_consumers.LTIInternalCourse'),
+        ),
+
     ]

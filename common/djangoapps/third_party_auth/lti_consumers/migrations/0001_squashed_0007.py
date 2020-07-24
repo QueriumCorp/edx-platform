@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, editable=False, verbose_name='created')),
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
+                ('course_id', opaque_keys.edx.django.models.CourseKeyField(default=None, help_text='Rover Course Key (Opaque Key). Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course', max_length=255, serialize=False)),
                 ('context_id', models.CharField(help_text="This is the unique identifier of the LTI Consumer integration, passed viafrom tpa-lti-params. Course runs from external LMS' are intended to be unique.Example: e14751571da04dd3a2c71a311dda2e1b", max_length=255, primary_key=True, serialize=False)),
                 ('enabled', models.BooleanField(default=False, help_text='True if grade results for this course should be posted to LTI Grade Sync API.')),
                 ('context_title', models.CharField(blank=True, default=None, help_text='Name of the LTI Consumer integration. Example: Willo Labs Test Launch for KU Blackboard Rover Grade Testing', max_length=255, null=True)),
@@ -112,11 +113,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'LTI External Course Enrollment Grades',
                 'verbose_name_plural': 'LTI External Course Enrollment Grades',
             },
-        ),
-        migrations.AddField(
-            model_name='ltiexternalcourse',
-            name='course_id',
-            field=models.ForeignKey(help_text='Rover Course Key (Opaque Key). Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course', null=True, on_delete=django.db.models.deletion.SET_NULL, to='lti_consumers.LTIInternalCourse'),
         ),
         migrations.CreateModel(
             name='LTIExternalCourseAssignmentProblems',
