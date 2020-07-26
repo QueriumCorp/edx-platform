@@ -83,8 +83,10 @@ class StringOrDate(Date):
             return result
 
 
+# fuka july-2020 do not strip cdata or input of <problem> blocks with embedded Python will strip the cdata tags
 edx_xml_parser = etree.XMLParser(dtd_validation=False, load_dtd=False,
-                                 remove_comments=True, remove_blank_text=True)
+                                 remove_comments=True, remove_blank_text=True, strip_cdata=False)
+
 
 _cached_toc = {}
 
