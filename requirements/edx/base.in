@@ -50,7 +50,12 @@ django-method-override              # Allow use of HTTP methods normally not sup
 django-model-utils
 django-mptt
 django-mysql
-django-oauth-toolkit                # Provides oAuth2 capabilities for Django
+#---------------------------------------------------------------------------------------------------------
+# mcdaniel july-2020: juniper upgrade
+#
+#django-oauth-toolkit                # Provides oAuth2 capabilities for Django
+git+https://github.com/QueriumCorp/django-oauth-toolkit.git  # mcdaniel july-2020: fixes db migrations issues for upgrades from hawthorn to juniper
+#---------------------------------------------------------------------------------------------------------
 django-pipeline
 django-pyfs
 django-ratelimit-backend
