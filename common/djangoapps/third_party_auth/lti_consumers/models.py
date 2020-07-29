@@ -345,7 +345,7 @@ class LTIExternalCourse(TimeStampedModel):
         )
 
     def __str__(self):
-        return self.course_id.html_id()
+        return self.context_id
 
     class Meta(object):
         verbose_name = "LTI External Course"
@@ -512,7 +512,7 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         #ordering = ('-fetched_at', )
 
     def __str__(self):
-        return self.course.course_id.html_id() + ' - ' + self.user.username
+        return str(self.course) + ' - ' + self.user.username
 
 class LTIExternalCourseEnrollmentGrades(TimeStampedModel):
     """
