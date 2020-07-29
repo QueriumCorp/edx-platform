@@ -83,6 +83,7 @@ from util.json_request import JsonResponse
 
 # mcdaniel: Rover custom imports for oauth and LTI integration
 from common.djangoapps.third_party_auth.lti_consumers.lti_params import LTIParams
+from common.djangoapps.third_party_auth.lti_consumers.provisioners import CourseProvisioner
 import student
 from . import provider
 
