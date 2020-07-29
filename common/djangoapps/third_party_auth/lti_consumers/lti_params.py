@@ -291,11 +291,8 @@ class LTIParamsFieldMap(object):
         # extract the Rover course identifier embedded in the tpa_next URL string
         course_id = get_course_id_from_tpa_next(self.dictionary)
 
-        # convert the course_id string into a CourseKey object
-        course_key = CourseKey.from_string(course_id)
-
         # use the CourseKey object to identify the LTI Internal Course record
-        internal_course = LTIInternalCourse.objects.filter(course_id=course_key).first()
+        internal_course = LTIInternalCourse.objects.filter(course_id=course_id).first()
 
         lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration).first()
 
