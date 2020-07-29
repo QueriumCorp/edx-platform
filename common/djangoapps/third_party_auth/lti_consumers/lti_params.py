@@ -292,9 +292,11 @@ class LTIParamsFieldMap(object):
         course_id = get_course_id_from_tpa_next(self.dictionary)
 
         # use the CourseKey object to identify the LTI Internal Course record
+        ## mcdaniel july-2020: we need to anticipate the scenario where course_id is not yet setup
+
         internal_course = LTIInternalCourse.objects.filter(course_id=course_id).first()
 
-        lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration).first()
+        lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration.id).first()
 
         # retrieve the field-level LTI Grade Sync mapping configuration for this course.
         lti_configuration_params = LTIConfigurationParams.objects.filter(
