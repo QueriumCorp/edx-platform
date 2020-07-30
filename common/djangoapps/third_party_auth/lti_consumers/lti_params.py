@@ -5,6 +5,8 @@ Raises:
     ValidationError: [description]
     LTIBusinessRuleError: [description]
 """
+
+# python stuff
 try:
     from urllib.parse import urlparse, parse_qs
 except ImportError:
@@ -12,15 +14,18 @@ except ImportError:
 import logging
 import traceback
 
-from django.core.exceptions import ValidationError
+# django stuff
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.conf import settings
 
+# open edx stuff
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 
+# rover stuff
 from .exceptions import LTIBusinessRuleError
+from .utils import get_default_lti_configuration
 from .constants import (
-    LTI_PARAMS_DEFAULT_CONFIGURATION,
     LTI_INSTRUCTOR_ROLES,
     LTI_DOMAINS,
     LTI_CACHE_TABLES
@@ -263,9 +268,37 @@ class LTIParamsFieldMap(object):
             table {string} -- (default: {None}) a string representing an LTI cache table name
 
         Raises:
-            ValidationError: [description]
+            ValidationError: if table name is not a valid LTI External table
+                             if lti_params is an invalid format or structure
+                             if lti_params did not originate from Willo Labs
+
             LTIBusinessRuleError: [description]
         """
+        def get_lti_internal_course(course_id):
+            """retreives the LTI Internal Course object for the course_id if it exists,
+            otherwise creates and returns a new object.
+
+            Args:
+                course_id (string): string representation of a CourseKey
+
+            Returns:
+                [LTIInternalCourse]: returns a single record representing the LTI Internal Course for the course_id
+            """
+            try:
+                return LTIInternalCourse.objects.filter(course_id=course_id).first()
+            except ObjectDoesNotExist:
+                lti_configuration = get_default_lti_configuration()
+                lti_internal_course = LTIInternalCourse(
+                    course_id=course_id,
+                    enabled=True,
+                    lti_configuration=lti_configuration
+                )
+                lti_internal_course.save()
+                log.info('LTIParamsFieldMap.__init__().get_lti_internal_course() created a new LTIInternalCourse record for course_id {course_id}'.format(
+                    course_id=course_id
+                ))
+                return lti_internal_course
+
         if not table in LTI_CACHE_TABLES:
             raise ValidationError('LTIParamsFieldMap.__init__() - Received table {table} but was expecting table to be any of {tables}'.format(
                 table=table,
@@ -294,8 +327,7 @@ class LTIParamsFieldMap(object):
         # use the CourseKey object to identify the LTI Internal Course record
         ## mcdaniel july-2020: we need to anticipate the scenario where course_id is not yet setup
 
-        internal_course = LTIInternalCourse.objects.filter(course_id=course_id).first()
-
+        internal_course = get_lti_internal_course(course_id)
         lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration.id).first()
 
         # retrieve the field-level LTI Grade Sync mapping configuration for this course.
