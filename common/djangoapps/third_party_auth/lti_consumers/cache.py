@@ -28,7 +28,7 @@ from opaque_keys.edx.locator import BlockUsageLocator
 from .utils import find_course_unit, get_course_by_id
 
 from .exceptions import LTIBusinessRuleError
-from .lti_params import LTIParamsFieldMap, LTIParams, get_cached_course_id
+from .lti_params import LTIParamsFieldMap, LTIParams
 from .models import (
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
@@ -94,6 +94,7 @@ class LTISession(object):
         #----------------------------------------------------------------------
         self.lti_params = lti_params        # this needs to initialized first bc it resets all
                                             # other class properties.
+                                            # sets context_id, user_id, course_id (hopefully)
 
 
         if user:
@@ -128,7 +129,7 @@ class LTISession(object):
                 else:
                     # we'll arrive here if a) the student is enrolled in multiple courses,
                     # or b) the student is not enrolled in any courses.
-                    self.course_id =  self.get_cached_course_id(context_id=self.context_id)
+                    self.course_id = self.lti_params.course_id
 
         # removes any cache data that is persisted to MySQL
         if clear_cache:
@@ -878,6 +879,7 @@ class LTISession(object):
         if self._lti_params is not None:
             self._context_id = self._lti_params.context_id          # uniquely identifies course in LTI Consumer
             self.user_id = self._lti_params.user_id                 # uniquely identifies user in LTI Consumer
+            self._course_id = self._lti_params.course_id            # prioritized attempts to create course_id from lti_params data
 
 
     @property
@@ -1004,6 +1006,7 @@ class LTISession(object):
         self._course = value
         self._course_enrollment = None
         self._context_id = self._course.context_id
+        self._course_id = self._course.course_id
 
     @property
     def course_enrollment(self):
@@ -1055,11 +1058,3 @@ class LTISession(object):
             raise LTIBusinessRuleError(msg)
 
         self._course_enrollment = value
-
-
-    #context_id = property(get_context_id, set_context_id)
-    #lti_params = property(get_lti_params, set_lti_params)
-    #user = property(get_user, set_user)
-    #course_id = property(get_course_id, set_course_id)
-    #course = property(get_course, set_course)
-    #course_enrollment = property(get_course_enrollment, set_course_enrollment)

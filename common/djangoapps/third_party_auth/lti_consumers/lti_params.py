@@ -7,6 +7,7 @@ Raises:
 """
 
 # python stuff
+import json
 try:
     from urllib.parse import urlparse, parse_qs
 except ImportError:
@@ -71,6 +72,75 @@ class LTIParams(object):
             self=self
         ))
 
+    def _get_cached_course_id(self):
+        """Queries the cache and returns the course_id associated
+        with a context_id
+
+        Returns:
+            course_id --
+        """
+        try:
+            course = LTIExternalCourse.objects.filter(context_id=self.context_id).first()
+            if course:
+                if DEBUG:
+                    log.info('LTIParams._get_cached_course_id() - found course_id: {course_id}'.format(
+                        course_id=course.course_id
+                    ))
+                return course.course_id
+        except ObjectDoesNotExist:
+            pass
+        if DEBUG:
+            log.info('LTIParams._get_cached_course_id() - did not find a course_id.')
+        return None
+
+
+    def _get_course_id_from_tpa_next(self):
+        """attempt to extract a course_id parameter from tpa_next
+        in the lti_params dict, if it exists.
+
+        example: "custom_tpa_next": "/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false"
+
+        Returns:
+            [CourseKey]
+        """
+
+        try:
+            url = urlparse(url=self.custom_tpa_next)
+            query_dict = parse_qs(url.query)
+            course_id = query_dict.get('course_id')[0]
+            course_key = CourseKey.from_string(course_id)
+
+            if DEBUG:
+                log.info('LTIParams._get_course_id_from_tpa_next() - found course_id: {course_id}'.format(
+                    course_id=course_id
+                ))
+
+            return course_key
+
+        except Exception as err:
+            msg='LTIParams._get_course_id_from_tpa_next() - Exception encountered while extracting course_id from lti_params: \r\nError: {err}.\r\n{traceback}'.format(
+                err=err,
+                traceback=traceback.format_exc()
+            )
+            log.error(msg)
+
+        return None
+
+    def _get_course_id_from_context(self):
+        """Attempt to get course section information from the context parameters.
+        Cal State LA add section information in their parameters.
+
+        examples:
+            "context_label": "INTRODUCTORY PSYCHOLOGY PSY 1500-12",
+            "context_title": "PSY 1500-12",
+
+        Returns:
+            [string]: course_id string value.
+        """
+        if DEBUG:
+            log.info('LTIParams._get_course_id_from_context() - not yet implemented.')
+        return None
+
     @property
     def dictionary(self):
         """a dump of the original lti_params dictionary
@@ -82,6 +152,9 @@ class LTIParams(object):
 
     @dictionary.setter
     def dictionary(self, value):
+        if isinstance(value, str):
+            value = json.loads(value)
+
         self._lti_params = value
 
     def __getattr__(self, attr):
@@ -101,6 +174,25 @@ class LTIParams(object):
             context_id = self.context_id,
             user_id = self.user_id
         )
+
+    @property
+    def course_id(self):
+
+        # priority 1: use the LTI External Course cache object if it exists
+        course_id = self._get_cached_course_id()
+        if course_id: return course_id
+
+        # priority 2: try to parse the course key from custom_tpa_next
+        course_id = self._get_course_id_from_tpa_next()
+        if course_id: return course_id
+
+        # priority 3: try to parse the course key from the context parameters
+        course_id = self._get_course_id_from_context()
+        if course_id: return course_id
+
+        raise LTIBusinessRuleError('LTIParams.course_id() was unable to determine the course_id from these lti_params: {lti_params}'.format(
+                lti_params=self.dictionary
+            ))
 
     @property
     def faculty_status(self):
@@ -322,7 +414,7 @@ class LTIParamsFieldMap(object):
         Phase II field mapping
         """
         # extract the Rover course identifier embedded in the tpa_next URL string
-        course_id = get_course_id_from_tpa_next(self.dictionary)
+        course_id = lti_params.course_id
 
         # use the CourseKey object to identify the LTI Internal Course record
         ## mcdaniel july-2020: we need to anticipate the scenario where course_id is not yet setup
@@ -415,70 +507,9 @@ class LTIParamsFieldMap(object):
 """
 ------------------------------------------------------------------------------------------------------------------
 Utility functions.
+These are used in this module as well as gradesync.py
 ------------------------------------------------------------------------------------------------------------------
 """
-def get_cached_course_id(context_id):
-    """Queries the cache and returns the course_id associated
-    with a context_id
-
-    Returns:
-        course_id --
-    """
-    course = LTIExternalCourse.objects.filter(context_id=context_id).first()
-
-    if course:
-        log.info('LTIParams.get_cached_course_id() - found course_id: {course_id}'.format(
-            course_id=course.course_id
-        ))
-        return course.course_id
-
-    log.info('LTIParams.get_cached_course_id() - did not find a course_id.')
-    return None
-
-
-def get_course_id_from_tpa_next(lti_params):
-    """attempt to extract a course_id parameter from tpa_next
-    in the lti_params dict, if it exists.
-
-    example: "custom_tpa_next": "/account/finish_auth?course_id=course-v1%3AKU%2BOS9471721_108c%2BSpring2020_Fuka_Sample1&enrollment_action=enroll&email_opt_in=false"
-
-    Arguments:
-        lti_params {[LTIParams] or [dict]}
-
-    Returns:
-        [CourseKey]
-    """
-    if isinstance(lti_params, dict):
-        lti_params = LTIParams(lti_params)
-
-    if not isinstance(lti_params, LTIParams):
-        raise LTIBusinessRuleError('get_course_id_from_tpa_next() lti_params: expected LTIParams or dict but received: {otype}'.format(
-                otype=type(lti_params)
-            ))
-
-    try:
-
-        url = urlparse(url=lti_params.custom_tpa_next)
-        query_dict = parse_qs(url.query)
-        course_id = query_dict.get('course_id')[0]
-        course_key = CourseKey.from_string(course_id)
-
-        if DEBUG:
-            log.info('get_course_id_from_tpa_next() - found course_id: {course_id}'.format(
-                course_id=course_id
-            ))
-
-        return course_key
-
-    except Exception as err:
-        msg='LTIParams.get_course_id_from_tpa_next() - Exception encountered while extracting course_id from lti_params: \r\nError: {err}.\r\n{traceback}'.format(
-            err=err,
-            traceback=traceback.format_exc()
-        )
-        log.error(msg)
-
-    return None
-
 def get_lti_user_id(course_id, username, context_id=None):
     """
     Retrieve the LTI Consumer user_id assigned to Rover username for course_id.

@@ -35,7 +35,7 @@ from opaque_keys.edx.keys import CourseKey
 
 from .exceptions import LTIBusinessRuleError
 from .cache import LTISession
-from .lti_params import LTIParams, get_cached_course_id, get_course_id_from_tpa_next
+from .lti_params import LTIParams
 
 
 User = get_user_model()
@@ -201,8 +201,8 @@ class CourseProvisioner(object):
         # we we're not calling the setters in order to avoid
         # potential thrashing.
         if self.lti_params:
-            self._context_id = self.lti_params.context_id
-            self._course_id = get_course_id_from_tpa_next(self._lti_params)
+            self._context_id = self._lti_params.context_id
+            self._course_id = self._lti_params.course_id
 
     @property
     def context_id(self):
@@ -286,7 +286,7 @@ class CourseProvisioner(object):
         if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in lti_params.custom_tpa_next: {custom_tpa_next}'.format(
             custom_tpa_next=self.lti_params.custom_tpa_next
             ))
-        self._course_id = get_course_id_from_tpa_next(self.lti_params)
+        self._course_id = self.lti_params.course_id
         if self._course_id:
             return self._course_id
 
@@ -295,7 +295,7 @@ class CourseProvisioner(object):
         if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in the LTI cache. context_id: {context_id}'.format(
             context_id=self.context_id
             ))
-        self._course_id = get_cached_course_id(context_id=self.context_id)
+        self._course_id = self.lti_params.cached_course_id()
         if self._course_id:
             return self._course_id
 
@@ -348,8 +348,8 @@ class CourseProvisioner(object):
 
         # ensure agreement between data inside of lti_params vs whatever
         # we received.
-        lti_params_course_id = get_course_id_from_tpa_next(self.lti_params)
-        if lti_params_course_id and lti_params_course_id != value:
+        lti_params_course_id = self.lti_params.course_id
+        if lti_params_course_id and lti_params_course_id != value.course_id:
             raise LTIBusinessRuleError('CourseProvisioner.__init__() - internal error: course_id provided does not equal course_id found in lti_params.')
 
         self._course_id = value
