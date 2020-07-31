@@ -100,6 +100,11 @@ if (is_proctored_exam) {
 }
 %>
 <% if (parentInfo) { %>
+/*
+  McDaniel Nov-2018
+  create a 2-column course outline layout. Publish button moved to the left column.
+  styling for the 2-column layout is inline in theme folder cms/templates/course_outline.html
+*/
 <li class="outline-item outline-<%- xblockType %> <%- visibilityClass %> is-draggable <%- includesChildren ? 'is-collapsible' : '' %> <%- isCollapsed ? 'is-collapsed' : '' %>"
     data-parent="<%- parentInfo.get('id') %>" data-locator="<%- xblockInfo.get('id') %>" id="<%- xblockInfo.get('id') %>">
 
@@ -195,17 +200,54 @@ if (is_proctored_exam) {
                     <span class="status-release-value">
                         <% if (!course.get('self_paced')) { %>
                             <% if (xblockInfo.get('released_to_students')) { %>
-                                <span class="icon fa fa-check" aria-hidden="true"></span>
-                                <%- gettext('Released:') %>
+                                <!-- McDaniel Nov-2018: begin copied snippet -->
+                                <% if (xblockInfo.isEditableOnCourseOutline()) { %>
+                                    <span class="action-item action-configure">
+                                        <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
+                                            <span class="icon fa fa-calendar" aria-hidden="true"></span>
+                                            <span class="sr action-button-text">Set assignment due date</span>
+                                            <%- gettext('Released:') %>
+                                            <% if (xblockInfo.get('release_date')) { %>
+                                                <%- xblockInfo.get('release_date') %>
+                                            <% } %>
+                                        </a>
+                                        <!-- McDaniel Nov-2018: end copied snippet -->
+                                    </span>
+                                <% } %>
                             <% } else if (xblockInfo.get('release_date')) { %>
-                                <span class="icon fa fa-clock-o" aria-hidden="true"></span>
-                                <%- gettext('Scheduled:') %>
+
+
+                                  <!-- McDaniel mar-2019: wrapping original fa icon snippets with "edit" anchors from "Set assignment date", above. -->
+                                  <% if (xblockInfo.isEditableOnCourseOutline()) { %>
+                                      <span class="action-item action-configure">
+                                          <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
+                                            <span class="icon fa fa-clock-o" aria-hidden="true"></span>
+                                            <%- gettext('Scheduled:') %>
+                                            <% if (xblockInfo.get('release_date')) { %>
+                                                <%- xblockInfo.get('release_date') %>
+                                            <% } %>
+                                          </a>
+                                      </span>
+                                  <% } %>
+
                             <% } else { %>
-                                <span class="icon fa fa-clock-o" aria-hidden="true"></span>
-                                <%- gettext('Unscheduled') %>
-                            <% } %>
-                            <% if (xblockInfo.get('release_date')) { %>
-                                <%- xblockInfo.get('release_date') %>
+
+                                <!-- McDaniel mar-2019: wrapping original fa icon snippets with "edit" anchors from "Set assignment date", above. -->
+                                <% if (xblockInfo.isEditableOnCourseOutline()) { %>
+                                    <span class="action-item action-configure">
+                                        <a href="#" data-tooltip="Set assignment due date" class="rover-link configure-button action-button">
+
+                                            <span class="icon fa fa-clock-o" aria-hidden="true"></span>
+                                            <%- gettext('Unscheduled') %>
+                                            <% if (xblockInfo.get('release_date')) { %>
+                                                <%- xblockInfo.get('release_date') %>
+                                            <% } %>
+
+                                        </a>
+                                    </span>
+                                <% } %>
+
+
                             <% } %>
                         <% } %>
                     </span>
@@ -225,7 +267,8 @@ if (is_proctored_exam) {
                 <div class="status-timed-proctored-exam">
                     <p>
                         <span class="sr status-grading-label"> <%- gettext('Graded as:') %> </span>
-                        <span class="icon fa fa-check" aria-hidden="true"></span>
+                        <!-- McDaniel Nov-2018: don't want any more check marks appearing -->
+                        <!-- <span class="icon fa fa-check" aria-hidden="true"></span> -->
                         <span class="status-grading-value"> <%- gradingType %> </span>
                          -
                         <span class="sr status-proctored-exam-label"> <%- exam_value %> </span>
@@ -239,7 +282,8 @@ if (is_proctored_exam) {
                 <div class="status-grading">
                     <p>
                         <span class="sr status-grading-label"> <%- gettext('Graded as:') %> </span>
-                        <span class="icon fa fa-check" aria-hidden="true"></span>
+                        <!-- McDaniel Nov-2018: don't want any more check marks appearing -->
+                        <!-- <span class="icon fa fa-check" aria-hidden="true"></span> -->
                         <span class="status-grading-value"> <%- gradingType %> </span>
                         <% if (xblockInfo.get('due_date') && !course.get('self_paced')) { %>
                             <span class="status-grading-date"> <%- gettext('Due:') %> <%- xblockInfo.get('due_date') %> </span>
