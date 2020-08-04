@@ -1,20 +1,25 @@
 """
 Utility methods called from Mako templates in Rover theme.
 """
+# python  stuff
 import logging
 import datetime
 
+# django stuff
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
+# open edx stuff
 from opaque_keys.edx.keys import CourseKey
 from xmodule.modulestore.django import modulestore
 from courseware.date_summary import VerifiedUpgradeDeadlineDate
 from student.models import is_faculty
 
+# our stuff
 from .models import Configuration, EOPWhitelist
 
-log = logging.getLogger("edx.student")
-
+log = logging.getLogger(__name__)
+DEBUG = settings.ROVER_DEBUG
 
 
 def paywall_should_render(request):
@@ -22,36 +27,42 @@ def paywall_should_render(request):
     A series of boolean tests to determine whether the paywall html
     should be rendered an injected into the current page.
 
+    Args:
+        request: the current http request
+
     Returns:
         [boolean]: True if the Mako template should fully render all html.
     """
     ## this code is moot if the user is not yet authenticated.
     if not request.user.is_authenticated:
-    log.info('Not authenticated, exiting.')
+    logger('paywall_should_render() - Not authenticated, exiting.')
     return False
 
     if is_faculty(request.user):
-        logger('Faculty user - never block!, exiting.')
+        logger('paywall_should_render() - Faculty user - never block!, exiting.')
         return False
 
 
     if is_eop_student(request.user.email):
-        logger('User is an EOP student, exiting.')
+        logger('paywall_should_render() - User is an EOP student, exiting.')
         return False
 
     course = get_course(request)
     if course is None:
-        logger('Not a course, exiting.')
+        logger('paywall_should_render() - Not a course, exiting.')
         return False
 
     if not is_ecommerce_enabled(request):
-        logger('Ecommerce is not enabled for this course, exiting.')
+        logger('paywall_should_render() - Ecommerce is not enabled for this course, exiting.')
         return False
 
     return True
 
 def paywall_should_raise(request)
     """[summary]
+
+    Args:
+        request: the current http request
 
     Returns:
         [boolean]: True if the user has exceeded the payment deadline date
@@ -63,20 +74,24 @@ def paywall_should_raise(request)
 
     now = datetime.datetime.now()
     if now <= payment_deadline_date:
-        log.info('Payment deadline is in the future, exiting.')
+        logger('Payment deadline is in the future, exiting.')
         return False
 
-    log.error('Ecommerce paywall being raised on user {}!'.format(user.email))
+    log.error('paywall_should_raise() - Ecommerce paywall being raised on user {}!'.format(user.email))
     return True
 
 def is_eop_student(request)
     """Looks for a record in EOPWhitelist with the email address
     of the current user.
 
+    Args:
+        request: the current http request
+
     Returns:
         [boolean]: True if the current user's email address is saved
         to the EOP Whitelist table.
     """
+    logger('is_eop_student() - begin')
     try:
         usr = EOPWhitelist.objects.filter(user_email=request.user.email)
         return True
@@ -89,12 +104,17 @@ def is_eop_student(request)
 def is_ecommerce_enabled(request)
     """
     Args:
-        course: a ModuleStore course object
-        user:   the current user
+        request: the current http request
+
+    Args:
+        request: the current http request
+
     Returns:
         [boolean]: True if Oscar e-commerce is running and this course
         has been configured for e-commerce.
     """
+    logger('is_ecommerce_enabled() - begin')
+
     block = get_verified_upgrade_deadline_block(request)
     if block is None:
         return False
@@ -102,17 +122,34 @@ def is_ecommerce_enabled(request)
     return block.is_enabled
 
 def get_verified_upgrade_deadline_block(request):
+    """Retrieve the content block containing the
+    Verified Upgrade meta information.
+
+    Args:
+        request: the current http request
+
+    Returns:
+        [type]: [description]
+    """
+
+    logger('get_verified_upgrade_deadline_block() - begin')
     course = get_course(request)
     return VerifiedUpgradeDeadlineDate(course, request.user)
 
 
 def get_course_id(request):
+    """
+    Extract the course_id from the current request, if one exists.
+
+    Args:
+        request: the current http request
+
+    Returns:
+        [string]: string representation of the course_id, or None
+    """
     try:
         ## this is a hacky way to test for a course object that MIGHT be
         ## included in the page context for whatever page called this template.
-
-        ## start with the URL path
-        ##log.info('request.path: {}'.format(request.path))
 
         ## attempt to grap the course_id slug, if it exists.
         course_id = request.path.split("/")[2]
@@ -141,7 +178,7 @@ def get_course(request):
         course = modulestore().get_course(course_key)
         return course
     except:
-        log.info('Not a course, exiting.')
+        logger('Not a course, exiting.')
         pass
 
     return None
@@ -166,5 +203,6 @@ def get_course_deadline_date(request):
         return None
 
 def logger(msg):
-    log.info(msg)
+    if DEBUG:
+        log.info(msg)
 
