@@ -35,10 +35,7 @@ class RoverEcommerceEOPWhitelistAdmin(admin.ModelAdmin):
     Rover Ecommerce Configuration for EOP Student Exemptions
     """
     list_display = (
-        'id',
-        'course_id',
-        'user_email'
+        'user_email',
     )
-    readonly_fields=('id')
 
 admin.site.register(RoverEcommerceEOPWhitelist, RoverEcommerceEOPWhitelistAdmin)

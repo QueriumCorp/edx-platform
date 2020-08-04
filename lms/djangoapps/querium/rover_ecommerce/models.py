@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from django.db import models
+from model_utils.models import TimeStampedModel
 from opaque_keys.edx.django.models import CourseKeyField
 
 class RoverEcommerceConfiguration(TimeStampedModel):
