@@ -1,1 +1,1 @@
-default_app_config="lms.djangoapps.rover_ecommerce.apps.RoverEcommerceConfig"
+default_app_config="lms.djangoapps.querium.rover_ecommerce.apps.RoverEcommerceConfig"
