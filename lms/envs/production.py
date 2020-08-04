@@ -989,7 +989,9 @@ if 'figures' in INSTALLED_APPS:
         rover_env_token('FIGURES', {}))
 
 # McDaniel jul-2019: add querium apps
+# Aug-2020: add more querium apps
 INSTALLED_APPS.append('querium.stepwise')
+INSTALLED_APPS.append('querium.rover_ecommerce')
 
 
 # mcdaniel mar-2019: Openstax Backend parameters
