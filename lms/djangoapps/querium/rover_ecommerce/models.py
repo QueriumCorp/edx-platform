@@ -3,7 +3,7 @@ from django.db import models
 from model_utils.models import TimeStampedModel
 from opaque_keys.edx.django.models import CourseKeyField
 
-class RoverEcommerceConfiguration(TimeStampedModel):
+class Configuration(TimeStampedModel):
     """
     Course-level ecommerce configurations.
     """
@@ -30,7 +30,7 @@ class RoverEcommerceConfiguration(TimeStampedModel):
         return self.course_id.html_id()
 
 
-class RoverEcommerceEOPWhitelist(TimeStampedModel):
+class EOPWhitelist(TimeStampedModel):
     """
     Course-level EOP student lists for payment exemptions.
     """

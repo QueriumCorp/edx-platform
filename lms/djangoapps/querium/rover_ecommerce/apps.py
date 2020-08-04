@@ -3,4 +3,5 @@ from django.apps import AppConfig
 
 
 class RoverEcommerceConfig(AppConfig):
-    name = 'rover_ecommerce'
+    name = 'querium.rover_ecommerce'
+    verbose_name = 'Querium Rover Ecommerce'

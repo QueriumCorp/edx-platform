@@ -12,11 +12,11 @@ from __future__ import absolute_import
 from django.contrib import admin
 
 from .models import (
-    RoverEcommerceConfiguration,
-    RoverEcommerceEOPWhitelist,
+    Configuration,
+    EOPWhitelist,
     )
 
-class RoverEcommerceEOPStudentAdmin(admin.ModelAdmin):
+class ConfigurationAdmin(admin.ModelAdmin):
     """
     Rover Ecommerce Configuration
     """
@@ -28,9 +28,9 @@ class RoverEcommerceEOPStudentAdmin(admin.ModelAdmin):
     )
     readonly_fields=('created', 'modified' )
 
-admin.site.register(RoverEcommerceConfiguration, RoverEcommerceEOPStudentAdmin)
+admin.site.register(Configuration, ConfigurationAdmin)
 
-class RoverEcommerceEOPWhitelistAdmin(admin.ModelAdmin):
+class EOPWhitelistAdmin(admin.ModelAdmin):
     """
     Rover Ecommerce Configuration for EOP Student Exemptions
     """
@@ -38,4 +38,4 @@ class RoverEcommerceEOPWhitelistAdmin(admin.ModelAdmin):
         'user_email',
     )
 
-admin.site.register(RoverEcommerceEOPWhitelist, RoverEcommerceEOPWhitelistAdmin)
+admin.site.register(EOPWhitelist, EOPWhitelistAdmin)
