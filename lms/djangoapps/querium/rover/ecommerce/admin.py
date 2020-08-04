@@ -13,7 +13,7 @@ from django.contrib import admin
 
 from .models import (
     RoverEcommerceConfiguration,
-    RoverEcommerceEOPStudent,
+    RoverEcommerceEOPWhitelist,
     )
 
 class RoverEcommerceEOPStudentAdmin(admin.ModelAdmin):
@@ -30,7 +30,7 @@ class RoverEcommerceEOPStudentAdmin(admin.ModelAdmin):
 
 admin.site.register(RoverEcommerceConfiguration, RoverEcommerceEOPStudentAdmin)
 
-class RoverEcommerceEOPStudentAdmin(admin.ModelAdmin):
+class RoverEcommerceEOPWhitelistAdmin(admin.ModelAdmin):
     """
     Rover Ecommerce Configuration for EOP Student Exemptions
     """
@@ -41,4 +41,4 @@ class RoverEcommerceEOPStudentAdmin(admin.ModelAdmin):
     )
     readonly_fields=('id')
 
-admin.site.register(RoverEcommerceEOPStudent, RoverEcommerceEOPStudentAdmin)
+admin.site.register(RoverEcommerceEOPWhitelist, RoverEcommerceEOPWhitelistAdmin)
