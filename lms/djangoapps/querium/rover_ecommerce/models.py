@@ -51,13 +51,12 @@ class EOPWhitelist(TimeStampedModel):
     )
 
     user_email = models.EmailField(
-        primary_key=True
+        unique=True
     )
 
     type = models.CharField(max_length=24, blank=False,
                             choices=whitelist_type,
                             default=EOP,
-                            unique=True,
                             help_text=_(u"Type of E-Commerce whitelist user."))
 
     class Meta(object):

@@ -35,8 +35,11 @@ class EOPWhitelistAdmin(admin.ModelAdmin):
     Rover Ecommerce Configuration for EOP Student Exemptions
     """
     list_display = (
+        'id',
         'user_email',
         'type',
+        'created',
+        'modified',
     )
 
 admin.site.register(EOPWhitelist, EOPWhitelistAdmin)
