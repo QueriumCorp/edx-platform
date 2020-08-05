@@ -13,7 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from opaque_keys.edx.keys import CourseKey
 from xmodule.modulestore.django import modulestore
 from courseware.date_summary import VerifiedUpgradeDeadlineDate
-from student.models import is_faculty
+from student.models import is_faculty, get_user_by_username_or_email
 
 # our stuff
 from .models import Configuration, EOPWhitelist
@@ -34,16 +34,16 @@ def paywall_should_render(request):
         [boolean]: True if the Mako template should fully render all html.
     """
     ## this code is moot if the user is not yet authenticated.
-    if not request.user.is_authenticated:
-    logger('paywall_should_render() - Not authenticated, exiting.')
-    return False
+    user = get_user_by_username_or_email(request.user)
+    if not user.is_authenticated:
+        logger('paywall_should_render() - Not authenticated, exiting.')
+        return False
 
-    if is_faculty(request.user):
+    if is_faculty(user):
         logger('paywall_should_render() - Faculty user - never block!, exiting.')
         return False
 
-
-    if is_eop_student(request.user.email):
+    if is_eop_student(request):
         logger('paywall_should_render() - User is an EOP student, exiting.')
         return False
 
@@ -58,7 +58,7 @@ def paywall_should_render(request):
 
     return True
 
-def paywall_should_raise(request)
+def paywall_should_raise(request):
     """[summary]
 
     Args:
@@ -77,10 +77,11 @@ def paywall_should_raise(request)
         logger('Payment deadline is in the future, exiting.')
         return False
 
+    user = get_user_by_username_or_email(request.user)
     log.error('paywall_should_raise() - Ecommerce paywall being raised on user {}!'.format(user.email))
     return True
 
-def is_eop_student(request)
+def is_eop_student(request):
     """Looks for a record in EOPWhitelist with the email address
     of the current user.
 
@@ -93,7 +94,8 @@ def is_eop_student(request)
     """
     logger('is_eop_student() - begin')
     try:
-        usr = EOPWhitelist.objects.filter(user_email=request.user.email)
+        user = get_user_by_username_or_email(request.user)
+        usr = EOPWhitelist.objects.filter(user_email=user.email)
         return True
     except ObjectDoesNotExist:
         pass
@@ -101,7 +103,7 @@ def is_eop_student(request)
     return False
 
 
-def is_ecommerce_enabled(request)
+def is_ecommerce_enabled(request):
     """
     Args:
         request: the current http request
@@ -134,7 +136,8 @@ def get_verified_upgrade_deadline_block(request):
 
     logger('get_verified_upgrade_deadline_block() - begin')
     course = get_course(request)
-    return VerifiedUpgradeDeadlineDate(course, request.user)
+    user = get_user_by_username_or_email(request.user)
+    return VerifiedUpgradeDeadlineDate(course, user)
 
 
 def get_course_id(request):
