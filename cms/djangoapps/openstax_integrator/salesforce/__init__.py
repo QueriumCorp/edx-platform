@@ -1,0 +1,1 @@
+default_app_config="cms.djangoapps.openstax_integrator.salesforce.apps.SalesforceConfig"

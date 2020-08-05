@@ -3,4 +3,5 @@ from django.apps import AppConfig
 
 
 class SalesforceConfig(AppConfig):
-    name = u'salesforce'
+    name = 'openstax_integrator.salesforce'
+    verbose_name = 'Querium Openstax Salesforce Integrator'
