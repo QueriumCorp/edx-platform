@@ -19,10 +19,10 @@ from xmodule.x_module import DEPRECATION_VSCOMPAT_EVENT, XModuleDescriptor
 log = logging.getLogger(__name__)
 
 # assume all XML files are persisted as utf-8.
+# fuka august-2020 do not strip cdata or input of <problem> blocks with embedded Python will strip the cdata tags
 EDX_XML_PARSER = XMLParser(dtd_validation=False, load_dtd=False,
                            remove_comments=True, remove_blank_text=True,
-                           encoding='utf-8')
-
+                           encoding='utf-8', strip_cdata=False)
 
 def name_to_pathname(name):
     """
