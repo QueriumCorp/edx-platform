@@ -55,7 +55,6 @@ class EOPWhitelist(TimeStampedModel):
     )
 
     type = models.CharField(max_length=24, blank=False,
-                            primary_key=True,
                             choices=whitelist_type,
                             default=EOP,
                             unique=True,
