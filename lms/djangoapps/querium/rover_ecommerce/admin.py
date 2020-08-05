@@ -36,6 +36,7 @@ class EOPWhitelistAdmin(admin.ModelAdmin):
     """
     list_display = (
         'user_email',
+        'type',
     )
 
 admin.site.register(EOPWhitelist, EOPWhitelistAdmin)
