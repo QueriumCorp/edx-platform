@@ -12,4 +12,4 @@ from django.apps import AppConfig
 
 class LTIGradeSyncConfig(AppConfig):
     name = 'common.djangoapps.third_party_auth.lti_consumers'
-    verbose_name = "LTI Grade Sync"
+    verbose_name = "Querium LTI Grade Sync"

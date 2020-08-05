@@ -39,5 +39,5 @@ class EOPWhitelist(TimeStampedModel):
     )
 
     class Meta(object):
-        verbose_name = "Rover E-commerce EOP Student"
+        verbose_name = "Rover E-Commerce EOP Student"
         verbose_name_plural = verbose_name + "s"
