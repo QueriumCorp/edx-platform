@@ -20,11 +20,12 @@ class ConfigurationAdmin(admin.ModelAdmin):
     """
     Rover Ecommerce Configuration
     """
+    search_fields = ('course_id', )
     list_display = (
         'course_id',
+        'payment_deadline_date',
         'created',
         'modified',
-        'payment_deadline_date',
     )
     readonly_fields=('created', 'modified' )
 
@@ -34,6 +35,7 @@ class EOPWhitelistAdmin(admin.ModelAdmin):
     """
     Rover Ecommerce Configuration for EOP Student Exemptions
     """
+    search_fields = ('user_email', 'type', )
     list_display = (
         'id',
         'user_email',
