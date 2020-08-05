@@ -1,5 +1,11 @@
+# python
 from __future__ import absolute_import
+
+# django
 from django.db import models
+from django.utils.translation import ugettext as _
+
+# open edx
 from model_utils.models import TimeStampedModel
 from opaque_keys.edx.django.models import CourseKeyField
 
@@ -34,10 +40,27 @@ class EOPWhitelist(TimeStampedModel):
     """
     Course-level EOP student lists for payment exemptions.
     """
+    EOP = 'eop_student'
+    TESTER = 'tester'
+    RETAKE = 'free_retake'
+
+    whitelist_type = (
+        (EOP, _('EOP Student')),
+        (TESTER, _('Rover Tester')),
+        (RETAKE, _('Free Retake')),
+    )
+
     user_email = models.EmailField(
         primary_key=True
     )
 
+    type = models.CharField(max_length=24, blank=False,
+                            primary_key=True,
+                            choices=whitelist_type,
+                            default=EOP,
+                            unique=True,
+                            help_text=_(u"Type of E-Commerce whitelist user."))
+
     class Meta(object):
-        verbose_name = "Rover E-Commerce EOP Student"
+        verbose_name = "Rover E-Commerce Payment Exemption"
         verbose_name_plural = verbose_name + "s"
