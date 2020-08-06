@@ -22,7 +22,11 @@ from opaque_keys.edx.locator import BlockUsageLocator
 from xmodule.modulestore.django import modulestore
 
 # rover stuff
-from .models import LTIExternalCourse
+from .models import (
+    LTIExternalCourse,
+    LTIConfigurations,
+    LTIConfigurationParams
+    )
 from .constants import LTI_PARAMS_DEFAULT_CONFIGURATION
 
 log = logging.getLogger(__name__)
