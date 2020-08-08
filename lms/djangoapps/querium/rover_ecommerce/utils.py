@@ -34,7 +34,11 @@ def paywall_should_render(request):
         [boolean]: True if the Mako template should fully render all html.
     """
     ## this code is moot if the user is not yet authenticated.
-    user = get_user_by_username_or_email(request.user)
+    try:
+        user = get_user_by_username_or_email(request.user)
+    except:
+        return False
+
     if not user.is_authenticated:
         logger('paywall_should_render() - Not authenticated, exiting.')
         return False
