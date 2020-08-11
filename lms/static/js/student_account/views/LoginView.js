@@ -167,6 +167,7 @@
 
                 this.clearFormErrors();
                 this.clearPasswordResetSuccess();
+                this.showLoginFields();     /* McDaniel Aug-2020: un-hide the email field */
 
                 this.renderFormFeedback(this.formSuccessTpl, {
                     jsHook: this.passwordResetSuccessJsHook,
