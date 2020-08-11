@@ -218,6 +218,7 @@
                     if (!this.hideAuthWarnings) {
                         this.clearFormErrors();
                         this.renderThirdPartyAuthWarning();
+                        this.showLoginFields();     /* McDaniel Aug-2020: un-hide the username and password fields */
                     }
                 } else {
                     this.renderErrors(this.defaultFormErrorsTitle, this.errors);
@@ -240,6 +241,17 @@
                 });
             },
 
+            /* McDaniel Aug-2020: un-hide the username and password fields */
+            showLoginFields: function() {
+              HtmlUtils.prepend(
+                $(this.el),
+                HtmlUtils.joinHtml(
+                  HtmlUtils.HTML('<style>'),
+                  HtmlUtils.HTML('.email-email, .password-password, #login > button {display: inherit !important;}'),
+                  HtmlUtils.HTML('</style>')
+                ))
+            },
+
             clearPasswordResetSuccess: function() {
                 var query = '.' + this.passwordResetSuccessJsHook;
                 this.clearFormFeedbackItems(query);
@@ -248,7 +260,7 @@
             clearAuthWarning: function() {
                 var query = '.' + this.authWarningJsHook;
                 this.clearFormFeedbackItems(query);
-            }
+            },
         });
     });
 }).call(this, define || RequireJS.define);
