@@ -376,20 +376,30 @@ class LTIParamsFieldMap(object):
             Returns:
                 [LTIInternalCourse]: returns a single record representing the LTI Internal Course for the course_id
             """
-            try:
-                return LTIInternalCourse.objects.filter(course_id=course_id).first()
-            except ObjectDoesNotExist:
-                lti_configuration = get_default_lti_configuration()
-                lti_internal_course = LTIInternalCourse(
-                    course_id=course_id,
-                    enabled=True,
-                    lti_configuration=lti_configuration
-                )
-                lti_internal_course.save()
-                log.info('LTIParamsFieldMap.__init__().get_lti_internal_course() created a new LTIInternalCourse record for course_id {course_id}'.format(
+            if DEBUG:
+                log.info('get_lti_internal_course() - course_id: {course_id}'.format(
                     course_id=course_id
                 ))
-                return lti_internal_course
+
+            try:
+                lti_internal_course = LTIInternalCourse.objects.filter(course_id=course_id).first()
+                if lti_internal_course is not None:
+                    return lti_internal_course
+            except ObjectDoesNotExist:
+                pass
+
+            # didn't find a record, so we'll create one...
+            lti_configuration = get_default_lti_configuration()
+            lti_internal_course = LTIInternalCourse(
+                course_id=course_id,
+                enabled=True,
+                lti_configuration=lti_configuration
+            )
+            lti_internal_course.save()
+            log.info('LTIParamsFieldMap.__init__().get_lti_internal_course() created a new LTIInternalCourse record for course_id {course_id}'.format(
+                course_id=course_id
+            ))
+            return lti_internal_course
 
         if not table in LTI_CACHE_TABLES:
             raise ValidationError('LTIParamsFieldMap.__init__() - Received table {table} but was expecting table to be any of {tables}'.format(
@@ -420,23 +430,25 @@ class LTIParamsFieldMap(object):
         ## mcdaniel july-2020: we need to anticipate the scenario where course_id is not yet setup
 
         internal_course = get_lti_internal_course(course_id)
-        lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration.id).first()
 
-        # retrieve the field-level LTI Grade Sync mapping configuration for this course.
-        lti_configuration_params = LTIConfigurationParams.objects.filter(
-            configuration=internal_course.lti_configuration,
-            table_name=table
-            )
+        if internal_course is not None:
+            lti_configuration = LTIConfigurations.objects.filter(id=internal_course.lti_configuration.id).first()
 
-        # build a params configuration dict
-        #
-        # first, lets ensure that we have a complete field list by initializing
-        # to the generic default mapping.
-        self.configuration_parameters = LTI_PARAMS_DEFAULT_CONFIGURATION.get(table)
+            # retrieve the field-level LTI Grade Sync mapping configuration for this course.
+            lti_configuration_params = LTIConfigurationParams.objects.filter(
+                configuration=internal_course.lti_configuration,
+                table_name=table
+                )
 
-        # next, we iterate lti_configuration_params
-        for param in lti_configuration_params:
-            self.configuration_parameters[param.internal_field] = param.external_field
+            # build a params configuration dict
+            #
+            # first, lets ensure that we have a complete field list by initializing
+            # to the generic default mapping.
+            self.configuration_parameters = LTI_PARAMS_DEFAULT_CONFIGURATION.get(table)
+
+            # next, we iterate lti_configuration_params
+            for param in lti_configuration_params:
+                self.configuration_parameters[param.internal_field] = param.external_field
 
         if DEBUG:
             log.info('LTIParamsFieldMap.__init__() - course_id: {course_id}, internal_course: {internal_course}, lti_configuration: {lti_configuration}, table: {table}, lti_configuration_params: {lti_configuration_params}, configuration_parameters: {configuration_parameters}'.format(
