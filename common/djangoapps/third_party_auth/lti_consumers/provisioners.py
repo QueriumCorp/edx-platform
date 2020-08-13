@@ -121,26 +121,39 @@ class CourseProvisioner(object):
 
         if DEBUG: log.info('CourseProvisioner.check_enrollment() course_id is set. continuing.')
 
-        # if we have a course_id for the user and
-        if not CourseEnrollment.is_enrolled(self.user, self.course_id):
-            retval = CourseEnrollment.enroll(self.user, self.course_id)
-            if not retval:
-                log.error('CourseProvisioner.check_enrollment() auto-enrollment failed for '\
-                    ' user: {user}, context_id: {context_id}, '\
-                    ' course_id: {course_id}'.format(
-                        user=self.user,
-                        context_id=self.context_id,
-                        course_id=self.course_id
-                    ))
-                return False
+        try:
+            if CourseEnrollment.is_enrolled(self.user, self.course_id): return True
+        except Exception as err:
+            log.info('CourseProvisioner.check_enrollment() run-time error checking enrollment status of '\
+                ' user: {user}, context_id: {context_id}, '\
+                ' course_id: {course_id}, '\
+                ' error: {err.description}'.format(
+                    user=self.user,
+                    context_id=self.context_id,
+                    course_id=self.course_id,
+                    err=err
+                ))
+            return False
 
-            log.info('CourseProvisioner.check_enrollment() automatically enrolled'\
+        # user is not yet enrolled, so lets take care of that now...
+        retval = CourseEnrollment.enroll(self.user, self.course_id)
+        if not retval:
+            log.error('CourseProvisioner.check_enrollment() auto-enrollment failed for '\
                 ' user: {user}, context_id: {context_id}, '\
                 ' course_id: {course_id}'.format(
                     user=self.user,
                     context_id=self.context_id,
                     course_id=self.course_id
                 ))
+            return False
+
+        log.info('CourseProvisioner.check_enrollment() automatically enrolled'\
+            ' user: {user}, context_id: {context_id}, '\
+            ' course_id: {course_id}'.format(
+                user=self.user,
+                context_id=self.context_id,
+                course_id=self.course_id
+            ))
 
         # cache our mappings between
         #   Rover course_id and the LTI context_id
