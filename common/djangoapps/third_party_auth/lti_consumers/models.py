@@ -115,6 +115,19 @@ class LTIInternalCourse(TimeStampedModel):
     Phase II model. provides a way to explicitly enable/disable courses for LTI grade sync,
     and also provides a way to support independent per-course LTI integration field mapping.
     """
+    TPA_NEXT = 'TPA_NEXT'
+    CALSTATELA = 'CALSTATELA'
+    KU = 'KU'
+    UBC = 'UBC'
+    SWTS = 'SWTS'
+
+    MATCHING_FUNCTIONS = [
+        (CALSTATELA, 'Cal State LA'),
+        (KU, 'KU'),
+        (UBC, 'UBC'),
+        (SWTS, 'SW Texas State'),
+    ]
+
     course_id = CourseKeyField(
         max_length=255,
         help_text="Rover Course Key (Opaque Key). " \
@@ -137,6 +150,31 @@ class LTIInternalCourse(TimeStampedModel):
         on_delete=models.SET_NULL,
         help_text="Field mapping configuration to use for this Rover course."
         )
+
+    lti_external_course_key1 = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_("Optional LTI tpa_params value used to uniquely identify a course run.")
+        )
+
+    lti_external_course_key2 = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_("Optional LTI tpa_params value used to uniquely identify a course run.")
+        )
+
+    lti_external_course_key3 = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=_("Optional LTI tpa_params value used to uniquely identify a course run.")
+        )
+
+    matching_function = models.CharField(
+        max_length=25,
+        blank=False,
+        choices=MATCHING_FUNCTIONS,
+        default=TPA_NEXT,
+    )
 
     class Meta(object):
         verbose_name = "LTI Internal Rover Course"
