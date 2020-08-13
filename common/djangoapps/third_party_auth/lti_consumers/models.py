@@ -154,19 +154,19 @@ class LTIInternalCourse(TimeStampedModel):
     lti_external_course_key1 = models.CharField(
         max_length=255,
         blank=True,
-        help_text=_("Optional LTI tpa_params value used to uniquely identify a course run.")
+        help_text="Optional LTI tpa_params value used to uniquely identify a course run."
         )
 
     lti_external_course_key2 = models.CharField(
         max_length=255,
         blank=True,
-        help_text=_("Optional LTI tpa_params value used to uniquely identify a course run.")
+        help_text="Optional LTI tpa_params value used to uniquely identify a course run."
         )
 
     lti_external_course_key3 = models.CharField(
         max_length=255,
         blank=True,
-        help_text=_("Optional LTI tpa_params value used to uniquely identify a course run.")
+        help_text="Optional LTI tpa_params value used to uniquely identify a course run."
         )
 
     matching_function = models.CharField(
