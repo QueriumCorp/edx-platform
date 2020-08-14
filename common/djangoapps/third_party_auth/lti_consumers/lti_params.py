@@ -126,19 +126,42 @@ class LTIParams(object):
 
         return None
 
-    def _get_course_id_from_context(self):
-        """Attempt to get course section information from the context parameters.
-        Cal State LA add section information in their parameters.
+    def _get_course_id_from_lis_course_offering_sourcedid(self):
+        """Attempt to get course section information from self.lis_course_offering_sourcedid
+        used by Cal State LA for fall 2020
 
         examples:
-            "context_label": "INTRODUCTORY PSYCHOLOGY PSY 1500-12",
-            "context_title": "PSY 1500-12",
+            "lis_course_offering_sourcedid": "2209-90086"  (maps to external key2)
 
         Returns:
             [string]: course_id string value.
         """
         if DEBUG:
-            log.info('LTIParams._get_course_id_from_context() - not yet implemented.')
+            log.info('LTIParams._get_course_id_from_lis_course_offering_sourcedid() - retrive course_id for lis_course_offering_sourcedid: {lis_course_offering_sourcedid}'.format(
+                lis_course_offering_sourcedid=self.lis_course_offering_sourcedid
+            ))
+
+        try:
+            course_id = LTIInternalCourse.objects.filter(lti_external_course_key1=self.lis_course_offering_sourcedid).first().course_id
+            return course_id
+        except:
+            pass
+
+        try:
+            course_id = LTIInternalCourse.objects.filter(lti_external_course_key2=self.lis_course_offering_sourcedid).first().course_id
+            return course_id
+        except:
+            pass
+
+        try:
+            course_id = LTIInternalCourse.objects.filter(lti_external_course_key3=self.lis_course_offering_sourcedid).first().course_id
+            return course_id
+        except:
+            pass
+
+        if DEBUG:
+            log.info('LTIParams._get_course_id_from_lis_course_offering_sourcedid() - did not find a course_id.')
+
         return None
 
     @property
@@ -186,8 +209,9 @@ class LTIParams(object):
         course_id = self._get_course_id_from_tpa_next()
         if course_id: return course_id
 
-        # priority 3: try to parse the course key from the context parameters
-        course_id = self._get_course_id_from_context()
+        # priority 3: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key field
+        # mcdaniel aug-2020: added this for Calstatela
+        course_id = self._get_course_id_from_lis_course_offering_sourcedid()
         if course_id: return course_id
 
         raise LTIBusinessRuleError('LTIParams.course_id() was unable to determine the course_id from these lti_params: {lti_params}'.format(
