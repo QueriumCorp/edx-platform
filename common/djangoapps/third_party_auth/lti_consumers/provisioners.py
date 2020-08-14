@@ -127,7 +127,7 @@ class CourseProvisioner(object):
             log.info('CourseProvisioner.check_enrollment() run-time error checking enrollment status of '\
                 ' user: {user}, context_id: {context_id}, '\
                 ' course_id: {course_id}, '\
-                ' error: {err.description}'.format(
+                ' error: {err}'.format(
                     user=self.user,
                     context_id=self.context_id,
                     course_id=self.course_id,
