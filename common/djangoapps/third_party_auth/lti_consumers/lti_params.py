@@ -29,7 +29,8 @@ from .utils import get_default_lti_configuration
 from .constants import (
     LTI_INSTRUCTOR_ROLES,
     LTI_DOMAINS,
-    LTI_CACHE_TABLES
+    LTI_CACHE_TABLES,
+    LTI_PARAMS_DEFAULT_CONFIGURATION
     )
 from .models import (
     LTIInternalCourse,
