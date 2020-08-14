@@ -33,6 +33,10 @@ class LTIInternalCourseAdmin(admin.ModelAdmin):
         'modified',
         'enabled',
         'lti_configuration',
+        'lti_external_course_key1',
+        'lti_external_course_key2',
+        'lti_external_course_key3',
+        'matching_function',
     )
     readonly_fields=(u'created', u'modified' )
 

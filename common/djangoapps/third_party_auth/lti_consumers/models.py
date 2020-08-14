@@ -122,6 +122,7 @@ class LTIInternalCourse(TimeStampedModel):
     SWTS = 'SWTS'
 
     MATCHING_FUNCTIONS = [
+        (TPA_NEXT, 'TPA Next URL'),
         (CALSTATELA, 'Cal State LA'),
         (KU, 'KU'),
         (UBC, 'UBC'),
@@ -457,6 +458,13 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         max_length=255,
         )
 
+    lti_user_image_url = models.CharField(
+        #verbose_name="User ID",
+        help_text="User profile image url from host LMS. Example: https://calstatela.instructure.com/images/thumbnails/2646143/dudwvMf0hrOrX6TEde9npjTCo9r1MbYVMKUKQVOI",
+        blank=True,
+        max_length=255,
+        )
+
     custom_user_id = models.CharField(
         #verbose_name="Canvas User ID",
         help_text="User ID provided to LTI Consumer. Example: 394",
@@ -498,6 +506,13 @@ class LTIExternalCourseEnrollment(TimeStampedModel):
         help_text="Privacy settings from external system, provided to LTI Consumer. Example: allow-pii-all",
         max_length=50,
         default=None,
+        blank=True,
+        null=True,
+        )
+
+    lis_course_offering_sourcedid = models.CharField(
+        max_length=255,
+        help_text="External course section identifier. Example: 2209-90086",
         blank=True,
         null=True,
         )
