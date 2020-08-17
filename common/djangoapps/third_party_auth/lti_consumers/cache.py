@@ -303,10 +303,23 @@ class LTISession(object):
 
         custom_course_startat = parse_date(date_str)
 
+        # mcdaniel Aug-2020: LTIExternalCourse.course_id is a FK to LTIInternalCourse.
+        lti_internal_course = LTIInternalCourse.objects.filter(
+            course_id = self.course_id
+        ).first()
+
+        if not lti_internal_course:
+            msg='LTISession.register_course() - did not find a matching course in LTIInternalCourse for context_id {context_id}, course_id {course_id}'.format(
+                context_id=self.context_id,
+                course_id=self.course_id
+            )
+            log.error(msg)
+            return None
+
         try:
             course = LTIExternalCourse(
                 context_id = self.context_id,
-                course_id = self.course_id,
+                course_id = lti_internal_course,
                 context_title = params.context_title,
                 context_label = params.context_label,
                 ext_wl_launch_key = params.ext_wl_launch_key,
