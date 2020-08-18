@@ -208,25 +208,28 @@ class LTIParams(object):
 
         # priority 1: use the LTI External Course cache object if it exists
         course_id = self._get_cached_course_id()
-        log.info('LTIParams.course_id - #1 cached course id: {course_id}, Type: {t}'.format(
-            course_id=course_id,
-            t=type(course_id)
-        ))
+        if DEBUG:
+            log.info('LTIParams.course_id - #1 cached course id: {course_id}, Type: {t}'.format(
+                course_id=course_id,
+                t=type(course_id)
+            ))
         if course_id: return course_id
 
         # priority 2: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key field
         # mcdaniel aug-2020: added this for Calstatela
         course_id = self._get_course_id_from_lis_course_offering_sourcedid()
-        log.info('LTIParams.course_id - #2 _get_course_id_from_lis_course_offering_sourcedid: {course_id}'.format(
-            course_id=course_id
-        ))
+        if DEBUG:
+            log.info('LTIParams.course_id - #2 _get_course_id_from_lis_course_offering_sourcedid: {course_id}'.format(
+                course_id=course_id
+            ))
         if course_id: return course_id
 
         # priority 3: try to parse the course key from custom_tpa_next
         course_id = self._get_course_id_from_tpa_next()
-        log.info('LTIParams.course_id - #3 _get_course_id_from_tpa_next: {course_id}'.format(
-            course_id=course_id
-        ))
+        if DEBUG:
+            log.info('LTIParams.course_id - #3 _get_course_id_from_tpa_next: {course_id}'.format(
+                course_id=course_id
+            ))
         if course_id: return course_id
 
         raise LTIBusinessRuleError('LTIParams.course_id() was unable to determine the course_id from these lti_params: {lti_params}'.format(
