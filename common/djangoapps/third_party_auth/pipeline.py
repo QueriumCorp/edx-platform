@@ -221,7 +221,9 @@ def get_idp_logout_url_from_running_pipeline(request):
             if tpa_provider:
                 try:
                     return tpa_provider.get_setting('logout_url')
-                except KeyError:
+                # mcdaniel aug-2020: had to broaden this exception type bc LTI configurations
+                # do not have a logout_url setting.
+                except:
                     logger.info(u'[THIRD_PARTY_AUTH] idP [%s] logout_url setting not defined', tpa_provider.name)
 
 
