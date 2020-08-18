@@ -382,11 +382,12 @@ class LTISession(object):
             if DEBUG: log.info('LTISession.register_enrollment() - returning a cached enrollment record.')
             return enrollment
 
-        log.info('register_enrollment() user: {user}, course_id: {course_id} {t}'.format(
-            user=self.user,
-            course_id=self.course_id,
-            t=type(self.course_id)
-        ))
+        if DEBUG:
+            log.info('register_enrollment() user: {user}, course_id: {course_id} {t}'.format(
+                user=self.user,
+                course_id=self.course_id,
+                t=type(self.course_id)
+            ))
 
         if not CourseEnrollment.is_enrolled(self.user, self.course_id):
             if DEBUG: log.info('LTISession.register_enrollment() - learner is not enrolled in this course. exiting.')

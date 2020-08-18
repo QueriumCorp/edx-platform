@@ -122,10 +122,11 @@ class CourseProvisioner(object):
         if DEBUG: log.info('CourseProvisioner.check_enrollment() course_id is set. continuing.')
 
         try:
-            log.info('check_enrollment - course_id: {course_id} {t}'.format(
-                course_id=course_id
-                t=type(self.course_id)
-            ))
+            if DEBUG:
+                log.info('check_enrollment - course_id: {course_id} {t}'.format(
+                    course_id=course_id,
+                    t=type(self.course_id)
+                ))
             if CourseEnrollment.is_enrolled(self.user, self.course_id): return True
         except Exception as err:
             log.info('CourseProvisioner.check_enrollment() run-time error checking enrollment status of '\
