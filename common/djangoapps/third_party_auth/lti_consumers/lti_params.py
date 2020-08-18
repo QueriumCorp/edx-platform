@@ -83,11 +83,15 @@ class LTIParams(object):
         try:
             course = LTIExternalCourse.objects.filter(context_id=self.context_id).first()
             if course:
+                course_id = course.course_id.course_id.html_id()
+                course_key = CourseKey.from_string(course_id)
                 if DEBUG:
-                    log.info('LTIParams._get_cached_course_id() - found course_id: {course_id}'.format(
-                        course_id=course.course_id
+                    log.info('LTIParams._get_cached_course_id() - found course_id: {course_id}, course_key: {course_key}, Type: {t}'.format(
+                        course_id=course_id,
+                        course_key=course_key,
+                        t=type(course_key)
                     ))
-                return course.course_id
+                return course_key
         except ObjectDoesNotExist:
             pass
         if DEBUG:
@@ -204,15 +208,25 @@ class LTIParams(object):
 
         # priority 1: use the LTI External Course cache object if it exists
         course_id = self._get_cached_course_id()
+        log.info('LTIParams.course_id - #1 cached course id: {course_id}, Type: {t}'.format(
+            course_id=course_id,
+            t=type(course_id)
+        ))
         if course_id: return course_id
 
         # priority 2: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key field
         # mcdaniel aug-2020: added this for Calstatela
         course_id = self._get_course_id_from_lis_course_offering_sourcedid()
+        log.info('LTIParams.course_id - #2 _get_course_id_from_lis_course_offering_sourcedid: {course_id}'.format(
+            course_id=course_id
+        ))
         if course_id: return course_id
 
         # priority 3: try to parse the course key from custom_tpa_next
         course_id = self._get_course_id_from_tpa_next()
+        log.info('LTIParams.course_id - #3 _get_course_id_from_tpa_next: {course_id}'.format(
+            course_id=course_id
+        ))
         if course_id: return course_id
 
         raise LTIBusinessRuleError('LTIParams.course_id() was unable to determine the course_id from these lti_params: {lti_params}'.format(
@@ -476,12 +490,11 @@ class LTIParamsFieldMap(object):
                 self.configuration_parameters[param.internal_field] = param.external_field
 
         if DEBUG:
-            log.info('LTIParamsFieldMap.__init__() - course_id: {course_id}, internal_course: {internal_course}, lti_configuration: {lti_configuration}, table: {table}, lti_configuration_params: {lti_configuration_params}, configuration_parameters: {configuration_parameters}'.format(
+            log.info('LTIParamsFieldMap.__init__() - course_id: {course_id}, internal_course: {internal_course}, lti_configuration: {lti_configuration}, table: {table}, configuration_parameters: {configuration_parameters}'.format(
                 course_id=course_id,
                 internal_course=internal_course,
                 lti_configuration=lti_configuration,
                 table=table,
-                lti_configuration_params=lti_configuration_params.objects.count(),
                 configuration_parameters=self.configuration_parameters
             ))
 

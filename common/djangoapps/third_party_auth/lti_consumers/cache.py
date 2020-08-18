@@ -266,7 +266,7 @@ class LTISession(object):
                 except ValidationError as err:
                     msg='LTISession.register_course() - could not update course_id of LTIExternalCourse for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
                         context_id=self.context_id,
-                        course_id=course_id,
+                        course_id=self.course_id,
                         err=err,
                         traceback=traceback.format_exc()
                     )
@@ -278,7 +278,7 @@ class LTISession(object):
                 # Note: if for any reason there were a descrepency between course.course_id
                 # and a not-null value of self.course_id, then we'll always assume
                 # that course.course_id is the correct value.
-                self._course_id = course.course_id
+                self._course_id = course.course_id.course_id
 
             return course
 
@@ -381,6 +381,12 @@ class LTISession(object):
             self.course_enrollment = enrollment
             if DEBUG: log.info('LTISession.register_enrollment() - returning a cached enrollment record.')
             return enrollment
+
+        log.info('register_enrollment() user: {user}, course_id: {course_id} {t}'.format(
+            user=self.user,
+            course_id=self.course_id,
+            t=type(self.course_id)
+        ))
 
         if not CourseEnrollment.is_enrolled(self.user, self.course_id):
             if DEBUG: log.info('LTISession.register_enrollment() - learner is not enrolled in this course. exiting.')
@@ -1020,7 +1026,7 @@ class LTISession(object):
         self._course = value
         self._course_enrollment = None
         self._context_id = self._course.context_id
-        self._course_id = self._course.course_id
+        self._course_id = self._course.course_id.course_id
 
     @property
     def course_enrollment(self):
