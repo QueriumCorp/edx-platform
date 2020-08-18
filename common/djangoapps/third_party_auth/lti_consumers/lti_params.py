@@ -206,13 +206,13 @@ class LTIParams(object):
         course_id = self._get_cached_course_id()
         if course_id: return course_id
 
-        # priority 2: try to parse the course key from custom_tpa_next
-        course_id = self._get_course_id_from_tpa_next()
-        if course_id: return course_id
-
-        # priority 3: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key field
+        # priority 2: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key field
         # mcdaniel aug-2020: added this for Calstatela
         course_id = self._get_course_id_from_lis_course_offering_sourcedid()
+        if course_id: return course_id
+
+        # priority 3: try to parse the course key from custom_tpa_next
+        course_id = self._get_course_id_from_tpa_next()
         if course_id: return course_id
 
         raise LTIBusinessRuleError('LTIParams.course_id() was unable to determine the course_id from these lti_params: {lti_params}'.format(
