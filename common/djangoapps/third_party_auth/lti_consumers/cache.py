@@ -30,6 +30,7 @@ from .utils import find_course_unit, get_course_by_id
 from .exceptions import LTIBusinessRuleError
 from .lti_params import LTIParamsFieldMap, LTIParams
 from .models import (
+    LTIInternalCourse,
     LTIExternalCourse,
     LTIExternalCourseEnrollment,
     LTIExternalCourseEnrollmentGrades,
