@@ -1,4 +1,5 @@
-"tpa-lti-params": {
+{
+  "tpa-lti-params": {
     "context_id": "dcabeb60badb4385ae0ad0635f243acc",
     "context_label": "4199-11983",
     "context_title": "-MATH 101 College Algebra LEC",
@@ -43,4 +44,5 @@
     "tool_consumer_instance_guid": "c2ba525f5eef40bc8df2fbf7ab4374f1",
     "tool_consumer_instance_name": "The University of Kansas",
     "user_id": "3abe194cb76d4e44a88ffa8932271342"
+}
 }
