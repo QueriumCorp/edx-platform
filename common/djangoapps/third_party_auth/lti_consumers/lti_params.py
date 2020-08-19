@@ -83,15 +83,12 @@ class LTIParams(object):
         try:
             course = LTIExternalCourse.objects.filter(context_id=self.context_id).first()
             if course:
-                course_id = course.course_id.course_id.html_id()
-                course_key = CourseKey.from_string(course_id)
+                course_id = course.course_id.course_id
                 if DEBUG:
-                    log.info('LTIParams._get_cached_course_id() - found course_id: {course_id}, course_key: {course_key}, Type: {t}'.format(
-                        course_id=course_id,
-                        course_key=course_key,
-                        t=type(course_key)
+                    log.info('LTIParams._get_cached_course_id() - found course_id: {course_id}'.format(
+                        course_id=course_id
                     ))
-                return course_key
+                return course_id
         except ObjectDoesNotExist:
             pass
         if DEBUG:
