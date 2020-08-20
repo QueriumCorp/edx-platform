@@ -180,7 +180,7 @@ class LTIInternalCourse(TimeStampedModel):
     class Meta(object):
         verbose_name = "LTI Internal Rover Course"
         verbose_name_plural = verbose_name + "s"
-        #ordering = ('-fetched_at', )
+        unique_together = [['lti_external_course_key1', 'lti_external_course_key2', 'lti_external_course_key3']]
 
     def __str__(self):
         return self.course_id.html_id()
@@ -388,7 +388,6 @@ class LTIExternalCourse(TimeStampedModel):
 
     class Meta(object):
         verbose_name = "LTI External Course"
-        unique_together = [['context_id', 'course_id']]
         #ordering = ('-fetched_at', )
 
 
