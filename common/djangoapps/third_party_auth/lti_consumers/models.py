@@ -22,6 +22,7 @@ from model_utils.models import TimeStampedModel
 from lms.djangoapps.courseware.fields import UnsignedBigIntAutoField
 #-----------------
 
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from opaque_keys.edx.django.models import CourseKeyField, UsageKeyField
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
@@ -119,14 +120,14 @@ class LTIInternalCourse(TimeStampedModel):
     CALSTATELA = 'CALSTATELA'
     KU = 'KU'
     UBC = 'UBC'
-    SWTS = 'SWTS'
+    STX = 'STX'
 
     MATCHING_FUNCTIONS = [
         (TPA_NEXT, 'TPA Next URL'),
         (CALSTATELA, 'Cal State LA'),
         (KU, 'KU'),
         (UBC, 'UBC'),
-        (SWTS, 'SW Texas State'),
+        (STX, 'South Texas'),
     ]
 
     course_id = CourseKeyField(
@@ -137,6 +138,15 @@ class LTIInternalCourse(TimeStampedModel):
         default=None,
         primary_key=True
         )
+
+    course_fk = models.ForeignKey(
+        CourseOverview,
+        db_index=True,
+        unique=True,
+        null=True,
+        db_constraint=False,
+        on_delete=models.CASCADE,
+    )
 
     enabled = models.BooleanField(
         default=False,
@@ -388,6 +398,7 @@ class LTIExternalCourse(TimeStampedModel):
 
     class Meta(object):
         verbose_name = "LTI External Course"
+        unique_together = [['context_id', 'course_id']]
         #ordering = ('-fetched_at', )
 
 
