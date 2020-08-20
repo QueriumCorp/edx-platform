@@ -29,14 +29,14 @@ class LTIInternalCourseAdmin(admin.ModelAdmin):
     """
     list_display = (
         'course_id',
-        'created',
-        'modified',
-        'enabled',
-        'lti_configuration',
         'lti_external_course_key1',
         'lti_external_course_key2',
         'lti_external_course_key3',
+        'lti_configuration',
         'matching_function',
+        'created',
+        'modified',
+        'enabled',
     )
     readonly_fields=(u'created', u'modified' )
 
