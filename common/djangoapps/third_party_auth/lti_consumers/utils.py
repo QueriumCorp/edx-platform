@@ -18,7 +18,7 @@ from django.core.exceptions import ObjectDoesNotExist
 # open edx stuff
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
-from opaque_keys.edx.locator import BlockUsageLocator
+from opaque_keys.edx.locator import BlockUsageLocator, CourseLocator
 from xmodule.modulestore.django import modulestore
 
 # rover stuff
@@ -143,7 +143,10 @@ def is_lti_gradesync_enabled(course_key):
     """
 
     if not is_valid_course_id(course_key):
-        log.error('is_lti_gradesync_enabled() received an invalid CourseKey: {course_key}'.format(course_key=course_key))
+        log.error('is_lti_gradesync_enabled() received an invalid CourseKey: {course_key} {t}'.format(
+            course_key=course_key,
+            t=type(course_key)
+            ))
         return False
     course_key = CourseKey.from_string(course_key)
 
@@ -215,12 +218,15 @@ def is_valid_course_id(course_id):
     Returns:
         [Boolean] -- True if the course_id string is valid.
     """
+    if type(course_id) is CourseLocator: return True
+
     # try to create an instance of CourseKey from the course_id passed
-    try:
-        course_key = CourseKey.from_string(course_id)
-    except:
-        pass
-        return False
+    if type(course_id) is str:
+        try:
+            course_key = CourseKey.from_string(course_id)
+        except:
+            pass
+            return False
 
     # Verify that this course_id corresponds with a Rover course
     if not CourseOverview.get_from_id(course_key):
