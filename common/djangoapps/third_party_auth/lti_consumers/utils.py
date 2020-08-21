@@ -148,7 +148,9 @@ def is_lti_gradesync_enabled(course_key):
             t=type(course_key)
             ))
         return False
-    course_key = CourseKey.from_string(course_key)
+
+    if type(course_key) is str:
+        course_key = CourseKey.from_string(course_key)
 
     """
     Test #1
