@@ -24,6 +24,7 @@ from xmodule.modulestore.django import modulestore
 # rover stuff
 from .models import (
     LTIExternalCourse,
+    LTIInternalCourse,
     LTIConfigurations,
     LTIConfigurationParams
     )
@@ -141,23 +142,10 @@ def is_lti_gradesync_enabled(course_key):
         [Boolean] -- True if LTI Grade Sync is enabled for the course_key
     """
 
-    # validate our course_key,
-    # and if necessary, convert from string to CourseKey object
-    #if not type(course_key) is CourseKey:
-    #    if not type(course_key) is str:
-    #        log.error('is_lti_gradesync_enabled() - was expecting course_key of type CourseKey or str but received {t}'.format(
-    #            t=type(course_key)
-    #        ))
-    #        return False
-
-    #    if is_valid_course_id(course_key):
-    #        course_key = CourseKey.from_string(course_id)
-    #    else:
-    #        log.error('is_lti_gradesync_enabled() - Received and invalid course_key: {course_key}'.format(
-    #            course_key=course_key
-    #        ))
-    #        return False
-    log.error('is_lti_gradesync_enabled() - McDaniel Aug-2020: course_key validation is disabled.')
+    if not is_valid_course_id(course_key):
+        log.error('is_lti_gradesync_enabled() received an invalid CourseKey: {course_key}'.format(course_key=course_key))
+        return False
+    course_key = CourseKey.from_string(course_key)
 
     """
     Test #1
@@ -189,8 +177,8 @@ def is_lti_gradesync_enabled(course_key):
 
         # test #2b: is the control record enabled?
         if not lti_internal_course.enabled: return False
-    except:
-        log.error('is_lti_gradesync_enabled() - Internal error while attempting to read LTIInternalCourse.')
+    except Exception as err:
+        log.error('is_lti_gradesync_enabled() - Internal error while attempting to read LTIInternalCourse: {err}'.format(err=err))
         return False
 
     """
@@ -201,7 +189,10 @@ def is_lti_gradesync_enabled(course_key):
     response, and upserts a tracking record in LTIExternalCourse.
     """
     try:
-        if not LTIExternalCourse.objects.filter(course_id=course_key).exists(): return False
+        lti_external_course = LTIExternalCourse.objects.filter(course_id=course_key).first()
+        if not lti_external_course: return False
+
+        return lti_external_course.enabled
     except:
         log.error('is_lti_gradesync_enabled() - Internal error while attempting to read LTIExternalCourse.')
         return False
