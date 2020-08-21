@@ -124,10 +124,12 @@ class CourseProvisioner(object):
         try:
             if DEBUG:
                 log.info('check_enrollment - course_id: {course_id} {t}'.format(
-                    course_id=course_id,
+                    course_id=self.course_id,
                     t=type(self.course_id)
                 ))
-            if CourseEnrollment.is_enrolled(self.user, self.course_id): return True
+            if CourseEnrollment.is_enrolled(self.user, self.course_id):
+                self.session.register_enrollment()  # to ensure cache mapping records have been created for this user.
+                return True
         except Exception as err:
             log.info('CourseProvisioner.check_enrollment() run-time error checking enrollment status of '\
                 ' user: {user}, context_id: {context_id}, '\
