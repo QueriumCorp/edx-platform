@@ -2,6 +2,10 @@
 # mcdaniel Aug-2020
 Unit tests for LTIParams parser
 
+Use Case I: normal django unit testing
+Use Case II: validate tpa_lti_params test files uploaded to
+             the tests.roverbyopenstax.org test S3 bucket.
+
 Reference: https://docs.python.org/3/library/unittest.html
 """
 
