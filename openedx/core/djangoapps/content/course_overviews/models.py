@@ -695,19 +695,30 @@ class CourseOverview(TimeStampedModel):
         # mcdaniel oct-2019: hack to fix the missing course cards from the LMS
         # home screen.
         #
-        if "calculus iii" in self.display_name.lower():
-            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus3.svg'
-        elif "calculus ii" in self.display_name.lower():
-            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus2.svg'
-        elif "calculus i" in self.display_name.lower():
-            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus1.svg'
-        elif "precalculus" in self.display_name.lower():
+        if "precalculus" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/precalculus.svg'
         elif "trig" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/algebra_trigonometry.svg'
+        elif "calculus iii" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus3.svg'
+        elif "calculus3" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus3.svg'
+        elif "cal3" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus3.svg'
+        elif "calculus ii" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus2.svg'
+        elif "calculus2" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus2.svg'
+        elif "cal2" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus2.svg'
+        elif "calculus i" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus1.svg'
+        elif "calculus1" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus1.svg'
+        elif "cal1" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus1.svg'
         else:
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/college_algebra.svg'
-
 
         # Default all sizes to return the raw image if there is no
         # CourseOverviewImageSet associated with this CourseOverview. This can
