@@ -693,9 +693,15 @@ class CourseOverview(TimeStampedModel):
 
         # FIX NOTE: DELETE ME!!!!
         # mcdaniel oct-2019: hack to fix the missing course cards from the LMS
-        # home screen. 
+        # home screen.
         #
-        if "precalculus" in self.display_name.lower():
+        if "calculus iii" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus3.svg'
+        elif "calculus ii" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus2.svg'
+        elif "calculus i" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/calculus1.svg'
+        elif "precalculus" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/precalculus.svg'
         elif "trig" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/algebra_trigonometry.svg'
