@@ -22,8 +22,8 @@ class Migration(migrations.Migration):
             name='matching_function',
             field=models.CharField(choices=[('TPA_NEXT', 'TPA Next URL'), ('CALSTATELA', 'Cal State LA'), ('KU', 'KU'), ('UBC', 'UBC'), ('STX', 'South Texas')], default='TPA_NEXT', max_length=25),
         ),
-        migrations.AlterUniqueTogether(
-            name='ltiinternalcourse',
-            unique_together={('lti_external_course_key1', 'lti_external_course_key2', 'lti_external_course_key3')},
-        ),
+        #migrations.AlterUniqueTogether(
+        #    name='ltiinternalcourse',
+        #    unique_together={('lti_external_course_key1', 'lti_external_course_key2', 'lti_external_course_key3')},
+        #),
     ]
