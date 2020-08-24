@@ -314,8 +314,8 @@ def get_default_lti_configuration():
         [LTIConfigurations]: the default LTI Configuration object
     """
     config_name = "Default LTI Configuration"
-    try:
-        return LTIConfigurations.objects.filter(name=config_name).first()
-    except ObjectDoesNotExist:
-        initialize_lti_configuration(config_name)
-        return LTIConfigurations.objects.filter(name=config_name).first()
+    lti_configuration = LTIConfigurations.objects.filter(name=config_name).first()
+    if lti_configuration: return lti_configuration
+
+    initialize_lti_configuration(config_name)
+    return LTIConfigurations.objects.filter(name=config_name).first()
