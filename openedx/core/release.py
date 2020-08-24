@@ -8,7 +8,13 @@ import unittest
 # The release line: an Open edX release name ("ficus"), or "master".
 # This should always be "master" on the master branch, and will be changed
 # manually when we start release-line branches, like open-release/ficus.master.
+<<<<<<< HEAD
 RELEASE_LINE = "hawthorn"
+||||||| 27b0e8d845
+RELEASE_LINE = "master"
+=======
+RELEASE_LINE = "juniper"
+>>>>>>> cbe913ef2938f64ef3d605dcb4071424303ad6eb
 
 
 def doc_version():
