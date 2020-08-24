@@ -74,7 +74,7 @@
         <span class="auto-register-message"><%- context.autoRegisterWelcomeMessage %></span>
     <% } %>
 
-    <%= context.fields %>
+    <%= context.fields /* xss-lint: disable=underscore-not-escaped */ %>
 
     <!-- mcdaniel jan-2019: hide the optional additional registration fields  -->
     <div class="rover-hidden form-field checkbox-optional_fields_toggle">
