@@ -122,15 +122,18 @@ def _post_grades(self, username, course_id, usage_id):
 
         lti_cached_course = session.course
         if lti_cached_course is None:
-            raise LTIBusinessRuleError('Tried to call LTI Consumer api with partially initialized LTI session object. course property is not set.')
+            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course property is not set.')
+            return False
 
         lti_cached_assignment = session.get_course_assignment(problem_usage_key)
         if lti_cached_assignment is None:
             log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course assignment property is not set.')
+            return False
 
         lti_cached_enrollment = session.course_enrollment
         if lti_cached_enrollment is None:
             log.error('Tried to call LTI Consumer api with partially initialized LTI session object. enrollment property is not set.')
+            return False
 
         subsection_grade = get_subsection_grade(student, course_key, problem_usage_key)
         homework_assignment_dict = get_assignment_grade(
