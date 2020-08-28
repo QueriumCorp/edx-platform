@@ -166,6 +166,44 @@ class LTIParams(object):
 
         return None
 
+    def _get_course_id_from_context_label(self):
+        """Attempt to get course section information from self.context_label
+        used by South Texas College (Blackboard) for fall 2020
+
+        examples:
+            "context_label": "24412.202110"  (maps to external key2)
+
+        Returns:
+            [string]: course_id string value.
+        """
+        if DEBUG:
+            log.info('LTIParams._get_course_id_from_context_label() - retrive course_id for context_label: {context_label}'.format(
+                context_label=self.context_label
+            ))
+
+        try:
+            course_id = LTIInternalCourse.objects.filter(lti_external_course_key1=self.context_label).first().course_id
+            return course_id
+        except:
+            pass
+
+        try:
+            course_id = LTIInternalCourse.objects.filter(lti_external_course_key2=self.context_label).first().course_id
+            return course_id
+        except:
+            pass
+
+        try:
+            course_id = LTIInternalCourse.objects.filter(lti_external_course_key3=self.context_label).first().course_id
+            return course_id
+        except:
+            pass
+
+        if DEBUG:
+            log.info('LTIParams._get_course_id_from_context_label() - did not find a course_id.')
+
+        return None
+
     @property
     def dictionary(self):
         """a dump of the original lti_params dictionary
@@ -212,7 +250,7 @@ class LTIParams(object):
             ))
         if course_id: return course_id
 
-        # priority 2: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key field
+        # priority 2: try to match self.lis_course_offering_sourcedid to one of the lti_external_course_key fields
         # mcdaniel aug-2020: added this for Calstatela
         course_id = self._get_course_id_from_lis_course_offering_sourcedid()
         if DEBUG:
@@ -221,10 +259,19 @@ class LTIParams(object):
             ))
         if course_id: return course_id
 
-        # priority 3: try to parse the course key from custom_tpa_next
+        # priority 3: try to match self.context_label to one of the lti_external_course_key fields
+        # fuka aug-2020: added this for SouthTexasCollege
+        course_id = self._get_course_id_from_context_label()
+        if DEBUG:
+            log.info('LTIParams.course_id - #3 _get_course_id_from_context_label: {course_id}'.format(
+                course_id=course_id
+            ))
+        if course_id: return course_id
+
+        # priority 4: try to parse the course key from custom_tpa_next
         course_id = self._get_course_id_from_tpa_next()
         if DEBUG:
-            log.info('LTIParams.course_id - #3 _get_course_id_from_tpa_next: {course_id}'.format(
+            log.info('LTIParams.course_id - #4 _get_course_id_from_tpa_next: {course_id}'.format(
                 course_id=course_id
             ))
         if course_id: return course_id
