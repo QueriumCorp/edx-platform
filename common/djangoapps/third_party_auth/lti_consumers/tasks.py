@@ -125,10 +125,14 @@ def _post_grades(self, username, course_id, usage_id):
             log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course property is not set.')
             return False
 
-        lti_cached_assignment = session.get_course_assignment(problem_usage_key)
-        if lti_cached_assignment is None:
-            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course assignment property is not set.')
-            return False
+        # mcdaniel aug-2020: this should not be here. it leave no opportunity for the assignment cache record to be
+        # created (see row 148)
+        #
+        #
+        #lti_cached_assignment = session.get_course_assignment(problem_usage_key)
+        #if lti_cached_assignment is None:
+        #    log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course assignment property is not set.')
+        #    return False
 
         lti_cached_enrollment = session.course_enrollment
         if lti_cached_enrollment is None:
