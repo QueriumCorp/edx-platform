@@ -141,7 +141,7 @@ def is_lti_gradesync_enabled(course_key):
     Returns:
         [Boolean] -- True if LTI Grade Sync is enabled for the course_key
     """
-    if ROVER_DEBUG:
+    if DEBUG:
         log.info('is_lti_gradesync_enabled() - entering. course_key: {course_key}'.format(
             course_key=str(course_key)
         ))
