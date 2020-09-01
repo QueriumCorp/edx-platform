@@ -118,7 +118,7 @@ class Command(BaseCommand):
                     if not dry_run: post_grades(username=username, course_id=course_id, usage_id=usage_id)
                     else: self.console_output('DRY RUN: Grade data was not sent to Willo Labs.')
                 else:
-                    print('No grade found for user {username}, assignment {display_name}'.format(
+                    print('No cached grade found for user {username}, assignment {display_name}'.format(
                         username=username,
                         display_name=assignment.display_name
                     ))
@@ -137,7 +137,7 @@ class Command(BaseCommand):
         msg += u'     YOU ARE TRANSMITTING LIVE GRADE DATA FROM ROVER TO AN LTI CONSUMER.\r\n'
         msg += u'     THIS OPERATION WILL POTENTIALLY MODIFY STUDENT GRADES IN A REMOTE LMS.\r\n'
         msg += u'     MODIFICATIONS TO STUDENT DATA TAKE EFFECT IMMEDIATELY AND CAN BE VIEWED AT\r\n'
-        msg += u'     https://willowlabs.instructure.com/.\r\n'
+        msg += u'     https://apps.willowlabs.com/.\r\n'
         msg += color.END
         msg += u'\r\n'
         msg += u'\r\n'
@@ -160,8 +160,11 @@ class Command(BaseCommand):
         msg += u'     referenced in the source code as\n\r'
         msg += u'              LTI_CONSUMER_API_AUTHORIZATION_TOKEN\n\r'
         msg += u'     and is stored in the following two Python settings files:\n\r'
-        msg += u'     /edx/app/edxapp/edx-platform/lms/envs/production.py\n\r'
-        msg += u'     /edx/app/edxapp/edx-platform/cms/envs/production.py\n\r'
+        msg += u'     /edx/app/edxapp/edx-platform/lms/envs/roversecrets.py\n\r'
+        msg += u'     /edx/app/edxapp/edx-platform/cms/envs/roversecrets.py\n\r'
+        msg += u'\r\n'
+        msg += u'     * roversecrets.py is installled by the Provisioner from s3://secrets.roverbyopenstax.org'
+        msg += u'\r\n'
         msg += color.END
         msg += u'\r\n'
         msg += u'\r\n'
