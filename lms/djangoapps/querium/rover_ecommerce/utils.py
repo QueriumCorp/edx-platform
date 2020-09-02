@@ -16,7 +16,7 @@ from courseware.date_summary import VerifiedUpgradeDeadlineDate
 from student.models import is_faculty, get_user_by_username_or_email
 
 # our stuff
-from .models import Configuration, EOPWhitelist
+from lms.djangoapps.querium.rover_ecommerce.models import Configuration, EOPWhitelist
 
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG

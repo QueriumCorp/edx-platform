@@ -11,7 +11,7 @@
 from __future__ import absolute_import
 from django.contrib import admin
 
-from .models import (
+from lms.djangoapps.querium.rover_ecommerce.models import (
     Configuration,
     EOPWhitelist,
     )
