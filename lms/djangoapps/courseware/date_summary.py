@@ -33,6 +33,13 @@ from student.models import CourseEnrollment
 
 from .context_processor import user_timezone_locale_prefs
 
+# mcdaniel sep-2020 - Rover ecommerce configurations
+from datetime import timedelta
+from lms.djangoapps.querium.rover_ecommerce.models import Configuration as RoverEcommConfig
+import logging
+log = logging.getLogger(__name__)
+
+
 
 class DateSummary(object):
     """Base class for all date summary blocks."""
@@ -537,7 +544,10 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
     @lazy
     def date(self):
         if self.enrollment:
-            return self.enrollment.upgrade_deadline
+            # mcdaniel sep-2020: override with Rover payment deadline date from
+            # Querium Rover E-commerce › Rover E-Commerce Configurations
+            #return self.enrollment.upgrade_deadline
+            return self.rover_payment_deadline()
         else:
             return None
 
@@ -557,11 +567,29 @@ class VerifiedUpgradeDeadlineDate(DateSummary):
         #return _('Verification Upgrade Deadline')
         return _('Rover Free Trial End Date - Payment Deadline')
 
+    def rover_payment_deadline(self):
+        # mcdaniel sep-2020: replace the default ecommerce upgrade deadline with Rover's
+        # per-course_id payment deadline date. If we're missing the payment deadline date
+        # then we'll approximate it as 14 days after the course start date.
+        try:
+            rover_payment_deadline_date = RoverEcommConfig.objects.filter(course_id=self.course_id).first().payment_deadline_date
+        except:
+            log.warning('_dynamic_deadline() - Payment deadline date was not found in Django admin Querium Rover E-commerce › Rover E-Commerce Configurations for course {course_id}'.format(
+                course_id=self.course_id
+            ))
+            rover_payment_deadline_date = self.course.start + timedelta(days=14)
+
+        #return self.enrollment.dynamic_upgrade_deadline
+        return rover_payment_deadline_date
+
     def _dynamic_deadline(self):
         if not self.enrollment:
             return None
 
-        return self.enrollment.dynamic_upgrade_deadline
+        # mcdaniel sep-2020: override with Rover payment deadline date from
+        # Querium Rover E-commerce › Rover E-Commerce Configurations
+        #return self.enrollment.dynamic_upgrade_deadline
+        return self.rover_payment_deadline()
 
     @property
     def description(self):
