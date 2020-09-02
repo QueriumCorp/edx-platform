@@ -74,7 +74,9 @@ def get_subsection_chapter(subsection_url):
     while parent.block_type != u'chapter':
         parent = modulestore().get_parent_location(parent)
 
-    return parent.name
+    # mcdaniel sep-2020: getting this warning: DeprecationWarning: Name is no longer supported as a property of Locators. Please use the block_id property.
+    #return parent.name
+    return parent.block_id
 
 
 def chapter_from_url(url):

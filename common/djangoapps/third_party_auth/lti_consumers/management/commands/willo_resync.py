@@ -3,22 +3,18 @@ u"""
                 lpm0073@gmail.com
                 https://lawrencemcdaniel.com
 
-  Date:         Jan-2020
+  Date:         Sep-2020
 
   LTI Grade Sync
   Repost all cached grade data to Willo Labs.
 
   Run from the command line like this:
-  cd /edx/app/edxapp/edx-platform
-  sudo -u www-data /edx/bin/python.edxapp ./manage.py lms --settings production willo_resync course-v1:edX+DemoX+Demo_Course
-
-  or:
   sudo -H -u edxapp bash
     cd ~
     source edxapp_env
     source venvs/edxapp/bin/activate
     cd edx-platform
-    python manage.py lms --settings production willo_resync --course_id course-v1:edX+DemoX+Demo_Course
+    python manage.py lms --settings production willo_resync --dry-run --course_id course-v1:edX+DemoX+Demo_Course
 
 
 """
@@ -55,6 +51,7 @@ class style:
     END = color.END
     BOLD = color.BOLD
     UNDERLINE = color.UNDERLINE
+
 class Command(BaseCommand):
     help = u"LTI Willo Labs Grade Re-sync. Iterates cached grade data for the course_id and re-posts all student assignment grades to Willo Labs api."
 
@@ -100,7 +97,7 @@ class Command(BaseCommand):
 
         for enrollment in enrollments:
             for assignment in assignments:
-                username=enrollment.user.username,
+                username=enrollment.user.username
                 grade = LTIExternalCourseEnrollmentGrades.objects.filter(
                     course_enrollment=enrollment,
                     course_assignment=assignment

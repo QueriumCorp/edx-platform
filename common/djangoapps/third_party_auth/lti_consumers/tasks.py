@@ -22,10 +22,9 @@ except ImportError:
 from celery.task import task
 from celery.exceptions import SoftTimeLimitExceeded
 from celery_utils.persist_on_failure import LoggedPersistOnFailureTask
-#from celery.utils.log import get_task_logger
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db.utils import DatabaseError
 
@@ -48,9 +47,7 @@ from lms.djangoapps.course_blocks.api import get_course_blocks
 from lms.djangoapps.grades.transformer import GradesTransformer
 from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
 
-
 log = logging.getLogger(__name__)
-#log = get_task_logger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
 KNOWN_RETRY_ERRORS = (  # Errors we expect occasionally, should be resolved on retry
@@ -107,15 +104,17 @@ def _post_grades(self, username, course_id, usage_id):
     Return value:
         failure_messages: List of error messages for the providers that could not be updated
     """
+
+    log.info('_post_grades() - username: {username}, course_id: {course_id}, usage_id: {usage_id}'.format(
+        username=username,
+        course_id=course_id,
+        usage_id=usage_id
+    ))
+
     try:
-        if DEBUG: log.info('_post_grades() - username: {username}, course_id: {course_id}, usage_id: {usage_id}'.format(
-            username=username,
-            course_id=course_id,
-            usage_id=usage_id
-        ))
 
         # re-instantiate our class objects
-        student = get_user_model().objects.get(username=username)
+        student = User.objects.get(username=username)
         course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
         session = LTISession(user=student, course_id=course_id)
