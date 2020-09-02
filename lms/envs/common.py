@@ -2327,6 +2327,11 @@ INSTALLED_APPS = [
     # edX Video Pipeline integration
     'openedx.core.djangoapps.video_pipeline',
 
+    # mcdaniel sep-2020: rover ecommerce has to come before lms.djangoapps.courseware
+    'querium.stepwise',
+    'querium.rover_ecommerce',
+    #'querium.grades_api',
+
     # Our courseware
     'lms.djangoapps.courseware',
     'coursewarehistoryextended',
