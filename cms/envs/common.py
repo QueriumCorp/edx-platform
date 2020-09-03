@@ -1440,6 +1440,11 @@ INSTALLED_APPS = [
     # add LTI Grade Sync module
     'common.djangoapps.third_party_auth.lti_consumers',
 
+    # mcdaniel sep-2020: rover ecommerce has to come before lms.djangoapps.courseware
+    'querium.stepwise',
+    'querium.rover_ecommerce',
+    #'querium.grades_api',
+
     # These are apps that aren't strictly needed by Studio, but are imported by
     # other apps that are.  Django 1.8 wants to have imported models supported
     # by installed apps.
