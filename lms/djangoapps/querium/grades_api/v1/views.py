@@ -347,7 +347,7 @@ class InternalCourseGradeView(AbstractGradesView):
         super(InternalCourseGradeView, self).get(course_id=course_id, username=username)
 
         chapters = {}
-        for chapter in self.course_grade.chapter_grades.itervalues():
+        for chapter in self.course_grade.chapter_grades.values():
             chapters[chapter['url_name']] = self.get_chapter_dict(chapter)
 
         course_dict = self.get_course_dict()
@@ -363,7 +363,10 @@ class CourseGradeView(AbstractGradesView):
         super(CourseGradeView, self).get(request=request, course_id=course_id, chapter_id=None, section_id=None)
 
         chapters = {}
-        for chapter in self.course_grade.chapter_grades.itervalues():
+        if not self.course_grade or not self.course_grade.chapter_grades:
+            return Response({})
+
+        for chapter in self.course_grade.chapter_grades.values():
             chapters[chapter['url_name']] = self.get_chapter_dict(chapter)
 
         course_dict = self.get_course_dict()
@@ -381,7 +384,7 @@ class ChapterGradeView(AbstractGradesView):
             chapter_id=chapter_id
         ))
         super(ChapterGradeView, self).get(request=request, course_id=course_id, chapter_id=chapter_id, section_id=None)
-        for chapter in self.course_grade.chapter_grades.itervalues():
+        for chapter in self.course_grade.chapter_grades.values():
             if chapter['url_name'] == chapter_id:
                 return Response(self.get_chapter_dict(chapter))
 
@@ -400,7 +403,7 @@ class SectionGradeView(AbstractGradesView):
             section_id=section_id
         ))
         super(SectionGradeView, self).get(request=request, course_id=course_id, chapter_id=chapter_id, section_id=section_id)
-        for chapter in self.course_grade.chapter_grades.itervalues():
+        for chapter in self.course_grade.chapter_grades.values():
             if chapter['url_name'] == chapter_id:
                 for section in chapter['sections']:
                     if section.url_name == section_id:
