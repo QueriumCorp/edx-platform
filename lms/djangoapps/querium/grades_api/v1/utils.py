@@ -70,7 +70,7 @@ def parent_usagekey(
         course_key=course_key
         )
 
-    for chapter in course_grade.chapter_grades.itervalues():
+    for chapter in course_grade.chapter_grades.values():
         for section in chapter['sections']:
             grades_factory = SubsectionGradeFactory(
                 student=user,
