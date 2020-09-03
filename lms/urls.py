@@ -1067,14 +1067,12 @@ if 'figures' in settings.INSTALLED_APPS:
         )
 
 # mcdaniel nov-2019
-# to activate the URL endpoints currently defined in the LMS grades module.
-# Question: why weren't these already added to urls.py?????
-#
-#   ----- :/ -----
-urlpatterns += (
-    url(r'^grades_api/',
-        include('lms.djangoapps.grades.rest_api.urls')),
-)
+# to activate the Rover grades api
+if settings.ROVER_ENABLE_GRADES_API:
+    urlpatterns += (
+        url(r'^rover_grades_api/',
+            include('lms.querium.grades_api.urls')),
+    )
 
 # Course Home API urls
 urlpatterns += [

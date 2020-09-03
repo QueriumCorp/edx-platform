@@ -26,5 +26,5 @@ urlpatterns = [
 # mcdaniel feb-2020: only include grades api if feature flag is set.
 if settings.ROVER_ENABLE_GRADES_API:
     urlpatterns.append(
-        url(r'^v2/', include('grades.api.v2.urls', namespace='v2'))
+        url(r'^v2/', include('querium.grades_api.v2.urls', namespace='v2'))
     )
