@@ -5,6 +5,7 @@ Grades API URLs.
 from django.conf import settings
 from django.conf.urls import include, url
 
+"""
 from lms.djangoapps.grades.api import views
 
 urlpatterns = [
@@ -22,9 +23,10 @@ urlpatterns = [
     ),
     url(r'^v1/', include('grades.api.v1.urls', namespace='v1')),
 ]
+"""
 
 # mcdaniel feb-2020: only include grades api if feature flag is set.
 if settings.ROVER_ENABLE_GRADES_API:
-    urlpatterns.append(
+    urlpatterns = [
         url(r'^v2/', include('querium.grades_api.v2.urls', namespace='v2'))
-    )
+    ]

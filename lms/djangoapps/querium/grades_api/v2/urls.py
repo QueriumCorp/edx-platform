@@ -2,15 +2,17 @@
 from django.conf import settings
 from django.conf.urls import url
 
-from lms.djangoapps.grades.api.v2.views import CourseGradeView
-from lms.djangoapps.grades.api.v2.views import ChapterGradeView
-from lms.djangoapps.grades.api.v2.views import SectionGradeView
-from lms.djangoapps.grades.api.views import CourseGradingPolicy
+from .views import CourseGradeView
+from .views import ChapterGradeView
+from .views import SectionGradeView
+from lms.djangoapps.grades.rest_api.v1.views import CourseGradingPolicy
 
 
 from rest_framework.documentation import include_docs_urls
 # mcdaniel may-2020: swagger seems to have been removed in juniper.rc3
 #from rest_framework_swagger.views import get_swagger_view
+
+app_name = 'lms.djangoapps.querium.grades_api'
 
 """
   mcdaniel nov-2019
