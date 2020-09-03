@@ -1071,7 +1071,7 @@ if 'figures' in settings.INSTALLED_APPS:
 if settings.ROVER_ENABLE_GRADES_API:
     urlpatterns += (
         url(r'^rover_grades_api/',
-            include('lms.querium.grades_api.urls')),
+            include('lms.djangoapps.querium.grades_api.urls')),
     )
 
 # Course Home API urls

@@ -17,17 +17,15 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from edx_rest_framework_extensions import permissions
-from edx_rest_framework_extensions.authentication import JwtAuthentication
-from enrollment import data as enrollment_data
+from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
+from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
+from openedx.core.djangoapps.enrollments import data as enrollment_data
 from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
-from openedx.core.lib.api.authentication import (
-    OAuth2AuthenticationAllowInactiveUser,
-    SessionAuthenticationAllowInactiveUser
-)
 from openedx.core.lib.api.view_utils import DeveloperErrorViewMixin
+from openedx.core.lib.api.authentication import OAuth2AuthenticationAllowInactiveUser
 from student.models import CourseEnrollment
 
 # mcdaniel nov-2019
@@ -88,7 +86,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
          Abstract getter.
          Mostly deals with initializations needed by child objects.
 
-         Default usage as part of a REST api, but can also be called internally 
+         Default usage as part of a REST api, but can also be called internally
          for reports, large grade dumps, manage.py utility apps, etcetera.
 
          Notes:
@@ -342,7 +340,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                 }
 class InternalCourseGradeView(AbstractGradesView):
     """
-     Used for requests from manage.py 
+     Used for requests from manage.py
      Returns a json dict
     """
     def get(self, course_id, username):
