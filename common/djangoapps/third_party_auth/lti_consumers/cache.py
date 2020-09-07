@@ -6,6 +6,7 @@ Raises:
     LTIBusinessRuleError
 """
 from __future__ import absolute_import
+import pytz
 import datetime
 import logging
 import json
@@ -42,7 +43,10 @@ from .models import (
 # for _verify_structure
 from openedx.core.djangoapps.content.block_structure.api import get_block_structure_manager
 from openedx.core.djangoapps.content.block_structure.block_structure import BlockStructure
-
+from lms.djangoapps.course_blocks.api import get_course_blocks
+from xmodule.modulestore.django import modulestore
+from lms.lib.utils import get_parent_unit
+import urllib.parse
 
 User = get_user_model()
 log = logging.getLogger(__name__)
@@ -231,21 +235,91 @@ class LTICacheManager(object):
         # excluding: 'vertical', 'sequential', 'openassessment'
         PROBLEM_BLOCK_TYPES = ['problem', 'swxblock']
 
+
         # note: self.course_id is a CourseKey
         # structure: openedx.core.djangoapps.content.block_structure.block_structure.BlockStructureBlockData
         structure = get_block_structure_manager(self.course_id).get_collected()
 
+        #for block_usage_key in structure.get_children(self.course_id):
+        #    print('child: {child}'.format(child=block_usage_key))
+        course = modulestore().get_course(self.course_id)
+        #lms_link = get_lms_link_for_item(item.location)
+
+        #with modulestore().bulk_operations(self.course_id):
+
+
+
         for block_usage_key in structure.get_block_keys():
             if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
+
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
                 exists = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
                 if exists is not None:
                     print('Found: {block_usage_key}, lti record: {lti_record}'.format(block_usage_key=block_usage_key, lti_record=exists))
                 else:
-                    print('Missing: {block_usage_key}'.format(block_usage_key=block_usage_key))
-                    block_structure = BlockStructure(root_block_usage_key=block_usage_key)
-                    for locator in block_structure.get_parents(usage_key=block_usage_key):
-                        print(str(locator))
+                    print('Missing: {block_usage_key} {block_type}'.format(block_usage_key=block_usage_key, block_type=block_usage_key.block_type))
+
+                    item = None
+                    try:
+                        item = modulestore().get_item(block_usage_key, depth=1)
+                    except:
+                        print('no item for ' + str(block_usage_key))
+                        print('')
+                        print('')
+                        pass
+
+                    if item:
+                        parent = get_parent_unit(item)
+                        host = settings.SITE_NAME
+                        scheme = u"https" if settings.HTTPS == "on" else u"http"
+                        course_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/?activate_block_id='.format(
+                            scheme = scheme,
+                            host=host,
+                            url_prefix='courses',
+                            course_id=self.course_id
+                            )
+                        problem_encoded_location = urllib.parse.quote(str(item.location))
+                        assignment_encoded_location = urllib.parse.quote(str(parent.location))
+                        display_name = str(item.display_name)
+                        due_date = item.due
+
+                        assignment_url = course_url + assignment_encoded_location
+                        """
+                        print('course_key: ' + str(block_usage_key.course_key))
+                        print('problem location: ' + str(item.location))
+                        print('problem encoded location: ' + problem_encoded_location)
+                        print('block_usage_key display_name: ' + display_name)
+                        print('assignment location: ' + str(parent.location))
+                        print('assignment type: ' + str(type(parent)))
+                        print('problem url: ' + course_url + problem_encoded_location)
+                        print('assignment url: ' + assignment_url)
+                        print('')
+                        print('')
+                        """
+
+                        lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
+                        lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(course=lti_external_course).first()
+                        if lti_external_course_assignments is None:
+                            lti_external_course_assignments = LTIExternalCourseAssignments(
+                                course = lti_external_course,
+                                url = assignment_url,
+                                display_name = display_name,
+                                due_date = due_date
+                            )
+                            lti_external_course_assignments.save()
+                            print('saved new LTIExternalCourseAssignments cache record for assignment ' + parent.location)
+
+                        lti_external_course_assignment_problems = LTIExternalCourseAssignmentProblems(
+                            course_assignment = lti_external_course_assignments,
+                            usage_key = block_usage_key
+                        )
+                        lti_external_course_assignment_problems.save()
+                        print('saved new LTIExternalCourseAssignmentProblems cache record for problem ' + str(block_usage_key))
+                        print('')
+                        print('')
+
+
+
 
         return None
 
