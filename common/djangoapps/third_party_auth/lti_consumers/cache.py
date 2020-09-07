@@ -223,13 +223,15 @@ class LTICacheManager(object):
         exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
         """
         def get_parent(item):
+            """traverse up the course structure until we reach a sequential block type.
+            """
             parent = item
             while True:
-                print('item - ' + str(item.display_name))
                 parent = parent.get_parent()
-                print('get_parent() - ' + parent.location.block_type + '-' + parent.display_name)
+                if parent.location.black_type == 'chapter':
+                    print("internal error in get_parent. didn't find assignment item.")
+                    return None
                 if parent.location.block_type == 'sequential':
-                    print('parent = ' + parent.display_name)
                     return parent
 
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
@@ -255,18 +257,7 @@ class LTICacheManager(object):
             course_id=self.course_id
             )
 
-
         for block_usage_key in structure.get_block_keys():
-            """
-            try:
-                item = modulestore().get_item(block_usage_key, depth=1)
-                display_name = str(item.display_name)
-                print('Evaluating {display_name} - {t} {b}'.format(display_name=display_name, t=block_usage_key.block_type, b=str(block_usage_key)))
-            except:
-                print('no information for block_usage_key ' + str(block_usage_key))
-                pass
-            """
-
             if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
 
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
@@ -287,11 +278,12 @@ class LTICacheManager(object):
 
                     if item:
                         parent = get_parent(item)
-                        print('parent - ' + parent.display_name)
-                        display_name = str(item.display_name)
-                        due_date = item.due
+                        if parent is None: return None
                         assignment_encoded_location = urllib.parse.quote(str(parent.location))
+
                         assignment_url = course_url + assignment_encoded_location
+                        parent_display_name = parent.display_name
+                        due_date = item.due
 
                         lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(
                             course=lti_external_course,
@@ -301,7 +293,7 @@ class LTICacheManager(object):
                             lti_external_course_assignments = LTIExternalCourseAssignments(
                                 course = lti_external_course,
                                 url = assignment_url,
-                                display_name = parent.display_name,
+                                display_name = parent_display_name,
                                 due_date = due_date
                             )
                             lti_external_course_assignments.save()
