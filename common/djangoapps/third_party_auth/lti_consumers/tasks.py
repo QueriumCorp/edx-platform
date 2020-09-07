@@ -32,7 +32,7 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 
 # for LTI Grade Sync api
 from .exceptions import DatabaseNotReadyError, LTIBusinessRuleError
-from .cache import LTISession
+from .cache import LTICacheManager
 from .utils import willo_id_from_url, get_subsection_chapter
 from .api import (
     willo_api_post_grade,
@@ -117,7 +117,7 @@ def _post_grades(self, username, course_id, usage_id):
         student = User.objects.get(username=username)
         course_key = CourseKey.from_string(course_id)
         problem_usage_key = UsageKey.from_string(usage_id)
-        session = LTISession(user=student, course_id=course_id)
+        session = LTICacheManager(user=student, course_id=course_id)
 
         lti_cached_course = session.course
         if lti_cached_course is None:

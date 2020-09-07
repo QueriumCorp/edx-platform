@@ -38,17 +38,27 @@ from .models import (
     LTIExternalCourseAssignments,
     )
 
+
+# for _verify_structure
+from openedx.core.djangoapps.content.block_structure.api import get_block_structure_manager
+from openedx.core.djangoapps.content.block_structure.block_structure import BlockStructure
+
+
 User = get_user_model()
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
-class LTISession(object):
-    """Used during LTI authentication from external platforms connecting to Rover via
+class LTICacheManager(object):
+    """
+    1. Used during LTI authentication from external platforms connecting to Rover via
     LTI authentication. Persists external course and enrollment data provided during LTI authentication
     in the http response body, in a json object named lti_params. Establishes the
     relationships between external courses/users and the corresponding Rover courses/users.
     These relationships are required by Rover's Grade Sync, so that we can send
     Grade Sync requests to the LTI Consumer.
+
+    2. Used when grading problems in LTI Grade Sync-enabled courses to cache student assignment
+    grades and synchronization status with the LTI Consumer host system.
 
     Arguments:
         object {object} -- required to implement Python properties
@@ -75,7 +85,7 @@ class LTISession(object):
             User / context_id will be deleted.
         """
 
-        if DEBUG: log.info('LTISession.__init__() - initializing. user: {user}, course_id: {course_id}, lti_params: {lti_params}'.format(
+        if DEBUG: log.info('LTICacheManager.__init__() - initializing. user: {user}, course_id: {course_id}, lti_params: {lti_params}'.format(
             user=user,
             course_id=course_id,
             lti_params='yes' if lti_params is not None else 'no'
@@ -105,7 +115,7 @@ class LTISession(object):
             if lti_params is not None:
                 username = self.lti_param.user_id
                 if username is not None:
-                    if DEBUG: log.info('LTISession.__init__() - trying to assign user from tpi_param data. username: {username}'.format(
+                    if DEBUG: log.info('LTICacheManager.__init__() - trying to assign user from tpi_param data. username: {username}'.format(
                         username=username
                     ))
                     self.user = User.objects.get(username=username)
@@ -124,7 +134,7 @@ class LTISession(object):
                 enrollments = CourseEnrollment.enrollments_for_user(self.user)
                 if enrollments is not None and len(enrollments) == 1:
                     self.course_id = enrollments[0].course_id
-                    if DEBUG: log.info('LTISession.__init__() - located user enrollment. course: {course}'.format(
+                    if DEBUG: log.info('LTICacheManager.__init__() - located user enrollment. course: {course}'.format(
                         course=self.course_id
                     ))
                 else:
@@ -139,7 +149,7 @@ class LTISession(object):
         # retrieve cache data from MySQL
         self.refresh()
 
-        if DEBUG: log.info('LTISession.__init__() - initialized. user: {user}, course: {course}, enrollment: {enrollment}, course_id: {course_id}, context_id: {context_id}'.format(
+        if DEBUG: log.info('LTICacheManager.__init__() - initialized. user: {user}, course: {course}, enrollment: {enrollment}, course_id: {course_id}, context_id: {context_id}'.format(
             user=self.user,
             course=self.course,
             enrollment=self.course_enrollment,
@@ -149,7 +159,7 @@ class LTISession(object):
 
     def init(self):
         """ Initialize class variables """
-        if DEBUG: log.info('LTISession.init()')
+        if DEBUG: log.info('LTICacheManager.init()')
         self._context_id = None
         self._course = None
         self._course_enrollment = None
@@ -158,6 +168,120 @@ class LTISession(object):
         self._user = None
         self._course_id = None
 
+    def verify(self):
+        """Ensure that cache records exist for all enrolled students' assignments.
+        This is an administrative procedure that is intended to be called
+        from manage.py.
+
+        1. Verify that, for the Open edX course structure of the course, that
+        records exist in:
+            LTIExternalCourse,
+            LTIExternalCourseAssignments,
+            LTIExternalCourseAssignmentProblems
+        add any missing records.
+
+        Question: is it technically possible that LTI cache records could exist
+        for an assignment that has been deleted? if so, leave these records alone.
+
+        2. For student(s), verify that records exist in:
+            LTIExternalCourseEnrollment,
+            LTIExternalCourseEnrollmentGrades
+
+            a.) report errors to console for any missing LTIExternalCourseEnrollment records.
+            These have to be researched and manually added since we need user profile information
+            from the remote LTI Consumer host.
+
+            b.) add any missing LTIExternalCourseEnrollmentGrades.
+
+        dev notes:
+            self.course_id is a CourseKey and should already be set
+            self.user is a Django User object
+            self.course is an LTIExternalCourse object
+            self.course_enrollment is an LTIExternalCourseEnrollment record for the course_id/user
+
+        """
+        print('LTICacheManager.verify()')
+        if self.course_id is None:
+            print('LTICacheManager.verify() - course_id is not set. Nothing to do. Exiting.')
+            return None
+
+        if self.user is not None:
+            print('McDaniel Sep-2020: filtering by user is not yet implemented. Exiting.')
+            return None
+
+        self._verify_structure()
+        self._verify_enrollments()
+
+        return None
+
+    def _verify_structure(self):
+        """Iterate all blocks in a course. For any defined problem types, verify that the problem
+        exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
+
+        structure.get_block_keys():
+            block-v1:edX+DemoX+Demo_Course+type@html+block@030e35c4756a4ddc8d40b95fbbfff4d4
+            block-v1:edX+DemoX+Demo_Course+type@chapter+block@social_integration
+            block-v1:edX+DemoX+Demo_Course+type@html+block@ffcd6351126d4ca984409180e41d1b51
+            block-v1:edX+DemoX+Demo_Course+type@sequential+block@graded_simulations
+            block-v1:edX+DemoX+Demo_Course+type@html+block@8bb218cccf8d40519a971ff0e4901ccf
+            block-v1:edX+DemoX+Demo_Course+type@html+block@55cbc99f262443d886a25cf84594eafb
+            block-v1:edX+DemoX+Demo_Course+type@problem+block@d7daeff25e4f4026bdd269ae69e03e02
+
+        """
+        # excluding: 'vertical', 'sequential', 'openassessment'
+        PROBLEM_BLOCK_TYPES = ['problem', 'swxblock']
+
+        # note: self.course_id is a CourseKey
+        # structure: openedx.core.djangoapps.content.block_structure.block_structure.BlockStructureBlockData
+        structure = get_block_structure_manager(self.course_id).get_collected()
+
+        for block_usage_key in structure.get_block_keys():
+            if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
+                # this block usage key should exist in LTIExternalCourseAssignmentProblems
+                try:
+                    exists = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
+                    print('Found: {block_usage_key}'.format(block_usage_key=block_usage_key))
+                except:
+                    print('Missing: {block_usage_key}'.format(block_usage_key=block_usage_key))
+                    block_structure = BlockStructure(root_block_usage_key=block_usage_key)
+                    for locator in block_structure.get_parents:
+                        print(str(locator))
+                    pass
+
+        return None
+
+    def _verify_enrollments(self):
+        """[summary]
+            from openedx.core.djangoapps.enrollments import data as enrollment_data
+            from lms.djangoapps.grades.course_grade import CourseGrade
+            from lms.djangoapps.grades.course_data import CourseData
+            from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
+
+            enrollment_data.get_course_enrollment(self.username, str(self.course_key))
+            course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
+            course_data = CourseData(course_key=course_key)
+            course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
+
+        """
+        enrollments = None
+        if self._course_id and self._user:
+            enrollments = CourseEnrollment.objects.filter(course=course, user=self._user)
+        else:
+            if self._course_id:
+                enrollments = CourseEnrollment.objects.filter(course=course)
+            if self._user:
+                enrollments = CourseEnrollment.objects.filter(user=self._user)
+
+        if enrollments is None:
+            print('LTICacheManager.verify() - nothing to do. Exiting.')
+            return
+
+        courses_enrollments = []
+        for enrollment in enrollments:
+            print(enrollment.user.username)
+
+        return None
+
     def refresh(self):
         """Retrieve cached content from MySQL for the current context_id, user
 
@@ -165,7 +289,7 @@ class LTISession(object):
             [type] -- [description]
         """
 
-        if DEBUG: log.info('LTISession.refresh()')
+        if DEBUG: log.info('LTICacheManager.refresh()')
 
         # refresh during LTI authentication
         if self.lti_params is not None:
@@ -176,13 +300,13 @@ class LTISession(object):
 
         # all other use cases (Grader programs, etc.)
         else:
-            if DEBUG: log.info('LTISession.refresh() - lti_params not found. Initializing with user and course_id')
+            if DEBUG: log.info('LTICacheManager.refresh() - lti_params not found. Initializing with user and course_id')
             if self.user is None:
-                if DEBUG: log.info('LTISession.refresh() - self.user is not set. Exiting.')
+                if DEBUG: log.info('LTICacheManager.refresh() - self.user is not set. Exiting.')
                 return None
 
             if self.course_id is None:
-                if DEBUG: log.info('LTISession.refresh() - self.course_id is not set. Exiting.')
+                if DEBUG: log.info('LTICacheManager.refresh() - self.course_id is not set. Exiting.')
                 return None
 
             if self.course is None:
@@ -227,7 +351,7 @@ class LTISession(object):
         Returns:
             [LTIExternalCourse] -- the LTI cache record for the course_id
         """
-        if DEBUG: log.info('LTISession.register_course()')
+        if DEBUG: log.info('LTICacheManager.register_course()')
 
         course = None
         self._course = None
@@ -238,7 +362,7 @@ class LTISession(object):
         # register the course.
         if self.COMPLETE_MAPPING and (self.course_id is None or self.lti_params is None):
             if DEBUG:
-                log.info('LTISession.register_course() - COMPLETE_MAPPING=True'\
+                log.info('LTICacheManager.register_course() - COMPLETE_MAPPING=True'\
                     'but we are not yet fully initialized. exiting. course_id: {course_id}, lti_params: {lti_params}'.format(
                         course_id = self.course_id,
                         lti_params = self.lti_params
@@ -255,7 +379,7 @@ class LTISession(object):
             course = LTIExternalCourse.objects.filter(context_id=self._context_id).first()
 
         if course:
-            if DEBUG: log.info('LTISession.register_course() - found a cached course.')
+            if DEBUG: log.info('LTICacheManager.register_course() - found a cached course.')
             # we didn't necesarily know the course_id at the time the record was created.
             # the course_id could materialize at any time, and if so then we'll
             # need to persist the value.
@@ -264,7 +388,7 @@ class LTISession(object):
                     course.course_id = self.course_id
                     course.save()
                 except ValidationError as err:
-                    msg='LTISession.register_course() - could not update course_id of LTIExternalCourse for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
+                    msg='LTICacheManager.register_course() - could not update course_id of LTIExternalCourse for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
                         context_id=self.context_id,
                         course_id=self.course_id,
                         err=err,
@@ -286,10 +410,10 @@ class LTISession(object):
         # need to verify that lti_params is set and that we have a Rover course_id
         # to map to.
         if self.lti_params is None:
-            if DEBUG: log.info('LTISession.register_course() - lti_params is not set. cannot cache. exiting.')
+            if DEBUG: log.info('LTICacheManager.register_course() - lti_params is not set. cannot cache. exiting.')
             return None
         if self.course_id is None:
-            if DEBUG: log.info('LTISession.register_course() - course_id is not set. cannot cache. exiting.')
+            if DEBUG: log.info('LTICacheManager.register_course() - course_id is not set. cannot cache. exiting.')
             return None
 
         params = LTIParamsFieldMap(lti_params=self.lti_params, table='LTIExternalCourse')
@@ -310,7 +434,7 @@ class LTISession(object):
         ).first()
 
         if not lti_internal_course:
-            msg='LTISession.register_course() - did not find a matching course in LTIInternalCourse for context_id {context_id}, course_id {course_id}'.format(
+            msg='LTICacheManager.register_course() - did not find a matching course in LTIInternalCourse for context_id {context_id}, course_id {course_id}'.format(
                 context_id=self.context_id,
                 course_id=self.course_id
             )
@@ -340,7 +464,7 @@ class LTISession(object):
             course.save()
 
         except ValidationError as err:
-            msg='LTISession.register_course() - could not save LTIExternalCourse record for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
+            msg='LTICacheManager.register_course() - could not save LTIExternalCourse record for context_id {context_id}, course_id {course_id}.\r\nError: {err}.\r\n{traceback}'.format(
                 context_id=self.context_id,
                 course_id=self.course_id,
                 err=err,
@@ -349,7 +473,7 @@ class LTISession(object):
             log.error(msg)
             return None
 
-        if DEBUG: log.info('LTISession.register_course() - saved new cache record.')
+        if DEBUG: log.info('LTICacheManager.register_course() - saved new cache record.')
         return course
 
     def register_enrollment(self):
@@ -359,13 +483,13 @@ class LTISession(object):
         Returns:
             [LTIExternalCourseEnrollment] -- the cached enrollment record for the student / course_id
         """
-        if DEBUG: log.info('LTISession.register_enrollment()')
+        if DEBUG: log.info('LTICacheManager.register_enrollment()')
 
         if self.user is None:
-            if DEBUG: log.info('LTISession.register_enrollment() - self.user is not set. exiting.')
+            if DEBUG: log.info('LTICacheManager.register_enrollment() - self.user is not set. exiting.')
             return None
         if self.course is None:
-            if DEBUG: log.info('LTISession.register_enrollment() - self.course is not set. exiting.')
+            if DEBUG: log.info('LTICacheManager.register_enrollment() - self.course is not set. exiting.')
             return None
 
         # look for a cached record for this user / context_id
@@ -379,7 +503,7 @@ class LTISession(object):
 
             # set course enrollment
             self.course_enrollment = enrollment
-            if DEBUG: log.info('LTISession.register_enrollment() - returning a cached enrollment record.')
+            if DEBUG: log.info('LTICacheManager.register_enrollment() - returning a cached enrollment record.')
             return enrollment
 
         if DEBUG:
@@ -390,11 +514,11 @@ class LTISession(object):
             ))
 
         if not CourseEnrollment.is_enrolled(self.user, self.course_id):
-            if DEBUG: log.info('LTISession.register_enrollment() - learner is not enrolled in this course. exiting.')
+            if DEBUG: log.info('LTICacheManager.register_enrollment() - learner is not enrolled in this course. exiting.')
             return None
 
         if not self.lti_params:
-            if DEBUG: log.info('LTISession.register_enrollment() - lti_params is not set. partially populating enrollment record.')
+            if DEBUG: log.info('LTICacheManager.register_enrollment() - lti_params is not set. partially populating enrollment record.')
             return None
 
         try:
@@ -424,7 +548,7 @@ class LTISession(object):
 
             enrollment.save()
         except ValidationError as err:
-            msg='LTISession.register_enrollment() - could not save LTIExternalCourseEnrollment record for lti_user_id {lti_user_id}, username {username}.\r\nError: {err}.\r\n{traceback}'.format(
+            msg='LTICacheManager.register_enrollment() - could not save LTIExternalCourseEnrollment record for lti_user_id {lti_user_id}, username {username}.\r\nError: {err}.\r\n{traceback}'.format(
                 lti_user_id=self.user_id,
                 username=student.username,
                 err=err,
@@ -433,7 +557,7 @@ class LTISession(object):
             log.error(msg)
             return None
 
-        if DEBUG: log.info('LTISession - register_enrollment() saved new cache record.')
+        if DEBUG: log.info('LTICacheManager - register_enrollment() saved new cache record.')
         return enrollment
 
     def post_grades(self, usage_key, grades_dict):
@@ -463,21 +587,21 @@ class LTISession(object):
         Returns:
             [Boolean] -- returns True if the Grades were posted.
         """
-        if DEBUG: log.info('LTISession.post_grades() - usage_key: {usage_key}, grades: {grades_dict}'.format(
+        if DEBUG: log.info('LTICacheManager.post_grades() - usage_key: {usage_key}, grades: {grades_dict}'.format(
             usage_key=usage_key,
             grades_dict=grades_dict
         ))
 
         if self.course_enrollment is None:
-            log.error('LTISession.post_grades() - self.course_enrollment is not set."')
+            log.error('LTICacheManager.post_grades() - self.course_enrollment is not set."')
             return False
 
         if self.user is None:
-            log.error('LTISession.post_grades() - self.user is not set."')
+            log.error('LTICacheManager.post_grades() - self.user is not set."')
             return False
 
         if self.course is None:
-            log.error('LTISession.post_grades() - self.course is not set."')
+            log.error('LTICacheManager.post_grades() - self.course is not set."')
             return False
 
         if not grades_dict['grades']['section_attempted_graded']:
@@ -493,12 +617,12 @@ class LTISession(object):
         #        if isinstance(usage_key, UsageKey) or isinstance(usage_key, BlockUsageLocator):
         #            pass
         #        else:
-        #            raise LTIBusinessRuleError("LTISession.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+        #            raise LTIBusinessRuleError("LTICacheManager.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
         #                    key_type=type(usage_key),
         #                    usage_key=usage_key
         #                ))
         #except:
-        #    raise LTIBusinessRuleError("LTISession.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
+        #    raise LTIBusinessRuleError("LTICacheManager.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
         #            key_type=type(usage_key),
         #            usage_key=usage_key
         #        ))
@@ -544,7 +668,7 @@ class LTISession(object):
                 grades.save()
 
             except ValidationError as err:
-                msg='LTISession.post_grades() - could not save LTIExternalCourseEnrollmentGrades record for usage_key {usage_key}, grades_dict {grades_dict}.\r\nError: {err}.\r\n{traceback}'.format(
+                msg='LTICacheManager.post_grades() - could not save LTIExternalCourseEnrollmentGrades record for usage_key {usage_key}, grades_dict {grades_dict}.\r\nError: {err}.\r\n{traceback}'.format(
                     usage_key=usage_key,
                     grades_dict=grades_dict,
                     err=err,
@@ -553,7 +677,7 @@ class LTISession(object):
                 log.error(msg)
                 return False
 
-            if DEBUG: log.info('LTISession.post_grades() saved new cache record - username: {username}, '\
+            if DEBUG: log.info('LTICacheManager.post_grades() saved new cache record - username: {username}, '\
                 'course_id: {course_id}, context_id: {context_id}, usage_key: {usage_key}, grades: {grades}'.format(
                 username = self.user.username,
                 usage_key = usage_key,
@@ -563,7 +687,7 @@ class LTISession(object):
             ))
             return True
         else:
-            if DEBUG: log.info('LTISession.post_grades() nothing new to record. exiting')
+            if DEBUG: log.info('LTICacheManager.post_grades() nothing new to record. exiting')
             return False
 
     #=========================================================================================================
@@ -581,11 +705,11 @@ class LTISession(object):
         course_assignment = self.get_course_assignment(usage_key)
 
         if self.course_enrollment is None:
-            log.error('LTISession.get_course_assignment_grade() - self.course_enrollment is not set."')
+            log.error('LTICacheManager.get_course_assignment_grade() - self.course_enrollment is not set."')
             return False
 
         if course_assignment is None:
-            log.error('LTISession.get_course_assignment_grade() - course_assignment is not set."')
+            log.error('LTICacheManager.get_course_assignment_grade() - course_assignment is not set."')
             return False
 
         grade = LTIExternalCourseEnrollmentGrades.objects.filter(
@@ -593,7 +717,7 @@ class LTISession(object):
             course_assignment = course_assignment
         ).order_by('-created').first()
 
-        if DEBUG: log.info('LTISession.get_course_assignment_grade() - course_enrollment: {course_enrollment}, course_assignment: {course_assignment}, usage_key: {usage_key}, key_type: {key_type}, grade: {grade}'.format(
+        if DEBUG: log.info('LTICacheManager.get_course_assignment_grade() - course_enrollment: {course_enrollment}, course_assignment: {course_assignment}, usage_key: {usage_key}, key_type: {key_type}, grade: {grade}'.format(
             course_enrollment=self.course_enrollment,
             course_assignment=course_assignment,
             usage_key=usage_key,
@@ -611,7 +735,7 @@ class LTISession(object):
         Returns:
             [LTIExternalCourseAssignments] -- the cache record corresponding to the usage_key
         """
-        if DEBUG: log.info('LTISession.get_course_assignment() - usage_key: {usage_key} {key_type}'.format(
+        if DEBUG: log.info('LTICacheManager.get_course_assignment() - usage_key: {usage_key} {key_type}'.format(
             usage_key=usage_key,
             key_type=type(usage_key)
         ))
@@ -621,7 +745,7 @@ class LTISession(object):
             usage_key=usage_key
         ).order_by('-created').first()
         if problem:
-            if DEBUG: log.info('LTISession.get_course_assignment() - returning the cached parent assignment object.\n\rproblem: {problem}\n\rassignment: {course_assignment}'.format(
+            if DEBUG: log.info('LTICacheManager.get_course_assignment() - returning the cached parent assignment object.\n\rproblem: {problem}\n\rassignment: {course_assignment}'.format(
                 problem=problem,
                 course_assignment=problem.course_assignment
             ))
@@ -635,10 +759,10 @@ class LTISession(object):
             course=self.course
         ).order_by('-created').first()
         if assignment:
-            if DEBUG: log.info('LTISession.get_course_assignment() - returning most recently created cached assignment record.')
+            if DEBUG: log.info('LTICacheManager.get_course_assignment() - returning most recently created cached assignment record.')
             return assignment
 
-        if DEBUG: log.info('LTISession.get_course_assignment() - no record found.')
+        if DEBUG: log.info('LTICacheManager.get_course_assignment() - no record found.')
         return None
 
     def set_course_assignment(self, url, display_name):
@@ -651,7 +775,7 @@ class LTISession(object):
         Returns:
             [LTIExternalCourseAssignments] -- the cache record corresponding to this url
         """
-        if DEBUG: log.info('LTISession.set_course_assignment() - {url}, {display_name}'.format(
+        if DEBUG: log.info('LTICacheManager.set_course_assignment() - {url}, {display_name}'.format(
             url=url,
             display_name=display_name
         ))
@@ -662,28 +786,28 @@ class LTISession(object):
         ).first()
 
         if assignment:
-            if DEBUG: log.info('LTISession.set_course_assignment() - returning a cached record.')
+            if DEBUG: log.info('LTICacheManager.set_course_assignment() - returning a cached record.')
             return assignment
 
         if self.course is None:
-            if DEBUG: log.info('LTISession.set_course_assignment() - self.course() returned None. Exiting.')
+            if DEBUG: log.info('LTICacheManager.set_course_assignment() - self.course() returned None. Exiting.')
             return None
 
         # get the due_date for the assignment
         try:
             rover_course = get_course_by_id(self.course_id)
             unit = find_course_unit(rover_course, url)
-            log.debug('LTISession.set_course_assignment() - found course unit: {unit}, due date: {due_date}'.format(
+            log.debug('LTICacheManager.set_course_assignment() - found course unit: {unit}, due date: {due_date}'.format(
                 unit=unit,
                 due_date=unit.due
             ))
             due_date = unit.due
             if not due_date:
-                log.info('LTISession.set_course_assignment() - WARNING: no due date for this assignment. Setting to far future.')
+                log.info('LTICacheManager.set_course_assignment() - WARNING: no due date for this assignment. Setting to far future.')
                 due_date = datetime.datetime.now() + datetime.timedelta(days=365.25/2)
 
         except Exception as err:
-            msg='LTISession.set_course_assignment() - error getting due date for display_name {display_name}, url {url}. Error: {err}.\r\n{traceback}'.format(
+            msg='LTICacheManager.set_course_assignment() - error getting due date for display_name {display_name}, url {url}. Error: {err}.\r\n{traceback}'.format(
                 display_name=display_name,
                 url=url,
                 err=err,
@@ -702,7 +826,7 @@ class LTISession(object):
             assignment.save()
 
         except ValidationError as err:
-            msg='LTISession.set_course_assignment() - could not save LTIExternalCourseAssignments record for display_name {display_name}, url {url}. Error: {err}.\r\n{traceback}'.format(
+            msg='LTICacheManager.set_course_assignment() - could not save LTIExternalCourseAssignments record for display_name {display_name}, url {url}. Error: {err}.\r\n{traceback}'.format(
                 display_name=display_name,
                 url=url,
                 err=err,
@@ -711,7 +835,7 @@ class LTISession(object):
             log.error(msg)
             return None
 
-        if DEBUG: log.info('LTISession.set_course_assignment() - creating and returning a new record.')
+        if DEBUG: log.info('LTICacheManager.set_course_assignment() - creating and returning a new record.')
         return assignment
 
     def get_course_assignment_problem(self, usage_key):
@@ -727,7 +851,7 @@ class LTISession(object):
             usage_key = usage_key
         )
         if problem:
-            if DEBUG: log.info('LTISession.get_course_assignment_problem() - returning a cached record.')
+            if DEBUG: log.info('LTICacheManager.get_course_assignment_problem() - returning a cached record.')
 
         return problem
 
@@ -741,7 +865,7 @@ class LTISession(object):
         Returns:
             LTIExternalCourseAssignmentProblems -- the cache record corresponding to the usage_key.
         """
-        if DEBUG: log.info('LTISession.set_course_assignment_problem() - {course_assignment}, {usage_key}.'.format(
+        if DEBUG: log.info('LTICacheManager.set_course_assignment_problem() - {course_assignment}, {usage_key}.'.format(
             course_assignment=course_assignment,
             usage_key=usage_key
         ))
@@ -749,7 +873,7 @@ class LTISession(object):
             usage_key = usage_key
         )
         if problem:
-            if DEBUG: log.info('LTISession.set_course_assignment_problem() - returning a cached problem record: {problem}'.format(
+            if DEBUG: log.info('LTICacheManager.set_course_assignment_problem() - returning a cached problem record: {problem}'.format(
                 problem=problem
             ))
             return problem
@@ -762,7 +886,7 @@ class LTISession(object):
             problem.save()
 
         except ValidationError as err:
-            msg='LTISession.set_course_assignment_problem() - could not save LTIExternalCourseAssignmentProblems record for {course_assignment}, {usage_key}. Error: {err}.\r\n{traceback}'.format(
+            msg='LTICacheManager.set_course_assignment_problem() - could not save LTIExternalCourseAssignmentProblems record for {course_assignment}, {usage_key}. Error: {err}.\r\n{traceback}'.format(
                 course_assignment=course_assignment,
                 usage_key=usage_key,
                 err=err,
@@ -781,7 +905,7 @@ class LTISession(object):
         Returns:
             [string] -- string value representing context_id
         """
-        if DEBUG: log.info('LTISession.get_context_id() - {value}'.format(
+        if DEBUG: log.info('LTICacheManager.get_context_id() - {value}'.format(
             value=self._context_id
         ))
         if self._context_id is not None:
@@ -809,12 +933,12 @@ class LTISession(object):
             LTIBusinessRuleError: raises an error if the value provided is
             inconsistent with the value in lti_params or course.
         """
-        if DEBUG: log.info('LTISession.set_context_id() - {value}'.format(
+        if DEBUG: log.info('LTICacheManager.set_context_id() - {value}'.format(
             value=value
         ))
 
         if value == self._context_id:
-            if DEBUG: log.info('LTISession.set_context_id() - no changes. Exiting.')
+            if DEBUG: log.info('LTICacheManager.set_context_id() - no changes. Exiting.')
             return
 
         # check for integrity between context_id and the current contents of lti_params
@@ -853,7 +977,7 @@ class LTISession(object):
         Returns:
             dict -- lti_params dictionary
         """
-        if DEBUG: log.info('LTISession.lti_params - {value}'.format(
+        if DEBUG: log.info('LTICacheManager.lti_params - {value}'.format(
             value = 'is set' if self._lti_params is not None else 'None'
         ))
         return self._lti_params
@@ -869,7 +993,7 @@ class LTISession(object):
         Raises:
             LTIBusinessRuleError: raises an exception if lti_params is invalid.
         """
-        if DEBUG: log.info('LTISession.set_lti_params()')
+        if DEBUG: log.info('LTICacheManager.set_lti_params()')
 
         if value is None:
             self._lti_params = None
@@ -886,7 +1010,7 @@ class LTISession(object):
                     if new_params.is_valid:
                         self._lti_params = new_params
                     else:
-                        raise LTIBusinessRuleError('LTISession.set_lti_params() - received invalid lti_params.')
+                        raise LTIBusinessRuleError('LTICacheManager.set_lti_params() - received invalid lti_params.')
 
 
         # need to clear all class properties to ensure integrity between lti_params values and whatever is
@@ -912,7 +1036,7 @@ class LTISession(object):
         Returns:
             User -- Django User object
         """
-        if DEBUG: log.info('LTISession.get_user() - {value}'.format(
+        if DEBUG: log.info('LTICacheManager.get_user() - {value}'.format(
             value=self._user
         ))
         return self._user
@@ -925,10 +1049,10 @@ class LTISession(object):
         Arguments:
             value {User} -- a valid Django User object.
         """
-        if DEBUG: log.info('LTISession.set_user()')
+        if DEBUG: log.info('LTICacheManager.set_user()')
 
         if value == self._user:
-            if DEBUG: log.info('LTISession.set_user() - no changes. Exiting.')
+            if DEBUG: log.info('LTICacheManager.set_user() - no changes. Exiting.')
             return
 
         self._user = value
@@ -946,7 +1070,7 @@ class LTISession(object):
         Returns:
             string -- a string value representing a course_id (CourseKey)
         """
-        if DEBUG: log.info('LTISession.get_course_id() - {val}, {obj_type}'.format(
+        if DEBUG: log.info('LTICacheManager.get_course_id() - {val}, {obj_type}'.format(
             val = self._course_id,
             obj_type = type(self._course_id)
         ))
@@ -962,13 +1086,13 @@ class LTISession(object):
         Raises:
             LTIBusinessRuleError: raises an excpetion if value is not a valid CourseKey
         """
-        if DEBUG: log.info('LTISession.set_course_id() - {value}, {obj_type}'.format(
+        if DEBUG: log.info('LTICacheManager.set_course_id() - {value}, {obj_type}'.format(
             value=value,
             obj_type=type(value)
         ))
 
         if value == self._course_id:
-            if DEBUG: log.info('LTISession.set_course_id() - no changes. Exiting.')
+            if DEBUG: log.info('LTICacheManager.set_course_id() - no changes. Exiting.')
             return
 
         if isinstance(value, CourseKey):
@@ -977,12 +1101,16 @@ class LTISession(object):
             if isinstance(value, str) or isinstance(value, unicode):
                 self._course_id = CourseKey.from_string(value)
             else:
-                raise LTIBusinessRuleError("LTISession.set_course_id() - Course_key provided is not a valid object type"\
+                raise LTIBusinessRuleError("LTICacheManager.set_course_id() - Course_key provided is not a valid object type"\
                     " ({}). Must be either CourseKey or String.".format(
                     type(value)
             ))
 
-        self._course = LTIExternalCourse.objects.filter(course_id=self._course_id).first()
+        #
+        # mcdaniel sep-2020: LTIExternalCourse.course_id is now a fk to LTIInternalCourse
+        #
+        lti_internal_course = LTIInternalCourse.objects.filter(course_id=self._course_id).first()
+        self._course = LTIExternalCourse.objects.filter(course_id=lti_internal_course).first()
         self._course_enrollment = None
 
     @property
@@ -993,7 +1121,7 @@ class LTISession(object):
         Returns:
             LTIExternalCourse -- a course cache record.
         """
-        if DEBUG: log.info('LTISession.get_course() - {value}'.format(
+        if DEBUG: log.info('LTICacheManager.get_course() - {value}'.format(
             value=self._course
         ))
 
@@ -1013,10 +1141,10 @@ class LTISession(object):
         Raises:
             LTIBusinessRuleError: raises an exception if value is not an object of type LTIExternalCourse
         """
-        if DEBUG: log.info('LTISession.set_course()')
+        if DEBUG: log.info('LTICacheManager.set_course()')
 
         if value == self.course:
-            if DEBUG: log.info('LTISession.set_course() - no changes. Exiting.')
+            if DEBUG: log.info('LTICacheManager.set_course() - no changes. Exiting.')
             return
 
         if not isinstance(value, LTIExternalCourse):
@@ -1039,7 +1167,7 @@ class LTISession(object):
         Returns:
             LTIExternalCourseEnrollment -- a cache record corresponding to user / context_id / course_id
         """
-        if DEBUG: log.info('LTISession.get_course_enrollment() - {value}'.format(
+        if DEBUG: log.info('LTICacheManager.get_course_enrollment() - {value}'.format(
             value=self._course_enrollment
         ))
 
@@ -1068,14 +1196,14 @@ class LTISession(object):
             value=value,
             val_type=type(value)
         )
-        if DEBUG: log.info('LTISession.set_course_enrollment()' + msg)
+        if DEBUG: log.info('LTICacheManager.set_course_enrollment()' + msg)
 
         if value == self._course_enrollment:
-            if DEBUG: log.info('LTISession.set_course_enrollment() - no changes. Exiting.')
+            if DEBUG: log.info('LTICacheManager.set_course_enrollment() - no changes. Exiting.')
             return
 
         if not isinstance(value, LTIExternalCourseEnrollment) and value is not None:
-            msg = "LTISession.set_course_enrollment() - Tried to assign an object to course_enrollment property that is not" \
+            msg = "LTICacheManager.set_course_enrollment() - Tried to assign an object to course_enrollment property that is not" \
                 " an instance of third_party_auth.models.LTIExternalCourseEnrollment." \
                 + msg
             raise LTIBusinessRuleError(msg)

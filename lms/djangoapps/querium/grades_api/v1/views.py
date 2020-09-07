@@ -39,6 +39,14 @@ from lms.djangoapps.grades.course_data import CourseData
 from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
 #from openedx.core.djangoapps.models.course_details import CourseDetails
 
+# LTI integration stuff
+from common.djangoapps.third_party_auth.lti_consumers.models import (
+    LTIInternalCourse,
+    LTIExternalCourse
+)
+from common.djangoapps.student.models import CourseEnrollment
+
+
 log = logging.getLogger(__name__)
 USER_MODEL = get_user_model()
 
@@ -338,6 +346,35 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
                                         problem_ProblemScore.possible
                                         )
                 }
+class InternalLTICourses(AbstractGradesView):
+    """Used for requests from manage.py
+
+    Returns:
+        json dict of LTI-enabled courses
+    """
+    def get(self):
+
+        courses_list = []
+        courses = LTIInternalCourse.objects.all()
+        for course in courses:
+            course = course.course_fk
+
+            course_dict = {}
+            course_dict.course_id = str(course.course_id)
+
+            enrollments = CourseEnrollment.objects.filter(
+                course=course
+            )
+
+            courses_enrollments = []
+            for enrollment in enrollments:
+                courses_enrollments.append(enrollment.user.username)
+
+            course_dict.enrollments = courses_enrollments
+            courses_list.append(course_dict)
+
+        return courses_list
+
 class InternalCourseGradeView(AbstractGradesView):
     """
      Used for requests from manage.py
