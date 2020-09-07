@@ -69,8 +69,10 @@ class Command(BaseCommand):
             print('No LTIInternalCourses found for course_id/username. Exiting.')
             return None
 
+        print(type(lti_internal_courses))
         for lti_internal_course in lti_internal_courses:
-            course_id = str(lti_internal_course.course_fk.course_id)
+            course_id = str(lti_internal_course.course_fk.id)
+            print('course_id: ' + course_id)
             lti_cache = LTICacheManager(course_id=course_id, user=user)
             lti_cache.verify()
 
@@ -96,7 +98,7 @@ class Command(BaseCommand):
             return None
 
         if course is not None:
-            return LTIInternalCourse.objects.filter(course_fk=course)
+            return LTIInternalCourse.objects.filter(course_fk__in=course)
 
         if user is not None:
             print('PLEASE IMPLEMENT ME :/')

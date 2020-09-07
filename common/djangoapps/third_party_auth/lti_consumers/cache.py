@@ -238,15 +238,14 @@ class LTICacheManager(object):
         for block_usage_key in structure.get_block_keys():
             if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
-                try:
-                    exists = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
-                    print('Found: {block_usage_key}'.format(block_usage_key=block_usage_key))
-                except:
+                exists = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
+                if exists is not None:
+                    print('Found: {block_usage_key}, lti record: {lti_record}'.format(block_usage_key=block_usage_key, lti_record=exists))
+                else:
                     print('Missing: {block_usage_key}'.format(block_usage_key=block_usage_key))
                     block_structure = BlockStructure(root_block_usage_key=block_usage_key)
-                    for locator in block_structure.get_parents:
+                    for locator in block_structure.get_parents(usage_key=block_usage_key):
                         print(str(locator))
-                    pass
 
         return None
 
@@ -263,6 +262,8 @@ class LTICacheManager(object):
             course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
 
         """
+        return None
+
         enrollments = None
         if self._course_id and self._user:
             enrollments = CourseEnrollment.objects.filter(course=course, user=self._user)
