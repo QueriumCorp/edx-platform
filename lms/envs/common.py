@@ -2327,11 +2327,6 @@ INSTALLED_APPS = [
     # edX Video Pipeline integration
     'openedx.core.djangoapps.video_pipeline',
 
-    # mcdaniel sep-2020: rover ecommerce has to come before lms.djangoapps.courseware
-    'lms.djangoapps.querium.stepwise',
-    'lms.djangoapps.querium.rover_ecommerce',
-    'lms.djangoapps.querium.grades_api',
-
     # Our courseware
     'lms.djangoapps.courseware',
     'coursewarehistoryextended',
@@ -2361,9 +2356,6 @@ INSTALLED_APPS = [
 
     'third_party_auth',
 
-    # mcdaniel dec-2019
-    # add Willo Labs LTI Grade Sync module
-    'common.djangoapps.third_party_auth.lti_consumers',
 
     # System Wide Roles
     'openedx.core.djangoapps.system_wide_roles',
@@ -2569,6 +2561,8 @@ INSTALLED_APPS = [
     # Management of per-user schedules
     'openedx.core.djangoapps.schedules',
     'rest_framework_jwt',
+
+
 ]
 
 ######################### CSRF #########################################
@@ -3923,3 +3917,13 @@ GITHUB_REPO_ROOT = '/edx/var/edxapp/data'
 
 ##################### SUPPORT URL ############################
 SUPPORT_HOW_TO_UNENROLL_LINK = ''
+
+
+# mcdaniel dec-2019
+# add Willo Labs LTI Grade Sync module
+INSTALLED_APPS.append('common.djangoapps.third_party_auth.lti_consumers')
+
+# mcdaniel sep-2020: rover ecommerce has to come before lms.djangoapps.courseware
+INSTALLED_APPS.append('lms.djangoapps.querium.stepwise')
+INSTALLED_APPS.append('lms.djangoapps.querium.rover_ecommerce')
+INSTALLED_APPS.append('lms.djangoapps.querium.grades_api')
