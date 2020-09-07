@@ -34,7 +34,7 @@ from student.models import is_faculty, CourseEnrollment
 from opaque_keys.edx.keys import CourseKey
 
 from .exceptions import LTIBusinessRuleError
-from .cache import LTISession
+from .cache import LTICacheManager
 from .lti_params import LTIParams
 
 
@@ -302,16 +302,7 @@ class CourseProvisioner(object):
         # then course_id has somehow been set to null since class initialization.
         if DEBUG: log.info('CourseProvisioner.get_course_id() -- trying to self-initialize...')
 
-        # 1.) try to pull a course_id from tpi_params
-        if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in lti_params.custom_tpa_next: {custom_tpa_next}'.format(
-            custom_tpa_next=self.lti_params.custom_tpa_next
-            ))
-        self._course_id = self.lti_params.course_id
-        if self._course_id:
-            return self._course_id
-
-
-        # 2.) try to pull a cached course record based on the context_id from the lti_params.
+        # 1.) try to pull a cached course record based on the context_id from the lti_params.
         if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in the LTI cache. context_id: {context_id}'.format(
             context_id=self.context_id
             ))
@@ -319,6 +310,13 @@ class CourseProvisioner(object):
         if self._course_id:
             return self._course_id
 
+        # 2.) try to pull a course_id from tpi_params
+        if DEBUG: log.info('CourseProvisioner.get_course_id() -- looking in lti_params.custom_tpa_next: {custom_tpa_next}'.format(
+            custom_tpa_next=self.lti_params.custom_tpa_next
+            ))
+        self._course_id = self.lti_params.course_id
+        if self._course_id:
+            return self._course_id
 
         # 3.) this is a fallback option: check student's enrollment data
         enrollments = self.enrollments
@@ -343,7 +341,7 @@ class CourseProvisioner(object):
     def course_id(self, value):
         """Alternatively, we can simply set the course_id corresponding to this instances
         context_id, and in this case we only need to validate the course_id passed. Also
-        set the LTISession object to None.
+        set the LTICacheManager object to None.
 
         Arguments:
             value {string} -- a string representation of a CourseKey
@@ -418,25 +416,25 @@ class CourseProvisioner(object):
             LTIBusinessRuleError: raises exception if lti_params, user or course_id is None.
 
         Returns:
-            [LTISession]
+            [LTICacheManager]
         """
 
         if self._session is not None:
             return self._session
 
-        if DEBUG: log.info('CourseProvisioner.get_session() -- creating a new LTISession')
+        if DEBUG: log.info('CourseProvisioner.get_session() -- creating a new LTICacheManager')
 
 
         if not self.lti_params:
-            raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTISession but lti_params is not set.')
+            raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTICacheManager but lti_params is not set.')
 
         if not self.user:
-            raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTISession but user is not set.')
+            raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTICacheManager but user is not set.')
 
         if not self.course_id:
-            raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTISession but course_id is not set.')
+            raise LTIBusinessRuleError('CourseProvisioner.get_session() - tried to instantiate LTICacheManager but course_id is not set.')
 
-        self._session = LTISession(
+        self._session = LTICacheManager(
             lti_params = self.lti_params.dictionary,
             user = self.user,
             course_id = self.course_id

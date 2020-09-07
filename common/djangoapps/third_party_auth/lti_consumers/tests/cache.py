@@ -1,6 +1,6 @@
 """
 # mcdaniel Aug-2020
-Unit tests for LTISession cache objects
+Unit tests for LTICacheManager cache objects
 
 Reference: https://docs.python.org/3/library/unittest.html
 """
@@ -17,10 +17,10 @@ from opaque_keys.edx.keys import CourseKey, UsageKey
 USER_MODEL = get_user_model()
 
 
-class UnitTestLTISession(TestCase):
+class UnitTestLTICacheManager(TestCase):
 
     def setUp(self):
-        super(UnitTestLTISession, self).setUp()
+        super(UnitTestLTICacheManager, self).setUp()
 
     def test_inbound_lti_params(self):
         self.assertEqual(True, True)

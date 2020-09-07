@@ -112,13 +112,13 @@ class LTIGradeSync:
 
         for student in students:
             self.write_student_banner(student.username)
-            self.post_student_grades(student)
+            self.verify_lti_cache(student)
 
         self.write_course_banner(done=True)
 
         return None
 
-    def post_student_grades(self, student):
+    def verify_lti_cache(self, student):
         """
          Retrieve a json object of grade data for student.
          Iterate through chapters / assignments for the course.
@@ -136,7 +136,7 @@ class LTIGradeSync:
             return None
 
         results = InternalCourseGradeView().get(course_id=self.course_id, username=student.username)
-        self.console_output(u'    post_student_grades() - retrieved grades for {username} / {course_id}'.format(
+        self.console_output(u'    verify_lti_cache() - retrieved grades for {username} / {course_id}'.format(
             username=student.username,
             course_id=self.course_id
         ))
@@ -144,7 +144,7 @@ class LTIGradeSync:
         # only process the course if courses have actually begun.
         enrollment_start = results.get('course_enrollment_start')
         if not enrollment_start < utc.localize(datetime.datetime.now()):
-            msg = u'post_student_grades() - Skipping {course_id}. Course has not begun.'.format(
+            msg = u'verify_lti_cache() - Skipping {course_id}. Course has not begun.'.format(
                 course_id=self.course_id,
                 )
             self.console_output(msg, text_style=style.NOTICE)
