@@ -47,6 +47,8 @@ from lms.djangoapps.course_blocks.api import get_course_blocks
 from xmodule.modulestore.django import modulestore
 from lms.lib.utils import get_parent_unit
 import urllib.parse
+from xmodule.modulestore import ModuleStoreEnum
+
 
 User = get_user_model()
 log = logging.getLogger(__name__)
@@ -222,17 +224,15 @@ class LTICacheManager(object):
         """Iterate all blocks in a course. For any defined problem types, verify that the problem
         exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
         """
-        def get_parent(item):
+        def get_parent(item, block_type):
             """traverse up the course structure until we reach a sequential block type.
             """
             parent = item
             while True:
                 parent = parent.get_parent()
-                if parent.location.black_type == 'chapter':
-                    print("internal error in get_parent. didn't find assignment item.")
-                    return None
-                if parent.location.block_type == 'sequential':
+                if parent.location.block_type == block_type:
                     return parent
+
 
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
         if lti_external_course is None:
@@ -250,12 +250,6 @@ class LTICacheManager(object):
         course = modulestore().get_course(self.course_id)
         host = settings.SITE_NAME
         scheme = u"https" if settings.HTTPS == "on" else u"http"
-        course_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/?activate_block_id='.format(
-            scheme = scheme,
-            host=host,
-            url_prefix='courses',
-            course_id=self.course_id
-            )
 
         for block_usage_key in structure.get_block_keys():
             if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
@@ -269,22 +263,33 @@ class LTICacheManager(object):
 
                     item = None
                     try:
-                        item = modulestore().get_item(block_usage_key, depth=1)
+                        item = modulestore().get_item(block_usage_key, depth=1, revision=ModuleStoreEnum.RevisionOption.published_only)
                     except:
                         print('no item for ' + str(block_usage_key))
                         print('')
                         print('')
                         pass
 
-                    if item:
-                        parent = get_parent(item)
-                        if parent is None: return None
-                        assignment_encoded_location = urllib.parse.quote(str(parent.location))
+                    if item and not item.hide_from_toc:
+                        assignment = get_parent(item, 'sequential')
+                        chapter = get_parent(item, 'chapter')
+                        if assignment is None: return None
+                        assignment_encoded_location = urllib.parse.quote(str(assignment.location))
 
-                        assignment_url = course_url + assignment_encoded_location
-                        parent_display_name = parent.display_name
+                        assignment_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter_id}/{assignment_id}/'.format(
+                            scheme = scheme,
+                            host=host,
+                            url_prefix='courses',
+                            course_id=self.course_id,
+                            chapter_id=chapter.location.block_id,
+                            assignment_id=assignment.location.block_id
+                            )
+                        assignment_display_name = assignment.display_name
                         due_date = item.due
 
+                        print('block id: ' + item.location.block_id)
+                        print('parent id: ' + assignment.location.block_id)
+                        print('chapter id: ' + chapter.location.block_id)
                         lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(
                             course=lti_external_course,
                             url=assignment_url
@@ -293,11 +298,11 @@ class LTICacheManager(object):
                             lti_external_course_assignments = LTIExternalCourseAssignments(
                                 course = lti_external_course,
                                 url = assignment_url,
-                                display_name = parent_display_name,
+                                display_name = assignment_display_name,
                                 due_date = due_date
                             )
                             lti_external_course_assignments.save()
-                            print('Added new LTIExternalCourseAssignments cache record for assignment ' + str(parent.location))
+                            print('Added new LTIExternalCourseAssignments cache record for assignment ' + str(assignment.location))
 
                         lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems(
                             course_assignment = lti_external_course_assignments,
