@@ -6,6 +6,7 @@ Raises:
     LTIBusinessRuleError
 """
 from __future__ import absolute_import
+import urllib.parse
 import pytz
 import datetime
 import logging
@@ -21,6 +22,12 @@ from django.contrib.auth.models import AnonymousUser
 from student.models import is_faculty, CourseEnrollment
 from opaque_keys.edx.keys import CourseKey, UsageKey
 from opaque_keys.edx.locator import BlockUsageLocator
+
+# for _verify_structure
+from openedx.core.djangoapps.content.block_structure.api import get_block_structure_manager
+from openedx.core.djangoapps.content.block_structure.block_structure import BlockStructure
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore import ModuleStoreEnum
 
 # for locating a course assignment by its URL.
 # mcdaniel may-2020: getting a race situation on this import.
@@ -38,16 +45,6 @@ from .models import (
     LTIExternalCourseAssignmentProblems,
     LTIExternalCourseAssignments,
     )
-
-
-# for _verify_structure
-from openedx.core.djangoapps.content.block_structure.api import get_block_structure_manager
-from openedx.core.djangoapps.content.block_structure.block_structure import BlockStructure
-from lms.djangoapps.course_blocks.api import get_course_blocks
-from xmodule.modulestore.django import modulestore
-from lms.lib.utils import get_parent_unit
-import urllib.parse
-from xmodule.modulestore import ModuleStoreEnum
 
 
 User = get_user_model()
@@ -287,9 +284,6 @@ class LTICacheManager(object):
                         assignment_display_name = assignment.display_name
                         due_date = item.due
 
-                        print('block id: ' + item.location.block_id)
-                        print('parent id: ' + assignment.location.block_id)
-                        print('chapter id: ' + chapter.location.block_id)
                         lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(
                             course=lti_external_course,
                             url=assignment_url
