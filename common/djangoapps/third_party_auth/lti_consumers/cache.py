@@ -222,6 +222,16 @@ class LTICacheManager(object):
         """Iterate all blocks in a course. For any defined problem types, verify that the problem
         exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
         """
+        def get_parent(item):
+            parent = item
+            while True:
+                print('item - ' + str(item.display_name))
+                parent = parent.get_parent()
+                print('get_parent() - ' + parent.location.block_type + '-' + parent.display_name)
+                if parent.location.block_type == 'sequential':
+                    print('parent = ' + parent.display_name)
+                    return parent
+
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
         if lti_external_course is None:
             print('no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.'.format(
@@ -247,12 +257,22 @@ class LTICacheManager(object):
 
 
         for block_usage_key in structure.get_block_keys():
+            """
+            try:
+                item = modulestore().get_item(block_usage_key, depth=1)
+                display_name = str(item.display_name)
+                print('Evaluating {display_name} - {t} {b}'.format(display_name=display_name, t=block_usage_key.block_type, b=str(block_usage_key)))
+            except:
+                print('no information for block_usage_key ' + str(block_usage_key))
+                pass
+            """
+
             if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
 
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
                 lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
                 if lti_external_course_assignment_problem is not None:
-                    print('Found: {block_usage_key}, lti record: {lti_record}'.format(block_usage_key=block_usage_key, lti_record=exists))
+                    print('Found: {block_usage_key}, lti record: {lti_record}'.format(block_usage_key=block_usage_key, lti_record=lti_external_course_assignment_problem))
                 else:
                     print('Missing: {block_usage_key} {block_type}'.format(block_usage_key=block_usage_key, block_type=block_usage_key.block_type))
 
@@ -266,22 +286,26 @@ class LTICacheManager(object):
                         pass
 
                     if item:
-                        parent = get_parent_unit(item)
+                        parent = get_parent(item)
+                        print('parent - ' + parent.display_name)
                         display_name = str(item.display_name)
                         due_date = item.due
                         assignment_encoded_location = urllib.parse.quote(str(parent.location))
                         assignment_url = course_url + assignment_encoded_location
 
-                        lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(course=lti_external_course).first()
+                        lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(
+                            course=lti_external_course,
+                            url=assignment_url
+                            ).first()
                         if lti_external_course_assignments is None:
                             lti_external_course_assignments = LTIExternalCourseAssignments(
                                 course = lti_external_course,
                                 url = assignment_url,
-                                display_name = display_name,
+                                display_name = parent.display_name,
                                 due_date = due_date
                             )
                             lti_external_course_assignments.save()
-                            print('Added new LTIExternalCourseAssignments cache record for assignment ' + parent.location)
+                            print('Added new LTIExternalCourseAssignments cache record for assignment ' + str(parent.location))
 
                         lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems(
                             course_assignment = lti_external_course_assignments,
