@@ -221,40 +221,37 @@ class LTICacheManager(object):
     def _verify_structure(self):
         """Iterate all blocks in a course. For any defined problem types, verify that the problem
         exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
-
-        structure.get_block_keys():
-            block-v1:edX+DemoX+Demo_Course+type@html+block@030e35c4756a4ddc8d40b95fbbfff4d4
-            block-v1:edX+DemoX+Demo_Course+type@chapter+block@social_integration
-            block-v1:edX+DemoX+Demo_Course+type@html+block@ffcd6351126d4ca984409180e41d1b51
-            block-v1:edX+DemoX+Demo_Course+type@sequential+block@graded_simulations
-            block-v1:edX+DemoX+Demo_Course+type@html+block@8bb218cccf8d40519a971ff0e4901ccf
-            block-v1:edX+DemoX+Demo_Course+type@html+block@55cbc99f262443d886a25cf84594eafb
-            block-v1:edX+DemoX+Demo_Course+type@problem+block@d7daeff25e4f4026bdd269ae69e03e02
-
         """
+        lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
+        if lti_external_course is None:
+            print('no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.'.format(
+                course_id=self.course_id
+            ))
+            return None
+
         # excluding: 'vertical', 'sequential', 'openassessment'
         PROBLEM_BLOCK_TYPES = ['problem', 'swxblock']
-
 
         # note: self.course_id is a CourseKey
         # structure: openedx.core.djangoapps.content.block_structure.block_structure.BlockStructureBlockData
         structure = get_block_structure_manager(self.course_id).get_collected()
-
-        #for block_usage_key in structure.get_children(self.course_id):
-        #    print('child: {child}'.format(child=block_usage_key))
         course = modulestore().get_course(self.course_id)
-        #lms_link = get_lms_link_for_item(item.location)
-
-        #with modulestore().bulk_operations(self.course_id):
-
+        host = settings.SITE_NAME
+        scheme = u"https" if settings.HTTPS == "on" else u"http"
+        course_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/?activate_block_id='.format(
+            scheme = scheme,
+            host=host,
+            url_prefix='courses',
+            course_id=self.course_id
+            )
 
 
         for block_usage_key in structure.get_block_keys():
             if (block_usage_key.block_type in PROBLEM_BLOCK_TYPES):
 
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
-                exists = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
-                if exists is not None:
+                lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
+                if lti_external_course_assignment_problem is not None:
                     print('Found: {block_usage_key}, lti record: {lti_record}'.format(block_usage_key=block_usage_key, lti_record=exists))
                 else:
                     print('Missing: {block_usage_key} {block_type}'.format(block_usage_key=block_usage_key, block_type=block_usage_key.block_type))
@@ -270,34 +267,11 @@ class LTICacheManager(object):
 
                     if item:
                         parent = get_parent_unit(item)
-                        host = settings.SITE_NAME
-                        scheme = u"https" if settings.HTTPS == "on" else u"http"
-                        course_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/?activate_block_id='.format(
-                            scheme = scheme,
-                            host=host,
-                            url_prefix='courses',
-                            course_id=self.course_id
-                            )
-                        problem_encoded_location = urllib.parse.quote(str(item.location))
-                        assignment_encoded_location = urllib.parse.quote(str(parent.location))
                         display_name = str(item.display_name)
                         due_date = item.due
-
+                        assignment_encoded_location = urllib.parse.quote(str(parent.location))
                         assignment_url = course_url + assignment_encoded_location
-                        """
-                        print('course_key: ' + str(block_usage_key.course_key))
-                        print('problem location: ' + str(item.location))
-                        print('problem encoded location: ' + problem_encoded_location)
-                        print('block_usage_key display_name: ' + display_name)
-                        print('assignment location: ' + str(parent.location))
-                        print('assignment type: ' + str(type(parent)))
-                        print('problem url: ' + course_url + problem_encoded_location)
-                        print('assignment url: ' + assignment_url)
-                        print('')
-                        print('')
-                        """
 
-                        lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
                         lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(course=lti_external_course).first()
                         if lti_external_course_assignments is None:
                             lti_external_course_assignments = LTIExternalCourseAssignments(
@@ -307,19 +281,16 @@ class LTICacheManager(object):
                                 due_date = due_date
                             )
                             lti_external_course_assignments.save()
-                            print('saved new LTIExternalCourseAssignments cache record for assignment ' + parent.location)
+                            print('Added new LTIExternalCourseAssignments cache record for assignment ' + parent.location)
 
-                        lti_external_course_assignment_problems = LTIExternalCourseAssignmentProblems(
+                        lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems(
                             course_assignment = lti_external_course_assignments,
                             usage_key = block_usage_key
                         )
-                        lti_external_course_assignment_problems.save()
-                        print('saved new LTIExternalCourseAssignmentProblems cache record for problem ' + str(block_usage_key))
+                        lti_external_course_assignment_problem.save()
+                        print('Added new LTIExternalCourseAssignmentProblems cache record for problem ' + str(block_usage_key))
                         print('')
                         print('')
-
-
-
 
         return None
 
