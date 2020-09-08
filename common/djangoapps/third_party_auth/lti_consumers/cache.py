@@ -352,22 +352,73 @@ class LTICacheManager(object):
                 return o.isoformat()
 
         for student in students:
+            username = student['username']
             print('student id: ' + str(student['id']))
-            print('student username: ' + student['username'])
+            print('student username: ' + username)
             print('student email: ' + student['email'])
-            for grade in student['grade_summary']['section_breakdown']:
-                if 'due_date' in grade: due_date = grade['due_date']
-                else: due_date = None
 
-                if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
-                else: attempted_graded = None
+            # check student enrollment
+            user = User.objects.get(username=username)
+            course_enrollment = LTIExternalCourseEnrollment.objects.filter(
+                course=self.course,
+                user=user
+                ).first()
 
-                if (grade['percent'] > 0) or (attempted_graded is not None) or (due_date is not None and due_date < now):
-                    print(json.dumps(grade,
-                            indent=4,
-                            sort_keys=True,
-                            default=default
+            if not course_enrollment:
+                print('No LTIExternalCourseEnrollment record found for student {username}. Skipping this student.'.format(
+                    username=username
+                ))
+            else:
+                for grade in student['grade_summary']['section_breakdown']:
+                    if 'due_date' in grade: due_date = grade['due_date']
+                    else: due_date = None
+
+                    if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
+                    else: attempted_graded = None
+
+                    if (grade['percent'] > 0) or (attempted_graded is not None) or (due_date is not None and due_date < now):
+                        if 'display_name' in grade: display_name = grade['display_name']
+                        else: display_name = ''
+                        course_assignment = LTIExternalCourseAssignments.objects.filter(
+                            course=self.course,
+                            display_name=display_name
+                        ).first()
+
+                        if course_assignment is None:
+                            print('Internal error: LTIExternalCourseAssignments record not found for {display_name}'.format(
+                                display_name=display_name
                             ))
+
+                        student_grade = LTIExternalCourseEnrollmentGrades.objects.filter(
+                            course_enrollment=course_enrollment,
+                            course_assignment=course_assignment
+                        ).first()
+
+                        if student_grade is not None:
+                            print('Found student grade for {display_name}'.format(
+                                display_name=display_name
+                            ))
+                        else:
+                            print('Adding student grade for {display_name}'.format(
+                                display_name=display_name
+                            ))
+                            student_grade = LTIExternalCourseEnrollmentGrades(
+                                course_enrollment=course_enrollment,
+                                course_assignment=course_assignment,
+                                section_url=course_assignment.url,
+                                usage_key=??????,
+                                earned_all = 0.00
+                                possible_all = 0.00
+                                earned_graded = 0.00
+                                possible_graded = 0.00
+                            )
+
+                        print(json.dumps(grade,
+                                indent=4,
+                                sort_keys=True,
+                                default=default
+                                ))
+
 
         print('='*80)
         print('COMPLETE: VERIFY STUDENT GRADES')
