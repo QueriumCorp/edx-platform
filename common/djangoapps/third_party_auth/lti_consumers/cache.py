@@ -37,6 +37,7 @@ from .utils import find_course_unit, get_course_by_id
 
 from .exceptions import LTIBusinessRuleError
 from .lti_params import LTIParamsFieldMap, LTIParams
+from .utils import get_assignment, get_chapter
 from .models import (
     LTIInternalCourse,
     LTIExternalCourse,
@@ -221,16 +222,9 @@ class LTICacheManager(object):
         """Iterate all blocks in a course. For any defined problem types, verify that the problem
         exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
         """
-        def get_parent(item, block_type):
-            """traverse up the course structure until we reach a sequential block type.
-            """
-            parent = item
-            while True:
-                parent = parent.get_parent()
-                if parent.location.block_type == block_type:
-                    return parent
-
-
+        print('='*80)
+        print('BEGIN: VERIFY COURSE STRUCTURE')
+        print('='*80)
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
         if lti_external_course is None:
             print('no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.'.format(
@@ -268,8 +262,8 @@ class LTICacheManager(object):
                         pass
 
                     if item and not item.hide_from_toc:
-                        assignment = get_parent(item, 'sequential')
-                        chapter = get_parent(item, 'chapter')
+                        assignment = get_assignment(item)
+                        chapter = get_chapter(item)
                         if assignment is None: return None
                         assignment_encoded_location = urllib.parse.quote(str(assignment.location))
 
@@ -307,6 +301,9 @@ class LTICacheManager(object):
                         print('')
                         print('')
 
+        print('='*80)
+        print('COMPLETE: VERIFY COURSE STRUCTURE')
+        print('='*80)
         return None
 
     def _verify_enrollments(self):

@@ -325,3 +325,36 @@ def get_default_lti_configuration():
 
     initialize_lti_configuration(config_name)
     return LTIConfigurations.objects.filter(name=config_name).first()
+
+def get_parent(item, block_type):
+    """traverse up the course structure until we reach a block of type 'block_type'
+    """
+    parent = item
+    while True:
+        parent = parent.get_parent()
+        if parent.location.block_type == block_type:
+            return parent
+
+def get_assignment(item):
+    """traverse the course structure to return the parent Assignment
+
+    Args:
+        item (xBlock): a problem block
+        item = modulestore().get_item(block_usage_key)
+
+    Returns:
+        [xBlock]: the assignment that contains the problem
+    """
+    return get_parent(item, 'sequential')
+
+def get_chapter(item):
+    """traverse the course structure to return the parent Chapter
+
+    Args:
+        item (BlockUsageKey): a problem block
+        item = modulestore().get_item(block_usage_key)
+
+    Returns:
+        [BlockUsageKey]: the chapter that contains the problem
+    """
+    return get_parent(item, 'chapter')
