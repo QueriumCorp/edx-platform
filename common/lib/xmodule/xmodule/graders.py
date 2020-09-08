@@ -387,7 +387,21 @@ class AssignmentFormatGrader(CourseGrader):
         scores = list(grade_sheet.get(self.type, {}).values())
         breakdown = []
         labeler = get_short_labeler(self.short_label)
+
         for i in range(max(int(float(self.min_count)), len(scores))):
+            location = None
+            display_name = None
+            url_name = None
+            due_date = None
+            grade = None
+            show_correctness = None
+            course_version = None
+            subtree_edited_timestamp = None
+            override = None
+            attempted = None
+            attempted_graded = None
+            percent_graded = None
+
             if i < len(scores) or generate_random_scores:
                 if generate_random_scores:  	# for debugging!
                     earned = random.randint(2, 15)
@@ -398,6 +412,21 @@ class AssignmentFormatGrader(CourseGrader):
                     earned = scores[i].graded_total.earned
                     possible = scores[i].graded_total.possible
                     section_name = scores[i].display_name
+
+                    location = scores[i].location
+                    display_name = scores[i].display_name
+                    url_name = scores[i].url_name
+                    due_date = scores[i].due
+                    grade = scores[i].graded
+                    show_correctness = scores[i].show_correctness
+                    course_version = scores[i].course_version
+                    subtree_edited_timestamp = scores[i].subtree_edited_timestamp
+                    override = scores[i].override
+                    #attempted = scores[i].attempted
+                    attempted_graded = scores[i].attempted_graded
+                    percent_graded = scores[i].percent_graded
+                    #first_attempted = scores[i].first_attempted
+
                     # log.info("KENTGRADE AssignmentFormatGrader.grade earned={e} possible={p} section_name={s}".format(e=earned,p=possible,s=section_name))
 
                 percentage = scores[i].percent_graded
@@ -421,8 +450,25 @@ class AssignmentFormatGrader(CourseGrader):
                 )
             short_label = labeler(i + self.starting_index)
 
-            breakdown.append({'percent': percentage, 'label': short_label,
-                              'detail': summary, 'category': self.category})
+            breakdown.append({
+                'percent': percentage,
+                'label': short_label,
+                'detail': summary,
+                'category': self.category,
+                'location': location,
+                'display_name': display_name,
+                'url_name': url_name,
+                'due_date': due_date,
+                'grade': grade,
+                'show_correctness': show_correctness,
+                'course_version': course_version,
+                'subtree_edited_timestamp': subtree_edited_timestamp,
+                'override': override,
+                #'attempted': attempted,
+                'attempted_graded': attempted_graded,
+                'percent_graded': percent_graded,
+                #'first_attempted': first_attempted
+                })
             # log.info("KENTGRADE AssignmentFormatGrader.grade breakdown={b}".format(b=breakdown))
 
         total_percent, dropped_indices = self.total_with_drops(breakdown)

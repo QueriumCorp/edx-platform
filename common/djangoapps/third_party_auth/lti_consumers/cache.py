@@ -51,7 +51,7 @@ from .models import (
     LTIExternalCourseAssignments,
     )
 
-
+UTC = pytz.UTC
 User = get_user_model()
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
@@ -330,6 +330,7 @@ class LTICacheManager(object):
         # course = modulestore().get_item(self.course_id)
 
         # get all students enrolled in course
+        now = UTC.localize(datetime.datetime.now())
         enrolled_students = User.objects.filter(
             courseenrollment__course_id=self.course_id,
             courseenrollment__is_active=1
@@ -355,7 +356,13 @@ class LTICacheManager(object):
             print('student username: ' + student['username'])
             print('student email: ' + student['email'])
             for grade in student['grade_summary']['section_breakdown']:
-                if not 'Unreleased' in grade['detail'] and grade['label'] not in ['HW Avg', 'Lab Avg']:
+                if 'due_date' in grade: due_date = grade['due_date']
+                else: due_date = None
+
+                if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
+                else: attempted_graded = None
+
+                if (grade['percent'] > 0) or (attempted_graded is not None) or (due_date is not None and due_date < now):
                     print(json.dumps(grade,
                             indent=4,
                             sort_keys=True,
