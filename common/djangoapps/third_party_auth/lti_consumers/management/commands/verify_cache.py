@@ -56,11 +56,6 @@ class Command(BaseCommand):
         user = None
         lti_internal_courses = None
 
-        print('course_id: {course_id}, username: {username}'.format(
-            course_id=course_id,
-            username=username
-            ))
-
         if course_id: course = CourseOverview.objects.filter(id=course_id)
         if username: user = User.objects.get(username=username)
 
@@ -69,7 +64,6 @@ class Command(BaseCommand):
             print('No LTIInternalCourses found for course_id/username. Exiting.')
             return None
 
-        print(type(lti_internal_courses))
         for lti_internal_course in lti_internal_courses:
             course_id = str(lti_internal_course.course_fk.id)
             print('course_id: ' + course_id)
