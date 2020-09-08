@@ -251,7 +251,12 @@ def override_score_module_state(xmodule_instance_args, module_descriptor, studen
         create_new_event_transaction_id()
         set_event_transaction_type(grades_events.GRADES_OVERRIDE_EVENT_TYPE)
 
-        problem_weight = instance.weight if instance.weight is not None else 1
+        # fuka sept-2020 old swxblocks don't have an instance weight field, so this gets an attribute error on rescoring
+        try:
+            problem_weight = instance.weight if instance.weight is not None else 1
+        except AttributeError:
+            problem_weight = 1
+
         if problem_weight == 0:
             msg = "Scores cannot be overridden for a problem that has a weight of zero."
             raise UpdateProblemModuleStateError(msg)
@@ -261,8 +266,18 @@ def override_score_module_state(xmodule_instance_args, module_descriptor, studen
                 raw_possible=instance.max_score() / problem_weight
             ))
 
-        instance.publish_grade()
-        instance.save()
+        # fuka sept-2020 old swxblocks don't have an instance publish_grade() attribute, so this gets an attribute error on rescoring
+        try:
+            instance.publish_grade()
+        except AttributeError:
+            TASK_LOG.warning('XModule instance has no publish_grade() attribute')
+
+        # fuka sept-2020 old swxblocks don't have an instance save() attribute, so this gets an attribute error on rescoring
+        try:
+            instance.save()
+        except AttributeError:
+            TASK_LOG.warning('XModule instance has no save() attribute')
+
         TASK_LOG.debug(
             u"successfully processed score override for course %(course)s, problem %(loc)s "
             u"and student %(student)s",

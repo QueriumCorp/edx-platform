@@ -130,32 +130,37 @@ def instructor_dashboard_2(request, course_id):
 
     reports_enabled = configuration_helpers.get_value('SHOW_ECOMMERCE_REPORTS', False)
 
-    sections = []
-    if access['staff']:
-        sections.extend([
+    # fuka sept-2020 allow access to these to instructors not just staff
+    # sections = []
+    # if access['staff']:
+    #   sections.extend([
+    sections = [
             _section_course_info(course, access),
             _section_membership(course, access),
-            _section_cohort_management(course, access),
+            # _section_cohort_management(course, access),
             _section_discussions_management(course, access),
             _section_student_admin(course, access),
-        ])
-    if access['data_researcher']:
-        sections.append(_section_data_download(course, access))
+            _section_data_download(course, access),
+    ]
+    #    ])
+    # if access['data_researcher']:
+    #    sections.append(_section_data_download(course, access))
 
     analytics_dashboard_message = None
-    if show_analytics_dashboard_message(course_key) and (access['staff'] or access['instructor']):
-        # Construct a URL to the external analytics dashboard
-        analytics_dashboard_url = '{0}/courses/{1}'.format(settings.ANALYTICS_DASHBOARD_URL, six.text_type(course_key))
-        link_start = HTML(u"<a href=\"{}\" rel=\"noopener\" target=\"_blank\">").format(analytics_dashboard_url)
-        analytics_dashboard_message = _(
-            u"To gain insights into student enrollment and participation {link_start}"
-            u"visit {analytics_dashboard_name}, our new course analytics product{link_end}."
-        )
-        analytics_dashboard_message = Text(analytics_dashboard_message).format(
-            link_start=link_start, link_end=HTML("</a>"), analytics_dashboard_name=settings.ANALYTICS_DASHBOARD_NAME)
+    # fuka sept-2020 don't display the Analytics tab
+    # if show_analytics_dashboard_message(course_key) and (access['staff'] or access['instructor']):
+    #     # Construct a URL to the external analytics dashboard
+    #     analytics_dashboard_url = '{0}/courses/{1}'.format(settings.ANALYTICS_DASHBOARD_URL, six.text_type(course_key))
+    #     link_start = HTML(u"<a href=\"{}\" rel=\"noopener\" target=\"_blank\">").format(analytics_dashboard_url)
+    #     analytics_dashboard_message = _(
+    #         u"To gain insights into student enrollment and participation {link_start}"
+    #         u"visit {analytics_dashboard_name}, our new course analytics product{link_end}."
+    #     )
+    #     analytics_dashboard_message = Text(analytics_dashboard_message).format(
+    #         link_start=link_start, link_end=HTML("</a>"), analytics_dashboard_name=settings.ANALYTICS_DASHBOARD_NAME)
 
-        # Temporarily show the "Analytics" section until we have a better way of linking to Insights
-        sections.append(_section_analytics(course, access))
+    #     # Temporarily show the "Analytics" section until we have a better way of linking to Insights
+    #     sections.append(_section_analytics(course, access))
 
     # Check if there is corresponding entry in the CourseMode Table related to the Instructor Dashboard course
     course_mode_has_price = False
@@ -711,8 +716,9 @@ def _section_data_download(course, access):
         ),
         'export_ora2_data_url': reverse('export_ora2_data', kwargs={'course_id': six.text_type(course_key)}),
     }
-    if not access.get('data_researcher'):
-        section_data['is_hidden'] = True
+    # fuka sept-2020 don't hide the data downloads page
+    # if not access.get('data_researcher'):
+    #     section_data['is_hidden'] = True
     return section_data
 
 
