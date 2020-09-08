@@ -29,6 +29,10 @@ from openedx.core.djangoapps.content.block_structure.block_structure import Bloc
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore import ModuleStoreEnum
 
+# for _verify_grades
+from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
+
+
 # for locating a course assignment by its URL.
 # mcdaniel may-2020: getting a race situation on this import.
 # moved the def to utils, in this module.
@@ -213,14 +217,14 @@ class LTICacheManager(object):
             print('McDaniel Sep-2020: filtering by user is not yet implemented. Exiting.')
             return None
 
-        self._verify_structure()
-        self._verify_enrollments()
+        #self._verify_structure()
+        self._verify_grades()
 
         return None
 
     def _verify_structure(self):
         """Iterate all blocks in a course. For any defined problem types, verify that the problem
-        exists in LTIExternalCourseAssignmentProblems. If its missing then add it.
+        exists in LTIExternalCourseAssignmentProblems. Add any records that are missing.
         """
         print('='*80)
         print('BEGIN: VERIFY COURSE STRUCTURE')
@@ -265,7 +269,6 @@ class LTICacheManager(object):
                         assignment = get_assignment(item)
                         chapter = get_chapter(item)
                         if assignment is None: return None
-                        assignment_encoded_location = urllib.parse.quote(str(assignment.location))
 
                         assignment_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter_id}/{assignment_id}/'.format(
                             scheme = scheme,
@@ -306,12 +309,12 @@ class LTICacheManager(object):
         print('='*80)
         return None
 
-    def _verify_enrollments(self):
+    def _verify_grades(self):
         """[summary]
             from openedx.core.djangoapps.enrollments import data as enrollment_data
             from lms.djangoapps.grades.course_grade import CourseGrade
             from lms.djangoapps.grades.course_data import CourseData
-            from lms.djangoapps.grades.course_grade_factory import CourseGradeFactory
+
 
             enrollment_data.get_course_enrollment(self.username, str(self.course_key))
             course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
@@ -319,25 +322,49 @@ class LTICacheManager(object):
             course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
 
         """
-        return None
+        print('='*80)
+        print('BEGIN: VERIFY STUDENT GRADES')
+        print('='*80)
 
-        enrollments = None
-        if self._course_id and self._user:
-            enrollments = CourseEnrollment.objects.filter(course=course, user=self._user)
-        else:
-            if self._course_id:
-                enrollments = CourseEnrollment.objects.filter(course=course)
-            if self._user:
-                enrollments = CourseEnrollment.objects.filter(user=self._user)
+        # course should be of type common.lib.xmodule.course_module.CourseDescriptor
+        # course = modulestore().get_item(self.course_id)
 
-        if enrollments is None:
-            print('LTICacheManager.verify() - nothing to do. Exiting.')
-            return
+        # get all students enrolled in course
+        enrolled_students = User.objects.filter(
+            courseenrollment__course_id=self.course_id,
+            courseenrollment__is_active=1
+        ).order_by('username').select_related("profile")
 
-        courses_enrollments = []
-        for enrollment in enrollments:
-            print(enrollment.user.username)
+        with modulestore().bulk_operations(self.course_id):
+            students = [
+                {
+                    'username': student.username,
+                    'id': student.id,
+                    'email': student.email,
+                    'grade_summary': CourseGradeFactory().read(student, course_key=self.course_id).summary
+                }
+                for student in enrolled_students
+            ]
 
+        def default(o):
+            if isinstance(o, (datetime.date, datetime.datetime)):
+                return o.isoformat()
+
+        for student in students:
+            print('student id: ' + str(student['id']))
+            print('student username: ' + student['username'])
+            print('student email: ' + student['email'])
+            for grade in student['grade_summary']['section_breakdown']:
+                if not 'Unreleased' in grade['detail'] and grade['label'] not in ['HW Avg', 'Lab Avg']:
+                    print(json.dumps(grade,
+                            indent=4,
+                            sort_keys=True,
+                            default=default
+                            ))
+
+        print('='*80)
+        print('COMPLETE: VERIFY STUDENT GRADES')
+        print('='*80)
         return None
 
     def refresh(self):
