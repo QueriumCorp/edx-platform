@@ -4,6 +4,7 @@ Utility methods called from Mako templates in Rover theme.
 # python  stuff
 import logging
 import datetime
+import pytz
 
 # django stuff
 from django.conf import settings
@@ -20,7 +21,8 @@ from lms.djangoapps.querium.rover_ecommerce.models import Configuration, EOPWhit
 
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
-
+DEBUG = True
+UTC = pytz.UTC
 
 def paywall_should_render(request):
     """
@@ -76,13 +78,13 @@ def paywall_should_raise(request):
     if payment_deadline_date is None:
         return False
 
-    now = datetime.datetime.now()
+    now = UTC.localize(datetime.datetime.now())
     if now <= payment_deadline_date:
         logger('Payment deadline is in the future, exiting.')
         return False
 
     user = get_user_by_username_or_email(request.user)
-    log.error('paywall_should_raise() - Ecommerce paywall being raised on user {}!'.format(user.email))
+    logger('paywall_should_raise() - Ecommerce paywall being raised on user {}!'.format(user.email))
     return True
 
 def is_eop_student(request):
@@ -99,8 +101,9 @@ def is_eop_student(request):
     logger('is_eop_student() - begin')
     try:
         user = get_user_by_username_or_email(request.user)
-        usr = EOPWhitelist.objects.filter(user_email=user.email)
-        return True
+        usr = EOPWhitelist.objects.filter(user_email=user.email).first()
+        if usr is not None:
+            return True
     except ObjectDoesNotExist:
         pass
 
@@ -180,12 +183,14 @@ def get_course(request):
         [course]: a ModuleStore course object
     """
     try:
-        course_id = get_course_id()
+        course_id = get_course_id(request)
         course_key = CourseKey.from_string(course_id)
         course = modulestore().get_course(course_key)
         return course
     except:
-        logger('Not a course, exiting.')
+        logger('get_course() {course_id} is not a course, exiting.'.format(
+            course_id=course_id
+        ))
         pass
 
     return None
@@ -204,10 +209,16 @@ def get_course_deadline_date(request):
 
     try:
         course_id = get_course_id(request)
-        configuration = Configuration.objects.filter(course_id=course_id)
-        return configuration.payment_deadline_date
-    except ObjectDoesNotExist:
+        configuration = Configuration.objects.filter(course_id=course_id).first()
+        if configuration is not None:
+            return configuration.payment_deadline_date
+    except Exception as e:
+        logger('get_course_deadline_date() error: {e} '.format(
+            e=e
+        ))
         return None
+
+    return None
 
 def logger(msg):
     if DEBUG:
