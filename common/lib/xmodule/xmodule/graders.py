@@ -2,7 +2,7 @@
 Code used to calculate learner grades.
 """
 
-
+import json
 import abc
 import inspect
 import logging
@@ -398,9 +398,12 @@ class AssignmentFormatGrader(CourseGrader):
             course_version = None
             subtree_edited_timestamp = None
             override = None
-            attempted = None
-            attempted_graded = None
+            attempted_graded = False
             percent_graded = None
+            attempted = None
+            first_attempted = None
+            earned = 0.00
+            possible = 0.00
 
             if i < len(scores) or generate_random_scores:
                 if generate_random_scores:  	# for debugging!
@@ -409,6 +412,25 @@ class AssignmentFormatGrader(CourseGrader):
                     section_name = _("Generated")
 
                 else:
+                    """
+                    print('AssignmentFormatGrader scores type: {t}'.format(
+                        t=type(scores[i])
+                    ))
+                    print('AssignmentFormatGrader block usage key: {location}'.format(
+                        location=str(scores[i].location)
+                    ))
+
+                    def default(o):
+                        if isinstance(o, datetime):
+                            return o.isoformat()
+
+                    print('AssignmentFormatGrader scores: ')
+                    print(json.dumps(str(scores),
+                            indent=4,
+                            sort_keys=True,
+                            default=default
+                            ))
+                    """
                     earned = scores[i].graded_total.earned
                     possible = scores[i].graded_total.possible
                     section_name = scores[i].display_name
@@ -422,9 +444,13 @@ class AssignmentFormatGrader(CourseGrader):
                     course_version = scores[i].course_version
                     subtree_edited_timestamp = scores[i].subtree_edited_timestamp
                     override = scores[i].override
-                    #attempted = scores[i].attempted
                     attempted_graded = scores[i].attempted_graded
                     percent_graded = scores[i].percent_graded
+
+                    #print('student: ' + scores[i].user)
+                    #print(scores[i]._persisted_model_params(student=))
+                    #grade_dict = scores[i]._persisted_model_params()
+                    #attempted = scores[i].attempted
                     #first_attempted = scores[i].first_attempted
 
                     # log.info("KENTGRADE AssignmentFormatGrader.grade earned={e} possible={p} section_name={s}".format(e=earned,p=possible,s=section_name))
@@ -464,10 +490,12 @@ class AssignmentFormatGrader(CourseGrader):
                 'course_version': course_version,
                 'subtree_edited_timestamp': subtree_edited_timestamp,
                 'override': override,
-                #'attempted': attempted,
                 'attempted_graded': attempted_graded,
                 'percent_graded': percent_graded,
+                'earned': earned,
+                'possible': possible
                 #'first_attempted': first_attempted
+                #'attempted': attempted,
                 })
             # log.info("KENTGRADE AssignmentFormatGrader.grade breakdown={b}".format(b=breakdown))
 
