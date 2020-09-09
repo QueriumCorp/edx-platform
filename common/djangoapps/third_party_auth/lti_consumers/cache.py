@@ -56,6 +56,18 @@ User = get_user_model()
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
+class color:
+    PURPLE = '\033[95m'
+    CYAN = '\033[96m'
+    DARKCYAN = '\033[36m'
+    BLUE = '\033[94m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    END = '\033[0m'
+
 class LTICacheManager(object):
     """
     1. Used during LTI authentication from external platforms connecting to Rover via
@@ -217,7 +229,7 @@ class LTICacheManager(object):
             print('McDaniel Sep-2020: filtering by user is not yet implemented. Exiting.')
             return None
 
-        #self._verify_structure()
+        self._verify_structure()
         self._verify_grades()
 
         return None
@@ -252,7 +264,7 @@ class LTICacheManager(object):
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
                 lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
                 if lti_external_course_assignment_problem is not None:
-                    print('Found: {block_usage_key}, lti record: {lti_record}'.format(block_usage_key=block_usage_key, lti_record=lti_external_course_assignment_problem))
+                    print('Found: {block_usage_key}'.format(block_usage_key=block_usage_key))
                 else:
                     print('Missing: {block_usage_key} {block_type}'.format(block_usage_key=block_usage_key, block_type=block_usage_key.block_type))
 
@@ -310,24 +322,14 @@ class LTICacheManager(object):
         return None
 
     def _verify_grades(self):
-        """[summary]
-            from openedx.core.djangoapps.enrollments import data as enrollment_data
-            from lms.djangoapps.grades.course_grade import CourseGrade
-            from lms.djangoapps.grades.course_data import CourseData
-
-
-            enrollment_data.get_course_enrollment(self.username, str(self.course_key))
-            course_data = CourseData(user=self.grade_user, course=None, collected_block_structure=None, structure=None, course_key=self.course_key)
-            course_data = CourseData(course_key=course_key)
-            course_grade = CourseGradeFactory().read(self.grade_user, course_key=self.course_key)
-
+        """
+        iterate all student enrollments in the self.course_id.
+        query graded assignments that have been attempted by each student.
+        verify that a
         """
         print('='*80)
         print('BEGIN: VERIFY STUDENT GRADES')
         print('='*80)
-
-        # course should be of type common.lib.xmodule.course_module.CourseDescriptor
-        # course = modulestore().get_item(self.course_id)
 
         # get all students enrolled in course
         now = UTC.localize(datetime.datetime.now())
@@ -354,9 +356,11 @@ class LTICacheManager(object):
 
         for student in students:
             username = student['username']
-            print('student id: ' + str(student['id']))
-            print('student username: ' + username)
-            print('student email: ' + student['email'])
+            print('Verifying grades cache for student id: {id}, username: {username}, email: {email}'.format(
+                id=str(student['id']),
+                username=username,
+                email=student['email']
+            ))
 
             # check student enrollment
             user = User.objects.get(username=username)
@@ -366,21 +370,12 @@ class LTICacheManager(object):
                 ).first()
 
             if not course_enrollment:
-                print('No LTIExternalCourseEnrollment record found for student {username}. Skipping this student.'.format(
-                    username=username
+                print('{red}No LTIExternalCourseEnrollment record found for student {username}. Skipping this student.{end}'.format(
+                    red=color.RED,
+                    username=username,
+                    end=color.END
                 ))
             else:
-                """
-                for grade in student['subsection_grades']:
-                    # this does not work.
-                    print('student subsection_grades:')
-                    print(json.dumps(grade,
-                            indent=4,
-                            sort_keys=True,
-                            default=default
-                            ))
-                """
-
                 for grade in student['grade_summary']['section_breakdown']:
 
                     if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
@@ -393,18 +388,6 @@ class LTICacheManager(object):
                         possible_all = grade['possible']
                         earned_graded = grade['earned']
                         possible_graded = grade['possible']
-
-                        print('earned_all: {earned_all}, possible_all: {possible_all}, earned_graded: {earned_graded}, possible_graded: {possible_graded}'.format(
-                            location=location,
-                            earned_all=earned_all,
-                            possible_all=possible_all,
-                            earned_graded=earned_graded,
-                            possible_graded=possible_graded
-                        ))
-
-                        print('_verify_grades() - block usage key: {location}'.format(
-                            location=str(location)
-                        ))
 
                         if 'display_name' in grade: display_name = grade['display_name']
                         else: display_name = ''
@@ -424,7 +407,7 @@ class LTICacheManager(object):
                         ).first()
 
                         if student_grade is not None:
-                            print('Found student grade for {username} / {display_name}'.format(
+                            print('Found grade for student {username} - {display_name}'.format(
                                 display_name=display_name,
                                 username=username
                             ))
@@ -440,15 +423,15 @@ class LTICacheManager(object):
                                 possible_graded = possible_graded
                             )
                             student_grade.save()
-                            print('Added student grade for {display_name}'.format(
+                            print('Added grade for student {username} - {display_name}'.format(
+                                username=username,
                                 display_name=display_name
                             ))
-
-                        print(json.dumps(grade,
-                                indent=4,
-                                sort_keys=True,
-                                default=default
-                                ))
+                            print(json.dumps(grade,
+                                    indent=4,
+                                    sort_keys=True,
+                                    default=default
+                                    ))
 
 
         print('='*80)
