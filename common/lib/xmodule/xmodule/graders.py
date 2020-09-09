@@ -389,6 +389,7 @@ class AssignmentFormatGrader(CourseGrader):
         labeler = get_short_labeler(self.short_label)
 
         for i in range(max(int(float(self.min_count)), len(scores))):
+            # mcdaniel sep-2020: attribute additions for LTI cache verification.
             location = None
             display_name = None
             url_name = None
@@ -412,29 +413,11 @@ class AssignmentFormatGrader(CourseGrader):
                     section_name = _("Generated")
 
                 else:
-                    """
-                    print('AssignmentFormatGrader scores type: {t}'.format(
-                        t=type(scores[i])
-                    ))
-                    print('AssignmentFormatGrader block usage key: {location}'.format(
-                        location=str(scores[i].location)
-                    ))
-
-                    def default(o):
-                        if isinstance(o, datetime):
-                            return o.isoformat()
-
-                    print('AssignmentFormatGrader scores: ')
-                    print(json.dumps(str(scores),
-                            indent=4,
-                            sort_keys=True,
-                            default=default
-                            ))
-                    """
                     earned = scores[i].graded_total.earned
                     possible = scores[i].graded_total.possible
                     section_name = scores[i].display_name
 
+                    # mcdaniel sep-2020: attribute additions for LTI cache verification.
                     location = scores[i].location
                     display_name = scores[i].display_name
                     url_name = scores[i].url_name
@@ -446,12 +429,6 @@ class AssignmentFormatGrader(CourseGrader):
                     override = scores[i].override
                     attempted_graded = scores[i].attempted_graded
                     percent_graded = scores[i].percent_graded
-
-                    #print('student: ' + scores[i].user)
-                    #print(scores[i]._persisted_model_params(student=))
-                    #grade_dict = scores[i]._persisted_model_params()
-                    #attempted = scores[i].attempted
-                    #first_attempted = scores[i].first_attempted
 
                     # log.info("KENTGRADE AssignmentFormatGrader.grade earned={e} possible={p} section_name={s}".format(e=earned,p=possible,s=section_name))
 
@@ -494,8 +471,6 @@ class AssignmentFormatGrader(CourseGrader):
                 'percent_graded': percent_graded,
                 'earned': earned,
                 'possible': possible
-                #'first_attempted': first_attempted
-                #'attempted': attempted,
                 })
             # log.info("KENTGRADE AssignmentFormatGrader.grade breakdown={b}".format(b=breakdown))
 
