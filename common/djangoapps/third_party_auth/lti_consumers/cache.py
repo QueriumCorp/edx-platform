@@ -342,7 +342,8 @@ class LTICacheManager(object):
                     'username': student.username,
                     'id': student.id,
                     'email': student.email,
-                    'grade_summary': CourseGradeFactory().read(student, course_key=self.course_id).summary
+                    'grade_summary': CourseGradeFactory().read(student, course_key=self.course_id).summary,
+                    'subsection_grades': CourseGradeFactory().read(student, course_key=self.course_id).chapter_grades
                 }
                 for student in enrolled_students
             ]
@@ -369,14 +370,42 @@ class LTICacheManager(object):
                     username=username
                 ))
             else:
+                """
+                for grade in student['subsection_grades']:
+                    # this does not work.
+                    print('student subsection_grades:')
+                    print(json.dumps(grade,
+                            indent=4,
+                            sort_keys=True,
+                            default=default
+                            ))
+                """
+
                 for grade in student['grade_summary']['section_breakdown']:
-                    if 'due_date' in grade: due_date = grade['due_date']
-                    else: due_date = None
 
                     if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
-                    else: attempted_graded = None
+                    else: attempted_graded = False
 
-                    if (grade['percent'] > 0) or (attempted_graded is not None) or (due_date is not None and due_date < now):
+                    if attempted_graded:
+                        due_date = grade['due_date'] if 'due_date' in grade else None
+                        location = grade['location']
+                        earned_all = grade['earned']
+                        possible_all = grade['possible']
+                        earned_graded = grade['earned']
+                        possible_graded = grade['possible']
+
+                        print('earned_all: {earned_all}, possible_all: {possible_all}, earned_graded: {earned_graded}, possible_graded: {possible_graded}'.format(
+                            location=location,
+                            earned_all=earned_all,
+                            possible_all=possible_all,
+                            earned_graded=earned_graded,
+                            possible_graded=possible_graded
+                        ))
+
+                        print('_verify_grades() - block usage key: {location}'.format(
+                            location=str(location)
+                        ))
+
                         if 'display_name' in grade: display_name = grade['display_name']
                         else: display_name = ''
                         course_assignment = LTIExternalCourseAssignments.objects.filter(
@@ -395,23 +424,25 @@ class LTICacheManager(object):
                         ).first()
 
                         if student_grade is not None:
-                            print('Found student grade for {display_name}'.format(
-                                display_name=display_name
+                            print('Found student grade for {username} / {display_name}'.format(
+                                display_name=display_name,
+                                username=username
                             ))
                         else:
-                            print('Adding student grade for {display_name}'.format(
-                                display_name=display_name
-                            ))
                             student_grade = LTIExternalCourseEnrollmentGrades(
                                 course_enrollment=course_enrollment,
                                 course_assignment=course_assignment,
                                 section_url=course_assignment.url,
-                                usage_key=??????,
-                                earned_all = 0.00
-                                possible_all = 0.00
-                                earned_graded = 0.00
-                                possible_graded = 0.00
+                                usage_key=str(location),
+                                earned_all = earned_all,
+                                possible_all = possible_all,
+                                earned_graded = earned_graded,
+                                possible_graded = possible_graded
                             )
+                            student_grade.save()
+                            print('Added student grade for {display_name}'.format(
+                                display_name=display_name
+                            ))
 
                         print(json.dumps(grade,
                                 indent=4,
