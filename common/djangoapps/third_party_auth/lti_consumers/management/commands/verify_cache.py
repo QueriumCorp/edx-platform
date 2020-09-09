@@ -45,12 +45,19 @@ class Command(BaseCommand):
             type=str,
             help=u'A Rover username'
             )
+        parser.add_argument(
+            u'-q',
+            u'--quiet',
+            action='store_true',
+            help=u'True if you want to suppress console output'
+            )
 
 
     def handle(self, *args, **kwargs):
 
         course_id = kwargs['course_id']
         username = kwargs['username']
+        quiet = kwargs['quiet']
 
         course = None
         user = None
@@ -59,23 +66,21 @@ class Command(BaseCommand):
         if course_id: course = CourseOverview.objects.filter(id=course_id)
         if username: user = User.objects.get(username=username)
 
-        lti_internal_courses = self.get_lti_courses(course, user)
+        lti_internal_courses = self.get_lti_courses(course)
         if lti_internal_courses is None:
-            print('No LTIInternalCourses found for course_id/username. Exiting.')
+            print('No LTIInternalCourses found for course_id. Exiting.')
             return None
 
         for lti_internal_course in lti_internal_courses:
             course_id = str(lti_internal_course.course_fk.id)
-            print('course_id: ' + course_id)
             lti_cache = LTICacheManager(course_id=course_id, user=user)
-            lti_cache.verify()
+            lti_cache.verify(quiet)
 
-    def get_lti_courses(self, course, user):
+    def get_lti_courses(self, course):
         """evaluate course / user (both are optional) and query LTIInternalCourse
 
         Args:
             course: CourseOverview or None
-            user Django User object or None
 
         Returns: list of LTIInternalCourse records
         """
@@ -84,16 +89,8 @@ class Command(BaseCommand):
             print('LTIInternalCourses table is empty.')
             return None
 
-        if course is None and user is None:
+        if course is None:
             return LTIInternalCourse.objects.all()
-
-        if course is not None and user is not None:
-            print('PLEASE IMPLEMENT ME :/')
-            return None
-
-        if course is not None:
+        else:
             return LTIInternalCourse.objects.filter(course_fk__in=course)
 
-        if user is not None:
-            print('PLEASE IMPLEMENT ME :/')
-            return None

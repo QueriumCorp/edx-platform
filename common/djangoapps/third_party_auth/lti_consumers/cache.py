@@ -188,7 +188,7 @@ class LTICacheManager(object):
         self._user = None
         self._course_id = None
 
-    def verify(self):
+    def verify(self, quiet=False):
         """Ensure that cache records exist for all enrolled students' assignments.
         This is an administrative procedure that is intended to be called
         from manage.py.
@@ -220,26 +220,23 @@ class LTICacheManager(object):
             self.course_enrollment is an LTIExternalCourseEnrollment record for the course_id/user
 
         """
-        print('LTICacheManager.verify()')
         if self.course_id is None:
             print('LTICacheManager.verify() - course_id is not set. Nothing to do. Exiting.')
             return None
 
-        if self.user is not None:
-            print('McDaniel Sep-2020: filtering by user is not yet implemented. Exiting.')
-            return None
-
-        self._verify_structure()
-        self._verify_grades()
+        self._verify_structure(quiet)
+        self._verify_grades(quiet)
 
         return None
 
-    def _verify_structure(self):
+    def _verify_structure(self, quiet=False):
         """Iterate all blocks in a course. For any defined problem types, verify that the problem
         exists in LTIExternalCourseAssignmentProblems. Add any records that are missing.
         """
         print('='*80)
-        print('BEGIN: VERIFY COURSE STRUCTURE')
+        print('BEGIN: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
+            course_id=str(self.course_id)
+        ))
         print('='*80)
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
         if lti_external_course is None:
@@ -264,9 +261,15 @@ class LTICacheManager(object):
                 # this block usage key should exist in LTIExternalCourseAssignmentProblems
                 lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems.objects.filter(usage_key=block_usage_key).first()
                 if lti_external_course_assignment_problem is not None:
-                    print('Found: {block_usage_key}'.format(block_usage_key=block_usage_key))
+                    if not quiet: print('Found: {block_usage_key}'.format(block_usage_key=block_usage_key))
                 else:
-                    print('Missing: {block_usage_key} {block_type}'.format(block_usage_key=block_usage_key, block_type=block_usage_key.block_type))
+                    if not quiet:
+                        print('{red}Missing: {block_usage_key} {block_type}{end}'.format(
+                            red=color.RED,
+                            block_usage_key=block_usage_key,
+                            block_type=block_usage_key.block_type,
+                            end=color.END
+                            ))
 
                     item = None
                     try:
@@ -305,30 +308,42 @@ class LTICacheManager(object):
                                 due_date = due_date
                             )
                             lti_external_course_assignments.save()
-                            print('Added new LTIExternalCourseAssignments cache record for assignment ' + str(assignment.location))
+                            print('{green}Added new LTIExternalCourseAssignments cache record for assignment {assignment}{end}'.format(
+                                green=color.GREEN,
+                                assignment=str(assignment.location),
+                                end=color.END
+                            ))
 
                         lti_external_course_assignment_problem = LTIExternalCourseAssignmentProblems(
                             course_assignment = lti_external_course_assignments,
                             usage_key = block_usage_key
                         )
                         lti_external_course_assignment_problem.save()
-                        print('Added new LTIExternalCourseAssignmentProblems cache record for problem ' + str(block_usage_key))
+                        print('{green}Added new LTIExternalCourseAssignmentProblems cache record for problem {block_usage_key}{end}'.format(
+                            green=color.GREEN,
+                            block_usage_key=str(block_usage_key),
+                            end=color.END
+                        ))
                         print('')
                         print('')
 
         print('='*80)
-        print('COMPLETE: VERIFY COURSE STRUCTURE')
+        print('COMPLETED: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
+            course_id=str(self.course_id)
+        ))
         print('='*80)
         return None
 
-    def _verify_grades(self):
+    def _verify_grades(self, quiet=False):
         """
         iterate all student enrollments in the self.course_id.
         query graded assignments that have been attempted by each student.
         verify that a
         """
         print('='*80)
-        print('BEGIN: VERIFY STUDENT GRADES')
+        print('BEGIN: VERIFYING STUDENT GRADES FOR {course_id}'.format(
+            course_id=str(self.course_id)
+        ))
         print('='*80)
 
         # get all students enrolled in course
@@ -356,86 +371,90 @@ class LTICacheManager(object):
 
         for student in students:
             username = student['username']
-            print('Verifying grades cache for student id: {id}, username: {username}, email: {email}'.format(
-                id=str(student['id']),
-                username=username,
-                email=student['email']
-            ))
-
-            # check student enrollment
             user = User.objects.get(username=username)
-            course_enrollment = LTIExternalCourseEnrollment.objects.filter(
-                course=self.course,
-                user=user
-                ).first()
 
-            if not course_enrollment:
-                print('{red}No LTIExternalCourseEnrollment record found for student {username}. Skipping this student.{end}'.format(
-                    red=color.RED,
-                    username=username,
-                    end=color.END
-                ))
-            else:
-                for grade in student['grade_summary']['section_breakdown']:
+            if self.user is None or user.username == self.user.username:
+                if not quiet:
+                    print('Verifying grades cache for student id: {id}, username: {username}, email: {email}'.format(
+                        id=str(student['id']),
+                        username=username,
+                        email=student['email']
+                    ))
 
-                    if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
-                    else: attempted_graded = False
+                course_enrollment = LTIExternalCourseEnrollment.objects.filter(
+                    course=self.course,
+                    user=user
+                    ).first()
 
-                    if attempted_graded:
-                        due_date = grade['due_date'] if 'due_date' in grade else None
-                        location = grade['location']
-                        earned_all = grade['earned']
-                        possible_all = grade['possible']
-                        earned_graded = grade['earned']
-                        possible_graded = grade['possible']
+                if not course_enrollment:
+                    print('{red}No LTIExternalCourseEnrollment record found for student {username}. Skipping this student.{end}'.format(
+                        red=color.RED,
+                        username=username,
+                        end=color.END
+                    ))
+                else:
+                    for grade in student['grade_summary']['section_breakdown']:
 
-                        if 'display_name' in grade: display_name = grade['display_name']
-                        else: display_name = ''
-                        course_assignment = LTIExternalCourseAssignments.objects.filter(
-                            course=self.course,
-                            display_name=display_name
-                        ).first()
+                        if 'attempted_graded' in grade: attempted_graded = grade['attempted_graded']
+                        else: attempted_graded = False
 
-                        if course_assignment is None:
-                            print('Internal error: LTIExternalCourseAssignments record not found for {display_name}'.format(
+                        if attempted_graded:
+                            due_date = grade['due_date'] if 'due_date' in grade else None
+                            location = grade['location']
+                            earned_all = grade['earned']
+                            possible_all = grade['possible']
+                            earned_graded = grade['earned']
+                            possible_graded = grade['possible']
+
+                            if 'display_name' in grade: display_name = grade['display_name']
+                            else: display_name = ''
+                            course_assignment = LTIExternalCourseAssignments.objects.filter(
+                                course=self.course,
                                 display_name=display_name
-                            ))
+                            ).first()
 
-                        student_grade = LTIExternalCourseEnrollmentGrades.objects.filter(
-                            course_enrollment=course_enrollment,
-                            course_assignment=course_assignment
-                        ).first()
+                            if course_assignment is None:
+                                print('Internal error: LTIExternalCourseAssignments record not found for {display_name}'.format(
+                                    display_name=display_name
+                                ))
 
-                        if student_grade is not None:
-                            print('Found grade for student {username} - {display_name}'.format(
-                                display_name=display_name,
-                                username=username
-                            ))
-                        else:
-                            student_grade = LTIExternalCourseEnrollmentGrades(
+                            student_grade = LTIExternalCourseEnrollmentGrades.objects.filter(
                                 course_enrollment=course_enrollment,
-                                course_assignment=course_assignment,
-                                section_url=course_assignment.url,
-                                usage_key=str(location),
-                                earned_all = earned_all,
-                                possible_all = possible_all,
-                                earned_graded = earned_graded,
-                                possible_graded = possible_graded
-                            )
-                            student_grade.save()
-                            print('Added grade for student {username} - {display_name}'.format(
-                                username=username,
-                                display_name=display_name
-                            ))
-                            print(json.dumps(grade,
-                                    indent=4,
-                                    sort_keys=True,
-                                    default=default
+                                course_assignment=course_assignment
+                            ).first()
+
+                            if student_grade is not None:
+                                if not quiet:
+                                    print('Found grade for student {username} - {display_name}'.format(
+                                        display_name=display_name,
+                                        username=username
                                     ))
+                            else:
+                                student_grade = LTIExternalCourseEnrollmentGrades(
+                                    course_enrollment=course_enrollment,
+                                    course_assignment=course_assignment,
+                                    section_url=course_assignment.url,
+                                    usage_key=str(location),
+                                    earned_all = earned_all,
+                                    possible_all = possible_all,
+                                    earned_graded = earned_graded,
+                                    possible_graded = possible_graded
+                                )
+                                student_grade.save()
+                                print('{green}Added grade for student {username} - {display_name}{end}'.format(
+                                    green=color.GREEN,
+                                    username=username,
+                                    display_name=display_name,
+                                    end=color.END
+                                ))
+                                grade_data = json.dumps(grade, indent=4, sort_keys=True, default=default)
+                                print(color.GREEN + grade_data + color.END)
 
 
         print('='*80)
-        print('COMPLETE: VERIFY STUDENT GRADES')
+        print('COMPLETED: VERIFYING STUDENT GRADES FOR {course_id}'.format(
+            course_id=str(self.course_id)
+        ))
         print('='*80)
         return None
 
