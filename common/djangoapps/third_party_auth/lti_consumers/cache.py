@@ -285,7 +285,7 @@ class LTICacheManager(object):
                         chapter = get_chapter(item)
                         if assignment is None: return None
 
-                        assignment_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter_id}/{assignment_id}/'.format(
+                        assignment_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter_id}/{assignment_id}'.format(
                             scheme = scheme,
                             host=host,
                             url_prefix='courses',
@@ -300,6 +300,13 @@ class LTICacheManager(object):
                             course=lti_external_course,
                             url=assignment_url
                             ).first()
+
+                        if lti_external_course_assignments is None:
+                            lti_external_course_assignments = LTIExternalCourseAssignments.objects.filter(
+                                course=lti_external_course,
+                                url=assignment_url + '/'
+                                ).first()
+
                         if lti_external_course_assignments is None:
                             lti_external_course_assignments = LTIExternalCourseAssignments(
                                 course = lti_external_course,
@@ -429,10 +436,18 @@ class LTICacheManager(object):
                                 ).first()
 
                                 if course_assignment is None:
-                                    print('{red}Internal error: LTIExternalCourseAssignments record not found for {username} - {display_name}{end}'.format(
+                                    course_assignment = LTIExternalCourseAssignments.objects.filter(
+                                        course=self.course,
+                                        url=assignment_url + '/'
+                                    ).first()
+
+
+                                if course_assignment is None:
+                                    print('{red}Internal error: LTIExternalCourseAssignments record not found for {username} - {display_name} - {url}{end}'.format(
                                         red=color.RED,
                                         username=username,
                                         display_name=display_name,
+                                        url=assignment_url,
                                         end=color.END
                                     ))
 
