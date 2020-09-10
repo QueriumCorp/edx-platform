@@ -234,14 +234,16 @@ class LTICacheManager(object):
         exists in LTIExternalCourseAssignmentProblems. Add any records that are missing.
         """
         print('='*80)
-        print('BEGIN: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
-            course_id=str(self.course_id)
-        ))
+        print('Course: {course_id}'.format(course_id=str(self.course_id)))
+        print('Verifying course structure')
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
         if lti_external_course is None:
-            print('no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.'.format(
-                course_id=self.course_id
+            print('{red}no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.{end}'.format(
+                red=color.RED,
+                course_id=self.course_id,
+                end=color.END
             ))
+            print('='*80)
             print('')
             return False
 
@@ -323,8 +325,9 @@ class LTICacheManager(object):
                             end=color.END
                         ))
 
-        print('COMPLETED: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
-            course_id=str(self.course_id)
+        print('{green}Success.{end}'.format(
+            green=color.GREEN,
+            end=color.END
         ))
         print('')
         return True
@@ -335,9 +338,7 @@ class LTICacheManager(object):
         query graded assignments that have been attempted by each student.
         verify that a
         """
-        print('BEGIN: VERIFYING STUDENT GRADES FOR {course_id}'.format(
-            course_id=str(self.course_id)
-        ))
+        print('Verifying student grades')
 
         # get all students enrolled in course
         host = settings.SITE_NAME
@@ -469,8 +470,9 @@ class LTICacheManager(object):
                                         print(color.GREEN + grade_data + color.END)
 
 
-        print('COMPLETED: VERIFYING STUDENT GRADES FOR {course_id}'.format(
-            course_id=str(self.course_id)
+        print('{green}Finished.{end}'.format(
+            green=color.GREEN,
+            end=color.END
         ))
         print('='*80)
         print('')
