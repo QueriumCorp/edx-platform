@@ -332,7 +332,7 @@ class LTICacheManager(object):
                             end=color.END
                         ))
 
-        print('{green}Success.{end}'.format(
+        print('{green}Finished.{end}'.format(
             green=color.GREEN,
             end=color.END
         ))
