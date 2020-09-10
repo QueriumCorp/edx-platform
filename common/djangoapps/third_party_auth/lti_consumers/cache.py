@@ -242,6 +242,7 @@ class LTICacheManager(object):
             print('no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.'.format(
                 course_id=self.course_id
             ))
+            print('')
             return False
 
         # excluding: 'vertical', 'sequential', 'openassessment'
@@ -325,6 +326,7 @@ class LTICacheManager(object):
         print('COMPLETED: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
             course_id=str(self.course_id)
         ))
+        print('')
         return True
 
     def _verify_grades(self, quiet=False):
