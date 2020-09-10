@@ -224,8 +224,8 @@ class LTICacheManager(object):
             print('LTICacheManager.verify() - course_id is not set. Nothing to do. Exiting.')
             return None
 
-        self._verify_structure(quiet)
-        self._verify_grades(quiet)
+        if self._verify_structure(quiet):
+            self._verify_grades(quiet)
 
         return None
 
@@ -237,13 +237,12 @@ class LTICacheManager(object):
         print('BEGIN: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
             course_id=str(self.course_id)
         ))
-        print('='*80)
         lti_external_course = LTIExternalCourse.objects.filter(course_id=str(self.course_id)).first()
         if lti_external_course is None:
             print('no LTIExternalCourse record found for course {course_id}. Cannot proceed. Exiting.'.format(
                 course_id=self.course_id
             ))
-            return None
+            return False
 
         # excluding: 'vertical', 'sequential', 'openassessment'
         PROBLEM_BLOCK_TYPES = ['problem', 'swxblock']
@@ -323,12 +322,10 @@ class LTICacheManager(object):
                             end=color.END
                         ))
 
-        print('='*80)
         print('COMPLETED: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
             course_id=str(self.course_id)
         ))
-        print('='*80)
-        return None
+        return True
 
     def _verify_grades(self, quiet=False):
         """
@@ -336,11 +333,9 @@ class LTICacheManager(object):
         query graded assignments that have been attempted by each student.
         verify that a
         """
-        print('='*80)
         print('BEGIN: VERIFYING STUDENT GRADES FOR {course_id}'.format(
             course_id=str(self.course_id)
         ))
-        print('='*80)
 
         # get all students enrolled in course
         host = settings.SITE_NAME
@@ -472,12 +467,13 @@ class LTICacheManager(object):
                                         print(color.GREEN + grade_data + color.END)
 
 
-        print('='*80)
         print('COMPLETED: VERIFYING STUDENT GRADES FOR {course_id}'.format(
             course_id=str(self.course_id)
         ))
         print('='*80)
-        return None
+        print('')
+        print('')
+        return True
 
     def refresh(self):
         """Retrieve cached content from MySQL for the current context_id, user
