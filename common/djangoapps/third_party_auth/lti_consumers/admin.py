@@ -88,6 +88,8 @@ class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
     LTI Grade Sync - Course
     """
+    search_fields = ('context_id', 'course_id', 'custom_course_id', 'context_title')
+
     list_display = (
         'context_id',
         'enabled',
@@ -117,6 +119,8 @@ class LTIExternalCourseEnrollmentAdmin(admin.ModelAdmin):
     """
     LTI Grade Sync - Course Enrollment
     """
+    search_fields = ('user.username', 'user_id', 'custom_user_id')
+
     list_display = (
         'course',
         'user',
@@ -177,6 +181,8 @@ class LTIExternalCourseAssignmentsAdmin(admin.ModelAdmin):
     """
     LTI Grade Sync - Course Assignments
     """
+    search_fields = ('display_name', 'url')
+
     list_display = (
         'course',
         'url',
