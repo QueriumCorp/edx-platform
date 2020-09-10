@@ -74,7 +74,10 @@ class Command(BaseCommand):
         for lti_internal_course in lti_internal_courses:
             course_id = str(lti_internal_course.course_fk.id)
             lti_cache = LTICacheManager(course_id=course_id, user=user)
-            lti_cache.verify(quiet)
+            try:
+                lti_cache.verify(quiet)
+            except:
+                pass
 
     def get_lti_courses(self, course):
         """evaluate course / user (both are optional) and query LTIInternalCourse

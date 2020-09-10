@@ -276,11 +276,9 @@ class LTICacheManager(object):
                         item = modulestore().get_item(block_usage_key, depth=1, revision=ModuleStoreEnum.RevisionOption.published_only)
                     except:
                         print('no item for ' + str(block_usage_key))
-                        print('')
-                        print('')
                         pass
 
-                    if item and not item.hide_from_toc:
+                    if item:
                         assignment = get_assignment(item)
                         chapter = get_chapter(item)
                         if assignment is None: return None
@@ -324,8 +322,6 @@ class LTICacheManager(object):
                             block_usage_key=str(block_usage_key),
                             end=color.END
                         ))
-                        print('')
-                        print('')
 
         print('='*80)
         print('COMPLETED: VERIFYING COURSE STRUCTURE FOR {course_id}'.format(
@@ -347,6 +343,8 @@ class LTICacheManager(object):
         print('='*80)
 
         # get all students enrolled in course
+        host = settings.SITE_NAME
+        scheme = u"https" if settings.HTTPS == "on" else u"http"
         now = UTC.localize(datetime.datetime.now())
         enrolled_students = User.objects.filter(
             courseenrollment__course_id=self.course_id,
@@ -408,47 +406,70 @@ class LTICacheManager(object):
 
                             if 'display_name' in grade: display_name = grade['display_name']
                             else: display_name = ''
-                            course_assignment = LTIExternalCourseAssignments.objects.filter(
-                                course=self.course,
-                                display_name=display_name
-                            ).first()
 
-                            if course_assignment is None:
-                                print('Internal error: LTIExternalCourseAssignments record not found for {display_name}'.format(
-                                    display_name=display_name
-                                ))
+                            try:
+                                assignment = modulestore().get_item(location, depth=1)
+                            except:
+                                print('no item for ' + str(location))
+                                pass
 
-                            student_grade = LTIExternalCourseEnrollmentGrades.objects.filter(
-                                course_enrollment=course_enrollment,
-                                course_assignment=course_assignment
-                            ).first()
+                            if assignment is not None:
+                                chapter = get_chapter(assignment)
 
-                            if student_grade is not None:
-                                if not quiet:
-                                    print('Found grade for student {username} - {display_name}'.format(
+                                assignment_url = u'{scheme}://{host}/{url_prefix}/{course_id}/courseware/{chapter_id}/{assignment_id}'.format(
+                                    scheme = scheme,
+                                    host=host,
+                                    url_prefix='courses',
+                                    course_id=self.course_id,
+                                    chapter_id=chapter.location.block_id,
+                                    assignment_id=assignment.location.block_id
+                                    )
+
+                                course_assignment = LTIExternalCourseAssignments.objects.filter(
+                                    course=self.course,
+                                    url=assignment_url
+                                ).first()
+
+                                if course_assignment is None:
+                                    print('{red}Internal error: LTIExternalCourseAssignments record not found for {username} - {display_name}{end}'.format(
+                                        red=color.RED,
+                                        username=username,
                                         display_name=display_name,
-                                        username=username
+                                        end=color.END
                                     ))
-                            else:
-                                student_grade = LTIExternalCourseEnrollmentGrades(
+
+                                student_grade = LTIExternalCourseEnrollmentGrades.objects.filter(
                                     course_enrollment=course_enrollment,
-                                    course_assignment=course_assignment,
-                                    section_url=course_assignment.url,
-                                    usage_key=str(location),
-                                    earned_all = earned_all,
-                                    possible_all = possible_all,
-                                    earned_graded = earned_graded,
-                                    possible_graded = possible_graded
-                                )
-                                student_grade.save()
-                                print('{green}Added grade for student {username} - {display_name}{end}'.format(
-                                    green=color.GREEN,
-                                    username=username,
-                                    display_name=display_name,
-                                    end=color.END
-                                ))
-                                grade_data = json.dumps(grade, indent=4, sort_keys=True, default=default)
-                                print(color.GREEN + grade_data + color.END)
+                                    course_assignment=course_assignment
+                                ).first()
+
+                                if student_grade is not None:
+                                    if not quiet:
+                                        print('Found grade for student {username} - {display_name}'.format(
+                                            display_name=display_name,
+                                            username=username
+                                        ))
+                                else:
+                                    if course_assignment:
+                                        student_grade = LTIExternalCourseEnrollmentGrades(
+                                            course_enrollment=course_enrollment,
+                                            course_assignment=course_assignment,
+                                            section_url=course_assignment.url,
+                                            usage_key=str(location),
+                                            earned_all = earned_all,
+                                            possible_all = possible_all,
+                                            earned_graded = earned_graded,
+                                            possible_graded = possible_graded
+                                        )
+                                        student_grade.save()
+                                        print('{green}Added grade for student {username} - {display_name}{end}'.format(
+                                            green=color.GREEN,
+                                            username=username,
+                                            display_name=display_name,
+                                            end=color.END
+                                        ))
+                                        grade_data = json.dumps(grade, indent=4, sort_keys=True, default=default)
+                                        print(color.GREEN + grade_data + color.END)
 
 
         print('='*80)
