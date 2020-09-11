@@ -50,6 +50,8 @@ from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactor
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
+UTC = pytz.UTC
+
 KNOWN_RETRY_ERRORS = (  # Errors we expect occasionally, should be resolved on retry
     DatabaseError,
     ValidationError,
@@ -365,10 +367,15 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
             data=data
         ))
 
-    return willo_api_post_grade(
+    response_code = willo_api_post_grade(
         ext_wl_outcome_service_url=lti_cached_course.ext_wl_outcome_service_url,
         data=data
         )
+
+    if 200 <= response_code <= 299:
+        now = UTC.localize(datetime.datetime.now())
+        lti_cached_grade.synched = now
+        lti_cached_grade.save()
 
 
 

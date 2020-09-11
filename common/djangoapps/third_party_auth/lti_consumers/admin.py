@@ -88,7 +88,7 @@ class LTIExternalCourseAdmin(admin.ModelAdmin):
     """
     LTI Grade Sync - Course
     """
-    search_fields = ('context_id', 'course_id', 'custom_course_id', 'context_title')
+    search_fields = ('context_id', 'custom_course_id', 'context_title', 'context_label')
 
     list_display = (
         'context_id',
