@@ -132,6 +132,9 @@ def _post_grades(self, username, course_id, usage_id):
             return False
 
         subsection_grade = get_subsection_grade(student, course_key, problem_usage_key)
+        if subsection_grade is None:
+            return False
+
         homework_assignment_dict = get_assignment_grade(
             course_key=course_key,
             problem_usage_key=problem_usage_key,
