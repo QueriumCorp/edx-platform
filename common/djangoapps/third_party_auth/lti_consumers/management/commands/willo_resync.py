@@ -79,8 +79,11 @@ class Command(BaseCommand):
         course_id=kwargs['course_id']
         dry_run=kwargs['dry_run']
 
+        course = None
+        lti_internal_courses = None
 
-        course = CourseOverview.objects.filter(id=course_id)
+        if course_id: course = CourseOverview.objects.filter(id=course_id)
+
         lti_internal_courses = get_lti_courses(course)
         if lti_internal_courses is None:
             print('No LTIInternalCourses found for course_id. Exiting.')
@@ -88,7 +91,6 @@ class Command(BaseCommand):
 
         for lti_internal_course in lti_internal_courses:
             course_id = str(lti_internal_course.course_fk.id)
-            lti_cache = LTICacheManager(course_id=course_id, user=user)
             try:
                 self.resync_course(str(lti_internal_course.course_id), dry_run)
             except:
