@@ -80,8 +80,7 @@ class Command(BaseCommand):
         dry_run=kwargs['dry_run']
 
 
-        if course_id: course = CourseOverview.objects.filter(id=course_id)
-
+        course = CourseOverview.objects.filter(id=course_id)
         lti_internal_courses = get_lti_courses(course)
         if lti_internal_courses is None:
             print('No LTIInternalCourses found for course_id. Exiting.')

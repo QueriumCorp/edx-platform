@@ -360,7 +360,7 @@ def get_chapter(item):
     return get_parent(item, 'chapter')
 
 
-def get_lti_courses(self, course):
+def get_lti_courses(course):
     """evaluate course / user (both are optional) and query LTIInternalCourse
 
     Args:
