@@ -68,16 +68,25 @@ class Command(BaseCommand):
             help=u'Optional: A string representation of a CourseKey. Example: course-v1:ABC+OS9471721_9626+01'
             )
         parser.add_argument(
-            '--dry-run',
+            u'-d',
+            u'--dry-run',
             dest='dry_run',
             action='store_true',
             help='Optional: Iterates cache data and produces console output but does not push grades to Willo Labs.')
+
+        parser.add_argument(
+            u'-f',
+            u'--force',
+            dest='force_resync',
+            action='store_true',
+            help='Optional: Forces Willo Grade Sync on grades that were previously sent. That is, the "Sync" date field on LTIExternalCourseEnrollmentGrades is not null.')
 
 
     def handle(self, *args, **kwargs):
 
         course_id=kwargs['course_id']
         dry_run=kwargs['dry_run']
+        force_resync=kwargs['force_resync']
 
         course = None
         lti_internal_courses = None
@@ -92,12 +101,12 @@ class Command(BaseCommand):
         for lti_internal_course in lti_internal_courses:
             course_id = str(lti_internal_course.course_fk.id)
             try:
-                self.resync_course(str(lti_internal_course.course_id), dry_run)
+                self.resync_course(str(lti_internal_course.course_id), dry_run, force_resync)
             except:
                 pass
 
 
-    def resync_course(self, course_id, dry_run):
+    def resync_course(self, course_id, dry_run, force_resync):
         lti_internal_course = LTIInternalCourse.objects.filter(course_id=course_id).first()
         course = LTIExternalCourse.objects.filter(course_id=lti_internal_course).first()
         if not course:
@@ -129,16 +138,17 @@ class Command(BaseCommand):
                 ).first()
 
                 if grade:
-                    usage_id=str(grade.usage_key)
-                    self.console_output('Queueing course_id: {course_id}, username: {username}, usage_id: {usage_id}'.format(
-                        course_id=course_id,
-                        username=enrollment.user.username,
-                        usage_id=usage_id
-                    ))
+                    if grade.synched is None or force_resync
+                        usage_id=str(grade.usage_key)
+                        self.console_output('Queueing course_id: {course_id}, username: {username}, usage_id: {usage_id}'.format(
+                            course_id=course_id,
+                            username=enrollment.user.username,
+                            usage_id=usage_id
+                        ))
 
-                    # send this grade to Celery
-                    if not dry_run: post_grades(username=username, course_id=course_id, usage_id=usage_id)
-                    else: self.console_output('DRY RUN: Grade data was not sent to Willo Labs.')
+                        # send this grade to Celery
+                        if not dry_run: post_grades(username=username, course_id=course_id, usage_id=usage_id)
+                        else: self.console_output('DRY RUN: Grade data was not sent to Willo Labs.')
                 else:
                     print('No cached grade found for user {username}, assignment {display_name}'.format(
                         username=username,
