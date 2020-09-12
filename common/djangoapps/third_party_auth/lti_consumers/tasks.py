@@ -286,13 +286,13 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
     """
 
     try:
-
+        due_date = lti_cached_assignment.due_date.isoformat() if lti_cached_assignment.due_date is not None else None
         data = {
             "type": "activity",
             "id": willo_id_from_url(lti_cached_assignment.url),	    ## example: 249dfef365fd434c9f5b98754f2e2cb3
             "title": lti_cached_assignment.display_name,	        ## example: Getting to Know Rover Review Assignment
             "description": lti_cached_assignment.display_name,	    ## example: Getting to Know Rover Review Assignment
-            "due_date": lti_cached_assignment.due_date.isoformat(), ## Rover assignment due_date in ISO string format: 2019-06-01T00:00:00+04:00
+            "due_date": due_date,                                   ## Rover assignment due_date in ISO string format: 2019-06-01T00:00:00+04:00
             "points_possible": lti_cached_grade.possible_graded     ## int. example: 11
         }
 
