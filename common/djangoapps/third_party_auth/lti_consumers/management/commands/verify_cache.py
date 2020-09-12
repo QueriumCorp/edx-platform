@@ -24,8 +24,9 @@ from django.contrib.auth import get_user_model
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
 # rover stuff
-from common.djangoapps.third_party_auth.lti_consumers.models import LTIInternalCourse
 from common.djangoapps.third_party_auth.lti_consumers.cache import LTICacheManager
+
+from ...utils import get_lti_courses
 
 User = get_user_model()
 
@@ -78,22 +79,4 @@ class Command(BaseCommand):
                 lti_cache.verify(quiet)
             except:
                 pass
-
-    def get_lti_courses(self, course):
-        """evaluate course / user (both are optional) and query LTIInternalCourse
-
-        Args:
-            course: CourseOverview or None
-
-        Returns: list of LTIInternalCourse records
-        """
-
-        if (LTIInternalCourse.objects.count() == 0):
-            print('LTIInternalCourses table is empty.')
-            return None
-
-        if course is None:
-            return LTIInternalCourse.objects.all()
-        else:
-            return LTIInternalCourse.objects.filter(course_fk__in=course)
 

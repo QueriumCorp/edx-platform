@@ -29,6 +29,11 @@ from common.djangoapps.third_party_auth.lti_consumers.models import (
     LTIExternalCourseEnrollmentGrades
 )
 
+# open edx stuff
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+
+from ...utils import get_lti_courses
+
 VERBOSE = False
 DEBUG = settings.ROVER_DEBUG
 
@@ -60,19 +65,38 @@ class Command(BaseCommand):
             u'-c',
             u'--course_id',
             type=str,
-            help=u'A string representation of a CourseKey. Example: course-v1:ABC+OS9471721_9626+01'
+            help=u'Optional: A string representation of a CourseKey. Example: course-v1:ABC+OS9471721_9626+01'
             )
         parser.add_argument(
             '--dry-run',
             dest='dry_run',
             action='store_true',
-            help='Iterates cache data and produces console output but does not push grades to Willo Labs.')
+            help='Optional: Iterates cache data and produces console output but does not push grades to Willo Labs.')
 
 
     def handle(self, *args, **kwargs):
 
         course_id=kwargs['course_id']
         dry_run=kwargs['dry_run']
+
+
+        if course_id: course = CourseOverview.objects.filter(id=course_id)
+
+        lti_internal_courses = get_lti_courses(course)
+        if lti_internal_courses is None:
+            print('No LTIInternalCourses found for course_id. Exiting.')
+            return None
+
+        for lti_internal_course in lti_internal_courses:
+            course_id = str(lti_internal_course.course_fk.id)
+            lti_cache = LTICacheManager(course_id=course_id, user=user)
+            try:
+                self.resync_course(str(lti_internal_course.course_id), dry_run)
+            except:
+                pass
+
+
+    def resync_course(self, course_id, dry_run):
         lti_internal_course = LTIInternalCourse.objects.filter(course_id=course_id).first()
         course = LTIExternalCourse.objects.filter(course_id=lti_internal_course).first()
         if not course:
@@ -119,7 +143,6 @@ class Command(BaseCommand):
                         username=username,
                         display_name=assignment.display_name
                     ))
-
 
     def write_console_banner(self):
 

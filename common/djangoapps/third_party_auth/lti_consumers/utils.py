@@ -358,3 +358,23 @@ def get_chapter(item):
         [BlockUsageKey]: the chapter that contains the problem
     """
     return get_parent(item, 'chapter')
+
+
+def get_lti_courses(self, course):
+    """evaluate course / user (both are optional) and query LTIInternalCourse
+
+    Args:
+        course: CourseOverview or None
+
+    Returns: list of LTIInternalCourse records
+    """
+
+    if (LTIInternalCourse.objects.count() == 0):
+        print('LTIInternalCourses table is empty.')
+        return None
+
+    if course is None:
+        return LTIInternalCourse.objects.all()
+    else:
+        return LTIInternalCourse.objects.filter(course_fk__in=course)
+
