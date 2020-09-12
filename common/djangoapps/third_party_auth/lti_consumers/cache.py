@@ -820,27 +820,6 @@ class LTICacheManager(object):
             if DEBUG: log.info('no grade data to report. exiting.')
             return False
 
-        #try:
-        #    # validate the usage_key to verify that it at least
-        #    # points to SOMETHING in Rover.
-        #    if isinstance(usage_key, str) or isinstance(usage_key, unicode):
-        #        key = UsageKey.from_string(usage_key)
-        #    else:
-        #        if isinstance(usage_key, UsageKey) or isinstance(usage_key, BlockUsageLocator):
-        #            pass
-        #        else:
-        #            raise LTIBusinessRuleError("LTICacheManager.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
-        #                    key_type=type(usage_key),
-        #                    usage_key=usage_key
-        #                ))
-        #except:
-        #    raise LTIBusinessRuleError("LTICacheManager.post_grades() - Tried to pass an invalid usage_key: {key_type} {usage_key} ".format(
-        #            key_type=type(usage_key),
-        #            usage_key=usage_key
-        #        ))
-        #    return False
-        log.error('post_grades() - McDaniel Aug-2020: usage_key validation is disabled.')
-
         curr = LTIExternalCourseEnrollmentGrades.objects.filter(
             course_enrollment = self.course_enrollment,
             section_url = grades_dict['url']
