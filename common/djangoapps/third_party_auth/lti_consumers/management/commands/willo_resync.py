@@ -138,7 +138,7 @@ class Command(BaseCommand):
                 ).first()
 
                 if grade:
-                    if grade.synched is None or force_resync
+                    if grade.synched is None or force_resync:
                         usage_id=str(grade.usage_key)
                         self.console_output('Queueing course_id: {course_id}, username: {username}, usage_id: {usage_id}'.format(
                             course_id=course_id,
