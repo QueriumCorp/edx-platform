@@ -21,7 +21,8 @@ from xmodule.modulestore.django import modulestore
 from .. import permissions
 
 # Grade book: max students per page
-MAX_STUDENTS_PER_PAGE_GRADE_BOOK = 35		# Fuka changed for CalStateLA 8/27/2019
+# MAX_STUDENTS_PER_PAGE_GRADE_BOOK = 35		# Fuka changed for CalStateLA 8/27/2019
+MAX_STUDENTS_PER_PAGE_GRADE_BOOK = 100		# Fuka changed for KU 9/14/2020
 
 
 def calculate_page_info(offset, total_students):
