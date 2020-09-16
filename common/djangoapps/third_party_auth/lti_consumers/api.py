@@ -84,6 +84,12 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
     if not data:
         raise LTIBusinessRuleError('api.willo_api_check_column() - internal error: data dict is missing or null. Cannot continue.')
 
+    if not ext_wl_outcome_service_url.endswith('/'):
+        log.warning('api.willo_api_check_column() - grade URL missing final slash: {url}'.format(
+            url=ext_wl_outcome_service_url
+        ))
+        ext_wl_outcome_service_url += '/'
+
     req = requests.models.PreparedRequest()
     headers = willo_api_headers(
         key = 'Accept',
@@ -165,6 +171,12 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
     if willo_api_check_column(ext_wl_outcome_service_url, data):
         return 200
 
+    if not ext_wl_outcome_service_url.endswith('/'):
+        log.warning('api.willo_api_create_column() - grade URL missing final slash: {url}'.format(
+            url=ext_wl_outcome_service_url
+        ))
+        ext_wl_outcome_service_url += '/'
+
     headers = willo_api_headers(
         key = 'Content-Type',
         value = 'application/vnd.willolabs.outcome.activity+json'
@@ -244,6 +256,12 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
     """
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_post_grade()')
 
+    if not ext_wl_outcome_service_url.endswith('/'):
+        log.warning('api.willo_api_post_grade() - grade URL missing final slash: {url}'.format(
+            url=ext_wl_outcome_service_url
+        ))
+        ext_wl_outcome_service_url += '/'
+
     headers = willo_api_headers(
         key='Content-Type',
         value='application/vnd.willolabs.outcome.result+json'
@@ -280,6 +298,12 @@ def willo_api_get(url, assignment_id, user_id):
 
     """
     if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_get()')
+
+    if not url.endswith('/'):
+        log.warning('api.willo_get_api() - grade URL missing final slash: {url}'.format(
+            url=ext_wl_outcome_service_url
+        ))
+        ext_wl_outcome_service_url += '/'
 
     params = {
         'id' : assignment_id,
@@ -333,4 +357,3 @@ def willo_api_headers(key, value):
         ))
 
     return headers
-
