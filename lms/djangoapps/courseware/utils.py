@@ -68,13 +68,18 @@ def can_show_verified_upgrade(user, enrollment, course=None):
     if not upgradable_mode:
         return False
 
-    upgrade_deadline = enrollment.upgrade_deadline
-
-    if upgrade_deadline is None:
-        return False
-
-    if datetime.datetime.now(utc).date() > upgrade_deadline.date():
-        return False
+    #---------------------------------------------------------------------------------------
+    # mcdaniel sep-2020: Rover uses a payment deadline rather than an upgrade deadline.
+    # in our case we only want to hide the Buy button if a) ecommerce is not enabled for
+    # the course, or b) the student has already paid.
+    #---------------------------------------------------------------------------------------
+    #upgrade_deadline = enrollment.upgrade_deadline
+    #
+    #if upgrade_deadline is None:
+    #    return False
+    #
+    #if datetime.datetime.now(utc).date() > upgrade_deadline.date():
+    #    return False
 
     # Show the summary if user enrollment is in which allow user to upsell
     return enrollment.is_active and enrollment.mode in CourseMode.UPSELL_TO_VERIFIED_MODES
