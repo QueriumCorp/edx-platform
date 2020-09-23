@@ -234,7 +234,10 @@ def willo_api_column_point_value_changed(response, data):
         [type]: [description]
     """
     try:
-        log.info('lti_consumers.willolabs.api.willo_api_column_point_value_changed() - check point value')
+        log.info('lti_consumers.willolabs.api.willo_api_column_point_value_changed() - check point value. Their points {their_points}, our points: {our_points}.format(
+            their_points=their_json.get('points_possible'),
+            our_points=data.get('points_possible')
+        )')
         response_json = response.content.decode("utf-8")
         their_json = json.loads(response_json)
         their_points = float(their_json.get('points_possible'))
@@ -246,6 +249,10 @@ def willo_api_column_point_value_changed(response, data):
                 our_points=our_points,
                 their_points=their_points,
                 their_json=their_json
+            ))
+            log.info('lti_consumers.willolabs.api.willo_api_column_point_value_changed() - point value has changed. Their points: {their_points}, our points: {our_points}'.format(
+                their_points=their_points,
+                our_points=our_points
             ))
             return True
 
