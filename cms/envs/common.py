@@ -2315,4 +2315,4 @@ DISABLE_DEPRECATED_SIGNUP_URL = False
 
 
 # mcdaniel sep-2020: add any Querium name-spaced apps
-INSTALLED_APPS.append('cms.djangoapps.querium.course_utilities')
+INSTALLED_APPS.append('cms.djangoapps.querium.querium_utilities')
