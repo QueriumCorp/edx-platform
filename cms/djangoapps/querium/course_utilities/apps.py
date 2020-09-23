@@ -3,5 +3,5 @@ from django.apps import AppConfig
 
 
 class QueriumCourseManagement(AppConfig):
-    name = 'querium.courses'
-    verbose_name = 'Querium Course Management'
+    name = 'querium.course_utilities'
+    verbose_name = 'Querium Course Utilities'
