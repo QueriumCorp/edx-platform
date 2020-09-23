@@ -42,9 +42,12 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
 
     if type(dte) == str:
         try:
+            # this was written to exactly coincide with the string representations of dates
+            # originating from Open edX.
             retval = datetime.datetime.strptime(dte, format).isoformat()
         except:
-
+            # if the above did not work then we probably received a string value
+            # of a date from Willo Lab's REST api. These are returned in ISO 8601 format.
             retval = dateutil.parser.parse(dte)
 
         retval = retval - datetime.timedelta(microseconds=retval.microsecond)
@@ -133,7 +136,8 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
             their_due_date = willo_date(their_json.get('due_date'))
             our_due_date = willo_date(data.get('due_date'))
 
-            if our_due_date != their_due_date: log.info('lti_consumers.willolabs.api.willo_api_check_column() - NEED TO UPDATE DUE DATE.')
+            if our_due_date != their_due_date:
+                log.info('lti_consumers.willolabs.api.willo_api_check_column() - NEED TO UPDATE DUE DATE.')
                 log.info('lti_consumers.willolabs.api.willo_api_check_column() - our_due_date: {our_due_date}, their_due_date: {their_due_date}, their_json: {their_json}'.format(
                     our_due_date=our_due_date,
                     their_due_date=their_due_date,
@@ -228,7 +232,7 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
 
     if operation == "post":
         response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
-    else
+    else:
         if operation == "patch":
             response = requests.patch(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
 
