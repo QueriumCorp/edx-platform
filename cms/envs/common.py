@@ -2312,3 +2312,7 @@ DISABLE_DEPRECATED_SIGNIN_URL = False
 # .. toggle_tickets: ARCH-1253
 # .. toggle_status: supported
 DISABLE_DEPRECATED_SIGNUP_URL = False
+
+
+# mcdaniel sep-2020: add any Querium name-spaced apps
+INSTALLED_APPS.append('cms.djangoapps.querium.courses')
