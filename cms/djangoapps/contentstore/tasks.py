@@ -260,8 +260,15 @@ def export_olx(self, user_id, course_key_string, language):
         self.status.set_state(u'Exporting')
         tarball = create_export_tarball(courselike_module, courselike_key, {}, self.status)
         artifact = UserTaskArtifact(status=self.status, name=u'Output')
-        artifact.file.save(name=os.path.basename(tarball.name), content=File(tarball))
+        full_filename = os.path.basename(tarball.name)
+        artifact.file.save(name=full_filename, content=File(tarball))
         artifact.save()
+
+        LOGGER.info('export_olx() - Saved file for course_id {course_key_string} in path {full_filename}'.format(
+            course_key_string=course_key_string,
+            full_filename=full_filename
+        ))
+
     # catch all exceptions so we can record useful error messages
     except Exception as exception:  # pylint: disable=broad-except
         LOGGER.exception(u'Error exporting course %s', courselike_key, exc_info=True)
@@ -289,7 +296,7 @@ def create_export_tarball(course_module, course_key, context, status=None):
         if status:
             status.set_state(u'Compressing')
             status.increment_completed_steps()
-        LOGGER.debug(u'tar file being generated at %s', export_file.name)
+        LOGGER.info(u'create_export_tarball() tar file being generated at %s', export_file.name)
         with tarfile.open(name=export_file.name, mode='w:gz') as tar_file:
             tar_file.add(root_dir / name, arcname=name)
 
