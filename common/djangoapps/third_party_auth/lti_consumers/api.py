@@ -36,8 +36,8 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
     if dte is None: return None
 
     if type(dte) == datetime.datetime:
+        retval = dte - datetime.timedelta(microseconds=dte.microsecond)
         retval = dte.isoformat()
-        retval = retval - datetime.timedelta(microseconds=retval.microsecond)
         return retval
 
     if type(dte) == str:
@@ -50,8 +50,16 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
             # of a date from Willo Lab's REST api. These are returned in ISO 8601 format.
             retval = dateutil.parser.parse(dte)
 
-        retval = retval - datetime.timedelta(microseconds=retval.microsecond)
-        return retval
+        if type(retval) == datetime.datetime:
+            retval = retval - datetime.timedelta(microseconds=retval.microsecond)
+            return retval
+        else:
+            log.error('willo_date() - error converting string value {dte} to a datetime object. got value {retval} with type {tpe}'.format(
+                dte=dte,
+                retval=retval,
+                tpe=type(retval)
+            ))
+            return None
 
     log.error('willo_date() - received an expected data type: {type}, value: {value}'.format(
         type=type(dte),
@@ -129,32 +137,15 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
             ))
 
         # check to see if the due_date has changed.
-        try:
-            log.info('lti_consumers.willolabs.api.willo_api_check_column() - check due date 12')
-            response_json = response.content.decode("utf-8")
-            their_json = json.loads(response_json)
-            their_due_date = willo_date(their_json.get('due_date'))
-            our_due_date = willo_date(data.get('due_date'))
-
-            if our_due_date != their_due_date:
-                log.info('lti_consumers.willolabs.api.willo_api_check_column() - NEED TO UPDATE DUE DATE.')
-                log.info('lti_consumers.willolabs.api.willo_api_check_column() - our_due_date: {our_due_date}, their_due_date: {their_due_date}, their_json: {their_json}'.format(
-                    our_due_date=our_due_date,
-                    their_due_date=their_due_date,
-                    their_json=their_json
-                ))
-                willo_api_create_column(
-                    ext_wl_outcome_service_url=ext_wl_outcome_service_url,
-                    data=data,
-                    operation="patch"
-                )
-
-
-        except Exception as e:
-            log.info('lti_consumers.willolabs.api.willo_api_check_column() - error checking dates: {e}'.format(
-                e=str(e)
-            ))
-            pass
+        changed = willo_api_column_due_date_changed(response, data)
+        changed = changed or willo_api_column_point_value_changed(response, data)
+        if changed:
+            log.info('lti_consumers.willolabs.api.willo_api_check_column() - grade column has changed.')
+            willo_api_create_column(
+                ext_wl_outcome_service_url=ext_wl_outcome_service_url,
+                data=data,
+                operation="patch"
+            )
 
         return True
 
@@ -164,6 +155,107 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
         status_code=response.status_code,
         msg=response.reason
     ))
+    return False
+
+def willo_api_column_due_date_changed(response, data):
+    """Compare the due_data in the Willo Grade Column against
+    the due data we received in the data json object.
+
+    Args:
+        response: http response. Example:
+        {
+            'description': '<p>MATH1081-Wk 3, Module 4 - Domain and Range</p>',
+            'points_possible': 41.0,
+            'type': 'activity',
+            'title': 'MATH1081-Wk 3, Module 4 - Domain and Range',
+            'links': [
+                {
+                    'href': 'https://app.willolabs.com/api/v1/outcomes/pY8QfS/79987a06bee1422a838a39d773c8e312/?id=7bbb00f7db1211ea8096f575723d2ea1',
+                    'rel': 'self'
+                }
+                ],
+            'due_date': None,
+            'id': '7bbb00f7db1211ea8096f575723d2ea1'
+        }
+
+        data: json object with grade data
+
+    Returns: boolean
+    """
+    try:
+        log.info('lti_consumers.willolabs.api.willo_api_column_due_date_changed() - check due date')
+        response_json = response.content.decode("utf-8")
+        their_json = json.loads(response_json)
+        their_due_date = willo_date(their_json.get('due_date'))
+        our_due_date = willo_date(data.get('due_date'))
+
+        if our_due_date != their_due_date:
+            log.info('lti_consumers.willolabs.api.willo_api_column_due_date_changed() - NEED TO UPDATE DUE DATE.')
+            log.info('lti_consumers.willolabs.api.willo_api_column_due_date_changed() - our_due_date: {our_due_date}, their_due_date: {their_due_date}, their_json: {their_json}'.format(
+                our_due_date=our_due_date,
+                their_due_date=their_due_date,
+                their_json=their_json
+            ))
+            return True
+
+
+    except Exception as e:
+        log.info('lti_consumers.willolabs.api.willo_api_column_due_date_changed() - error checking dates: {e}'.format(
+            e=str(e)
+        ))
+        pass
+
+    return False
+
+def willo_api_column_point_value_changed(response, data):
+    """Compare the due_data in the Willo Grade Column against
+    the due data we received in the data json object.
+
+    Args:
+        response ([type]): [description]. Example:
+        {
+            'description': '<p>MATH1081-Wk 3, Module 4 - Domain and Range</p>',
+            'points_possible': 41.0,
+            'type': 'activity',
+            'title': 'MATH1081-Wk 3, Module 4 - Domain and Range',
+            'links': [
+                {
+                    'href': 'https://app.willolabs.com/api/v1/outcomes/pY8QfS/79987a06bee1422a838a39d773c8e312/?id=7bbb00f7db1211ea8096f575723d2ea1',
+                    'rel': 'self'
+                }
+                ],
+            'due_date': None,
+            'id': '7bbb00f7db1211ea8096f575723d2ea1'
+        }
+
+        data ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
+    try:
+        log.info('lti_consumers.willolabs.api.willo_api_column_point_value_changed() - check point value')
+        response_json = response.content.decode("utf-8")
+        their_json = json.loads(response_json)
+        their_points = float(their_json.get('points_possible'))
+        our_points = float(data.get('points_possible'))
+
+        if their_points != our_points:
+            log.info('lti_consumers.willolabs.api.willo_api_column_point_value_changed() - NEED TO UPDATE POINT VALUE.')
+            log.info('lti_consumers.willolabs.api.willo_api_column_due_date_changed() - our_points: {our_points}, their_points: {their_points}, their_json: {their_json}'.format(
+                our_points=our_points,
+                their_points=their_points,
+                their_json=their_json
+            ))
+            return True
+
+
+    except Exception as e:
+        log.info('lti_consumers.willolabs.api.willo_api_column_point_value_changed() - error checking point values: {e}'.format(
+            e=str(e)
+        ))
+        pass
+
     return False
 
 def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
@@ -187,7 +279,7 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
             'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
 
-    update: True if we want to update an existing column rather than create a new column.
+    operation: "post" or "patch"
 
     Curl equivalent:
     -------------------------
@@ -215,7 +307,7 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
     if not data:
         raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing or null. Cannot continue.')
 
-    if willo_api_check_column(ext_wl_outcome_service_url, data):
+    if operation == "post" and willo_api_check_column(ext_wl_outcome_service_url, data):
         return 200
 
     if not ext_wl_outcome_service_url.endswith('/'):
@@ -231,18 +323,22 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
     data_json = json.dumps(data)
 
     if operation == "post":
+        log.info('willo_api_create_column() - posting grade column')
         response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     else:
         if operation == "patch":
+            log.info('willo_api_create_column() - patching grade column')
             response = requests.patch(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
 
     if 200 <= response.status_code <= 299:
         if response.status_code == 200:
-            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully created grade column: {grade_column_data}'.format(
+            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully {operation}ed grade column: {grade_column_data}'.format(
+                    operation=operation,
                     grade_column_data = data_json
                 ))
         if response.status_code == 201:
-            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully updated grade column: {grade_column_data}'.format(
+            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully {operation}ed grade column: {grade_column_data}'.format(
+                    operation=operation,
                     grade_column_data = data_json
                 ))
         if response.status_code not in (200, 201):
