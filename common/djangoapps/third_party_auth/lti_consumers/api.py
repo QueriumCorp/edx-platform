@@ -5,6 +5,7 @@ and convenience functions.
 import logging
 import re
 import datetime
+import dateutil.parser
 import json
 import requests
 from requests.models import PreparedRequest
@@ -34,9 +35,20 @@ def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
 
     if dte is None: return None
 
-    if type(dte) == datetime.datetime: return dte.isoformat()
+    if type(dte) == datetime.datetime:
+        retval = dte.isoformat()
+        retval = retval - datetime.timedelta(microseconds=retval.microsecond)
+        return retval
 
-    if type(dte) == str: return datetime.datetime.strptime(date_string=dte, format=format).isoformat()
+    if type(dte) == str:
+        try:
+            retval = datetime.datetime.strptime(dte, format).isoformat()
+        except:
+
+            retval = dateutil.parser.parse(dte)
+
+        retval = retval - datetime.timedelta(microseconds=retval.microsecond)
+        return retval
 
     log.error('willo_date() - received an expected data type: {type}, value: {value}'.format(
         type=type(dte),
@@ -107,10 +119,39 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
     response = requests.get(url=req.url, headers=headers)
 
     if 200 <= response.status_code <= 299:
+
         if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column() - Found assignment column: {id}-{assignment}'.format(
                 id=data.get('id'),
                 assignment=data.get('title')
             ))
+
+        # check to see if the due_date has changed.
+        try:
+            log.info('lti_consumers.willolabs.api.willo_api_check_column() - check due date 12')
+            response_json = response.content.decode("utf-8")
+            their_json = json.loads(response_json)
+            their_due_date = willo_date(their_json.get('due_date'))
+            our_due_date = willo_date(data.get('due_date'))
+
+            if our_due_date != their_due_date: log.info('lti_consumers.willolabs.api.willo_api_check_column() - NEED TO UPDATE DUE DATE.')
+                log.info('lti_consumers.willolabs.api.willo_api_check_column() - our_due_date: {our_due_date}, their_due_date: {their_due_date}, their_json: {their_json}'.format(
+                    our_due_date=our_due_date,
+                    their_due_date=their_due_date,
+                    their_json=their_json
+                ))
+                willo_api_create_column(
+                    ext_wl_outcome_service_url=ext_wl_outcome_service_url,
+                    data=data,
+                    operation="patch"
+                )
+
+
+        except Exception as e:
+            log.info('lti_consumers.willolabs.api.willo_api_check_column() - error checking dates: {e}'.format(
+                e=str(e)
+            ))
+            pass
+
         return True
 
     log.error('lti_consumers.willolabs.api.willo_api_check_column() - Did not find assignment column: {id}-{assignment}. Return code: {status_code}. Msg: {msg}'.format(
@@ -121,7 +162,7 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
     ))
     return False
 
-def willo_api_create_column(ext_wl_outcome_service_url, data):
+def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
     """
      Willo Grade Sync api.
      Add a new grade column to the LMS grade book.
@@ -141,6 +182,8 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
             'type': ,
             'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
+
+    update: True if we want to update an existing column rather than create a new column.
 
     Curl equivalent:
     -------------------------
@@ -182,7 +225,13 @@ def willo_api_create_column(ext_wl_outcome_service_url, data):
         value = 'application/vnd.willolabs.outcome.activity+json'
         )
     data_json = json.dumps(data)
-    response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
+
+    if operation == "post":
+        response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
+    else
+        if operation == "patch":
+            response = requests.patch(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
+
     if 200 <= response.status_code <= 299:
         if response.status_code == 200:
             if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_create_column() - successfully created grade column: {grade_column_data}'.format(

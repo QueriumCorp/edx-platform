@@ -310,7 +310,8 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
 
     return willo_api_create_column(
         ext_wl_outcome_service_url=lti_cached_course.ext_wl_outcome_service_url,
-        data=data
+        data=data,
+        operation="post"
         )
 
 

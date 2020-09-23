@@ -238,7 +238,7 @@ class LTIGradeSync:
             "due_date": willo_date(section.get('section_due_date')),
             "points_possible": section_grade.get('section_grade_possible')
         }
-        retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data)
+        retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data, operation="post")
         if 200 <= retval <= 299:
             msg = color.GREEN + color.BOLD + '    SUCCESS: ' + color.END + color.END
             msg += u'syncd column for {assignment}'.format(
