@@ -283,7 +283,9 @@ def create_export_tarball(course_module, course_key, context, status=None):
 
     Updates the context with any error information if applicable.
     """
-    name = course_module.url_name
+    dte = datetime.datetime.now()
+    datestring = dte.strftime("%Y%m%d%H%M")
+    name = course_module.url_name + '-' + str(course_key) + '-' + datestring
     export_file = NamedTemporaryFile(prefix=name + '.', suffix=".tar.gz")
     root_dir = path(mkdtemp())
 
