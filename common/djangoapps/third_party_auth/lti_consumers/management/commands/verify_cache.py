@@ -69,7 +69,7 @@ class Command(BaseCommand):
 
         lti_internal_courses = get_lti_courses(course)
         if lti_internal_courses is None:
-            print('No LTIInternalCourses found for course_id. Exiting.')
+            print('No LTIInternalCourses found. Exiting.')
             return None
 
         for lti_internal_course in lti_internal_courses:
