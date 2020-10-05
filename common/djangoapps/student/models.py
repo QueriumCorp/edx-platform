@@ -2450,6 +2450,7 @@ considered a valid course_creator if this field = faculty_confirmed
 """
 def is_faculty(user):
 
+    if user.is_staff or user.is_superuser: return True
     try:
         profile = UserProfile.objects.get(user=user)
 
