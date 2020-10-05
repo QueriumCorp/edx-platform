@@ -24,7 +24,7 @@ DEBUG = settings.ROVER_DEBUG
 DEBUG = True
 UTC = pytz.UTC
 
-def paywall_should_render(request):
+def paywall_should_render(request, context):
     """
     A series of boolean tests to determine whether the paywall html
     should be rendered an injected into the current page.
@@ -53,18 +53,18 @@ def paywall_should_render(request):
         logger('paywall_should_render() - User is an EOP student, exiting.')
         return False
 
-    course = get_course(request)
+    course = get_course(request, context)
     if course is None:
         logger('paywall_should_render() - Not a course, exiting.')
         return False
 
-    if not is_ecommerce_enabled(request):
+    if not is_ecommerce_enabled(request, context):
         logger('paywall_should_render() - Ecommerce is not enabled for this course, exiting.')
         return False
 
     return True
 
-def paywall_should_raise(request):
+def paywall_should_raise(request, context):
     """[summary]
 
     Args:
@@ -110,7 +110,7 @@ def is_eop_student(request):
     return False
 
 
-def is_ecommerce_enabled(request):
+def is_ecommerce_enabled(request, context):
     """
     Args:
         request: the current http request
@@ -124,13 +124,13 @@ def is_ecommerce_enabled(request):
     """
     logger('is_ecommerce_enabled() - begin')
 
-    block = get_verified_upgrade_deadline_block(request)
+    block = get_verified_upgrade_deadline_block(request, context)
     if block is None:
         return False
 
     return block.is_enabled
 
-def get_verified_upgrade_deadline_block(request):
+def get_verified_upgrade_deadline_block(request, context):
     """Retrieve the content block containing the
     Verified Upgrade meta information.
 
@@ -142,12 +142,12 @@ def get_verified_upgrade_deadline_block(request):
     """
 
     logger('get_verified_upgrade_deadline_block() - begin')
-    course = get_course(request)
+    course = get_course(request, context)
     user = get_user_by_username_or_email(request.user)
     return VerifiedUpgradeDeadlineDate(course, user)
 
 
-def get_course_id(request):
+def get_course_id(request, context):
     """
     Extract the course_id from the current request, if one exists.
 
@@ -162,18 +162,23 @@ def get_course_id(request):
         ## included in the page context for whatever page called this template.
 
         ## attempt to grap the course_id slug, if it exists.
-        course_id = request.path.split("/")[2]
+        logger('get_course_id() context: {context}, course_key: {course_key}'.format(
+            context=context.keys(),
+            course_key=context['course_key']
+        ))
 
-        ## test to see if the slug we grabbed is really a course_id
+        course_id = str(context['course_key'])
         course_key = CourseKey.from_string(course_id)
-
         return course_id
-    except:
+    except Exception as e:
+        logger('get_course_id() error: {e}'.format(
+            e=e
+        ))
         pass
 
     return None
 
-def get_course(request):
+def get_course(request, context):
     """retrieve the course object from the current request
 
     Args:
@@ -183,7 +188,7 @@ def get_course(request):
         [course]: a ModuleStore course object
     """
     try:
-        course_id = get_course_id(request)
+        course_id = get_course_id(request, context)
         course_key = CourseKey.from_string(course_id)
         course = modulestore().get_course(course_key)
         return course
