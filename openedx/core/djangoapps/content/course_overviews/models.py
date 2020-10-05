@@ -697,7 +697,9 @@ class CourseOverview(TimeStampedModel):
         #
         # log.info(u'image_urls self.display_name.lower()={d}'.format(d=self.display_name.lower()))
 
-        if "precalculus" in self.display_name.lower():
+        if "precal" in self.display_name.lower():
+            raw_image_url = 'https://cdn.roverbyopenstax.org/images/precalculus.svg'
+        elif "pre-cal" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/precalculus.svg'
         elif "trig" in self.display_name.lower():
             raw_image_url = 'https://cdn.roverbyopenstax.org/images/algebra_trigonometry.svg'
