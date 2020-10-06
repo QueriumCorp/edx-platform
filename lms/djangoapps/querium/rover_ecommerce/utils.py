@@ -31,6 +31,7 @@ def paywall_should_render(request, context):
 
     Args:
         request: the current http request
+        context: the mako context object
 
     Returns:
         [boolean]: True if the Mako template should fully render all html.
@@ -69,12 +70,13 @@ def paywall_should_raise(request, context):
 
     Args:
         request: the current http request
+        context: the mako context object
 
     Returns:
         [boolean]: True if the user has exceeded the payment deadline date
         for the course in which the current page is being rendered.
     """
-    payment_deadline_date = get_course_deadline_date(request)
+    payment_deadline_date = get_course_deadline_date(request, context)
     if payment_deadline_date is None:
         return False
 
@@ -117,6 +119,7 @@ def is_ecommerce_enabled(request, context):
 
     Args:
         request: the current http request
+        context: the mako context object
 
     Returns:
         [boolean]: True if Oscar e-commerce is running and this course
@@ -126,8 +129,12 @@ def is_ecommerce_enabled(request, context):
 
     block = get_verified_upgrade_deadline_block(request, context)
     if block is None:
+        logger('is_ecommerce_enabled() - get_verified_upgrade_deadline_block is None. returning False')
         return False
 
+    logger('is_ecommerce_enabled() - block.is_enabled = {is_enabled}'.format(
+        is_enabled=block.is_enabled
+    ))
     return block.is_enabled
 
 def get_verified_upgrade_deadline_block(request, context):
@@ -136,6 +143,7 @@ def get_verified_upgrade_deadline_block(request, context):
 
     Args:
         request: the current http request
+        context: the mako context object
 
     Returns:
         [type]: [description]
@@ -153,6 +161,7 @@ def get_course_id(request, context):
 
     Args:
         request: the current http request
+        context: the mako context object
 
     Returns:
         [string]: string representation of the course_id, or None
@@ -183,6 +192,7 @@ def get_course(request, context):
 
     Args:
         request (http request): current request from the current  user
+        context: the mako context object
 
     Returns:
         [course]: a ModuleStore course object
@@ -200,7 +210,7 @@ def get_course(request, context):
 
     return None
 
-def get_course_deadline_date(request):
+def get_course_deadline_date(request, context):
     """
     retrieve the payment deadline date for the course.
 
@@ -213,7 +223,7 @@ def get_course_deadline_date(request):
     """
 
     try:
-        course_id = get_course_id(request)
+        course_id = get_course_id(request, context)
         configuration = Configuration.objects.filter(course_id=course_id).first()
         if configuration is not None:
             return configuration.payment_deadline_date
