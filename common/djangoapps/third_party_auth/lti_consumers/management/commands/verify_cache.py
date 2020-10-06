@@ -3,29 +3,30 @@
                 lpm0073@gmail.com
                 https://lawrencemcdaniel.com
 
-  Date:         Jan-2020
+  Date:         Sep-2020
 
   LTI Grade Sync
   Rebuild the LTI Grade Sync cache data from lms grade factory.
 
-  https://dev.roverbyopenstax.org/grades_api/v2/courses/course-v1:ABC+OS9471721_9626+01/
-
   Run from the command line like this:
-  cd /edx/app/edxapp/edx-platform
-  sudo -u www-data /edx/bin/python.edxapp ./manage.py lms --settings aws cache_rebuild course-v1:ABC+OS9471721_9626+01
+    sudo -H -u edxapp bash
+    cd ~
+    source edxapp_env
+    source venvs/edxapp/bin/activate
+    cd edx-platform
+    python manage.py lms verify_cache -c course-v1:KU+OS9471721_2955+Fall2020_Master_Shell_Weiland
 
 """
 # django stuff
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 
-
 # open edx stuff
+from opaque_keys.edx.keys import CourseKey
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
 # rover stuff
 from common.djangoapps.third_party_auth.lti_consumers.cache import LTICacheManager
-
 from ...utils import get_lti_courses
 
 User = get_user_model()
@@ -64,9 +65,12 @@ class Command(BaseCommand):
         user = None
         lti_internal_courses = None
 
-        if course_id: course = CourseOverview.objects.filter(id=course_id)
+        course_key = CourseKey.from_string(course_id)
+        if course_id: course = CourseOverview.objects.filter(id=course_key)
         if username: user = User.objects.get(username=username)
 
+        print(course_key)
+        print(course)
         lti_internal_courses = get_lti_courses(course)
         if lti_internal_courses is None:
             print('No LTIInternalCourses found. Exiting.')
