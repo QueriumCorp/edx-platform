@@ -149,11 +149,12 @@ def willo_api_check_column(ext_wl_outcome_service_url, data):
 
         return True
 
-    log.error('lti_consumers.willolabs.api.willo_api_check_column() - Did not find assignment column: {id}-{assignment}. Return code: {status_code}. Msg: {msg}'.format(
+    log.error('lti_consumers.willolabs.api.willo_api_check_column() - Did not find assignment column: {id}-{assignment}. Return code: {status_code}. Msg: {msg} Text: {text}'.format(
         id=data.get('id'),
         assignment=data.get('title'),
         status_code=response.status_code,
-        msg=response.reason
+        msg=response.reason,
+        text=response.text
     ))
     return False
 
@@ -354,12 +355,13 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
                 ))
 
     else:
-        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}. Msg: {msg}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_create_column() - encountered an error while attempting to create a new grade column. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}. Msg: {msg} Text: {text}'.format(
             ext_wl_outcome_service_url=ext_wl_outcome_service_url,
             headers=headers,
             grade_column_data = data_json,
             response = response.status_code,
-            msg=response.reason
+            msg=response.reason,
+            text=response.text
         ))
 
     return response.status_code
@@ -428,12 +430,13 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
             grade_data = data_json
         ))
     else:
-        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post a grade. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}. Msg: {msg}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post a grade. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}. Msg: {msg} Text: {text}'.format(
             ext_wl_outcome_service_url=ext_wl_outcome_service_url,
             headers=headers,
             grade_column_data = data_json,
             response = response.status_code,
-            msg=response.reason
+            msg=response.reason,
+            text=response.text
         ))
 
     return response.status_code
@@ -478,11 +481,12 @@ def willo_api_get(url, assignment_id, user_id):
             ))
         return response.json()
     else:
-        log.error('willo_api_get() - encountered an error while attempting to retrieve grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}. Msg: {msg}'.format(
+        log.error('willo_api_get() - encountered an error while attempting to retrieve grade data for user_id: {user_id}, assignment id: {assignment_id}. The response was: {response}. Msg: {msg} Text: {text}'.format(
             assignment_id = assignment_id,
             user_id = user_id,
             response = response.status_code,
-            msg=response.reason
+            msg=response.reason,
+            text=response.text
         ))
 
     return None
