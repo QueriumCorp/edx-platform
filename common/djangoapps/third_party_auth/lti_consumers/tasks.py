@@ -123,12 +123,20 @@ def _post_grades(self, username, course_id, usage_id):
 
         lti_cached_course = session.course
         if lti_cached_course is None:
-            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course property is not set.')
+            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course property is not set. username: {username}, course_id: {course_id}, usage_id: {usage_id}'.format(
+                username=username,
+                course_id=course_id,
+                usage_id=usage_id
+            ))
             return False
 
         lti_cached_enrollment = session.course_enrollment
         if lti_cached_enrollment is None:
-            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. enrollment property is not set.')
+            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. enrollment property is not set. username: {username}, course_id: {course_id}, usage_id: {usage_id}'.format(
+                username=username,
+                course_id=course_id,
+                usage_id=usage_id
+            ))
             return False
 
         subsection_grade = get_subsection_grade(student, course_key, problem_usage_key)
@@ -149,13 +157,23 @@ def _post_grades(self, username, course_id, usage_id):
 
         lti_cached_assignment = session.get_course_assignment(problem_usage_key)
         if lti_cached_assignment is None:
-            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course assignment property is not set.')
+            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. course assignment property is not set. username: {username}, course_id: {course_id}, usage_id: {usage_id}, problem_usage_key: {problem_usage_key}, homework_assignment_dict: {homework_assignment_dict}'.format(
+                usage_key=problem_usage_key,
+                username=username,
+                course_id=course_id,
+                usage_id=usage_id,
+                homework_assignment_dict=homework_assignment_dict
+            ))
             return False
 
         lti_cached_grade = session.get_course_assignment_grade(problem_usage_key)
         if lti_cached_grade is None:
-            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}.'.format(
-                usage_key=problem_usage_key
+            log.error('Tried to call LTI Consumer api with partially initialized LTI session object. grades property is not set for usagekey {usage_key}. username: {username}, course_id: {course_id}, usage_id: {usage_id}, homework_assignment_dict: {homework_assignment_dict}'.format(
+                usage_key=problem_usage_key,
+                username=username,
+                course_id=course_id,
+                usage_id=usage_id,
+                homework_assignment_dict=homework_assignment_dict
             ))
             return False
 
