@@ -70,4 +70,5 @@ class Command(BaseCommand):
         print(course_key)
         print(course)
 
-        SectionGradeViewUser.get(request=None, course_id=course_id, chapter_id=None, section_id=assignment, grade_user=username)
+        grades = SectionGradeViewUser()
+        grades_dict = grades.get(request=None, course_id=course_id, chapter_id=None, section_id=assignment, grade_user=username)        
