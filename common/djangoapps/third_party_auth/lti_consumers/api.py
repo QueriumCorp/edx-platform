@@ -327,6 +327,10 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
         key = 'Content-Type',
         value = 'application/vnd.willolabs.outcome.activity+json'
         )
+
+    # mcdaniel dec-2020: emergency patch for Calstatela midterm3 
+    # DELETE ME!
+    data = calstatela_midterm3_stepwise_patch_column(data)
     data_json = json.dumps(data)
 
     if operation == "post":
@@ -423,6 +427,11 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
         key='Content-Type',
         value='application/vnd.willolabs.outcome.result+json'
         )
+
+    # mcdaniel dec-2020: emergency patch for Calstatela midterm3 
+    # DELETE ME!
+    data = calstatela_midterm3_stepwise_patch(data)
+
     data_json = json.dumps(data)
     response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
@@ -516,3 +525,70 @@ def willo_api_headers(key, value):
         ))
 
     return headers
+
+def calstatela_midterm3_stepwise_patch(data):
+    """
+     Dec-2020
+     Emergency patch to adjust point value of 1 stepwise problem that was included in
+     midterm exam 3 at Cal State LA. The URI is
+
+     DELETE ME!
+
+    block-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205+type@swxblock+block@59c57949db1411ea83bdf575723d2ea1
+
+    Payload format:
+        data = {
+            'activity_id': u'lesson45',
+            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce',
+            'points_possible': 5.0,
+            'score': 0.5,
+            'result_date': '2020-04-24T19:12:19.454723+00:00',
+            'type': 'result',
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+        }
+
+    """
+
+    # we only want to patch these three problems.
+    if (data.id != u'59c57949db1411ea83bdf575723d2ea1') :
+        return data
+
+    # kind of a belt & suspenders check. we're anticipating that for these three problems
+    # we're going to see points_possible == 1 whereas it is supposed to be points_possible == 6
+    # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
+    if data.points_possible == 1:
+        data.points_possible = 6
+        data.score = data.score * 6
+
+    return data
+
+
+def calstatela_midterm3_stepwise_patch_column(data):
+    """
+     Dec-2020
+     Emergency patch to adjust point value of 1 stepwise problem that was included in
+     midterm exam 3 at Cal State LA. 
+    
+     this method corrects the overall point value of the grade column
+
+    block-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205+type@sequential+block@d79c1e0244ff4db180c7bdfce53d9dd8
+    block-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205+type@vertical+block@30d1a91174f446c9855cd5f36d394a9a
+
+     DELETE ME!
+
+    Payload format:
+        data = {
+            'due_date': '2020-04-29T04:59:00+00:00',
+            'description': u'Lesson 4.5',
+            'title': u'Lesson 4.5',
+            'points_possible': 5.0,
+            'type': ,
+            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+        }
+    """
+
+    if (data.points_possible != 54.0):
+        data.points_possible = 54.0
+
+    return data
+
