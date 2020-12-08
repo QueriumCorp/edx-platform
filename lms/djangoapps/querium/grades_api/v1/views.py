@@ -44,7 +44,7 @@ from common.djangoapps.third_party_auth.lti_consumers.models import (
     LTIInternalCourse,
     LTIExternalCourse
 )
-from common.djangoapps.student.models import CourseEnrollment
+from student.models import CourseEnrollment
 
 
 log = logging.getLogger(__name__)
