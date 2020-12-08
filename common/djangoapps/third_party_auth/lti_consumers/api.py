@@ -596,7 +596,7 @@ def calstatela_midterm3_stepwise_patch_column(data):
         data=data
     ))
 
-    if data.id not in [u'd79c1e0244ff4db180c7bdfce53d9dd8', u'30d1a91174f446c9855cd5f36d394a9a']:
+    if (data['id'] != u'd79c1e0244ff4db180c7bdfce53d9dd8'):
         return data
 
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - checking to see if we need to patch.')
