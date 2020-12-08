@@ -5,6 +5,7 @@ from django.conf.urls import url
 from .views import CourseGradeView
 from .views import ChapterGradeView
 from .views import SectionGradeView
+from .views import SectionGradeViewUser
 from lms.djangoapps.grades.rest_api.v1.views import CourseGradingPolicy
 
 
@@ -81,6 +82,16 @@ urlpatterns = [
         ),
         SectionGradeView.as_view(),
         name='course_grades_section'
+    ),
+    url(
+        r'^courses/{course_id}/{chapter_id}/{section_id}/{grade_user}$'.format(
+            course_id=settings.COURSE_ID_PATTERN,
+            chapter_id=CHAPTER_ID_PATTERN,
+            section_id=SECTION_ID_PATTERN,
+            grade_user=settings.USERNAME_PATTERN,
+        ),
+        SectionGradeViewUser.as_view(),
+        name='course_grades_section_user'
     ),
     # ----------------------------------------------------------------------
 

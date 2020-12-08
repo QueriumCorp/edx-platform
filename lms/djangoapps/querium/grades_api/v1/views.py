@@ -16,6 +16,7 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
+from openedx.core.lib.api.permissions import IsStaffOrOwner
 from edx_rest_framework_extensions import permissions
 from edx_rest_framework_extensions.auth.jwt.authentication import JwtAuthentication
 from edx_rest_framework_extensions.auth.session.authentication import SessionAuthenticationAllowInactiveUser
@@ -74,14 +75,14 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
         OAuth2AuthenticationAllowInactiveUser,
         SessionAuthenticationAllowInactiveUser,
     )
-    permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS,)
+
+    # mcdaniel dec-2020: adding IsStaffOrOwner to restrict use of this api.
+    permission_classes = (permissions.JWT_RESTRICTED_APPLICATION_OR_USER_ACCESS, IsStaffOrOwner,)
     required_scopes = ['grades:read']
 
     course_id = None
     chapter_id = None
     section_id = None
-    username = None
-    user = None
     grade_user = None
     course_key = None
     course_data = None
@@ -89,7 +90,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
     course_url = None
 
 
-    def get(self, request=None, course_id=None, chapter_id=None, section_id=None, username=None):
+    def get(self, request=None, course_id=None, chapter_id=None, section_id=None, grade_user=None):
         """
          Abstract getter.
          Mostly deals with initializations needed by child objects.
@@ -98,49 +99,29 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
          for reports, large grade dumps, manage.py utility apps, etcetera.
 
          Notes:
-         - For REST api: request is required, and username (if provided) is ignored.
-         - For internal use: request is ignored, and username is required.
+         mcdaniel dec-2020: revisit and correct this soon.
+         - For REST api: request is required, and grade_user (if provided) is ignored.
+         - For internal use: request is ignored, and grade_user is required.
         """
         # business rule enforcement
         #---------------------------------------------------------
         if request is None:
-            if username is None:
-                raise Exception('Username is required if a request object is not provided.')
+            if grade_user is None:
+                raise Exception('grade_user is required if a request object is not provided.')
 
             if course_id is None:
                 raise Exception('course_id is required if a request object is not provided.')
 
-            # FIX NOTE: do we actually need this validation????
-            #if chapter_id is None:
-            #    raise Exception('chapter_id is required if a request object is not provided.')
 
-            # FIX NOTE: do we actually need this validation????
-            #if section_id is None:
-            #    raise Exception('section_id is required if a request object is not provided.')
-
-        if request is not None and username is not None:
-            raise Exception('AbstractGradesView requires either a request object or a username, but not both.')
-
-        # set and validate username
+        # set and validate grade_user
         #---------------------------------------------------------
-        if username is not None:
-            self.username = username
+        if grade_user is not None:
+            self.grade_user = grade_user
         else:
-            if 'username' in request.GET:
-                self.username = request.GET.get('username')
-            else:
-                self.username = request.user.username
-
-        if not self.username:
-            raise self.api_error(
-                status_code=status.HTTP_404_NOT_FOUND,
-                developer_message='Username is required for this view.',
-                error_code='missing_username'
-            )
+            self.grade_user = request.GET.get('grade_user')
 
         try:
-            self.grade_user = USER_MODEL.objects.get(username=self.username)
-            self.user = self.grade_user
+            self.grade_user = USER_MODEL.objects.get(username=self.grade_user)
         except USER_MODEL.DoesNotExist:
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -199,7 +180,7 @@ class AbstractGradesView(GenericAPIView, DeveloperErrorViewMixin):
             )
 
 
-        if not enrollment_data.get_course_enrollment(self.username, str(self.course_key)):
+        if not enrollment_data.get_course_enrollment(self.grade_user, str(self.course_key)):
             raise self.api_error(
                 status_code=status.HTTP_404_NOT_FOUND,
                 developer_message='The user is not enrolled in this course',
@@ -380,8 +361,8 @@ class InternalCourseGradeView(AbstractGradesView):
      Used for requests from manage.py
      Returns a json dict
     """
-    def get(self, course_id, username):
-        super(InternalCourseGradeView, self).get(course_id=course_id, username=username)
+    def get(self, course_id, grade_user):
+        super(InternalCourseGradeView, self).get(course_id=course_id, grade_user=grade_user)
 
         chapters = {}
         for chapter in self.course_grade.chapter_grades.values():
@@ -449,4 +430,29 @@ class SectionGradeView(AbstractGradesView):
         return HttpResponseNotFound("HTTP Error 404: Requested chapter_id/section_id {chapter_id}/{section_id} not found.".format(
             chapter_id=self.chapter_id,
             section_id=self.section_id
+            ))
+
+class SectionGradeViewUser(AbstractGradesView):
+    """
+     api view - section of a chapter for specified user
+     currently being used within manage.py rather than as a RESTapi view.
+    """
+    def get(self, request=None, course_id=None, chapter_id=None, section_id=None, grade_user=None):
+        log.info('SectionGradeViewUser: course_id={course_id}, chapter_id={chapter_id}, section_id={section_id}, grade_user={grade_user}'.format(
+            course_id=course_id,
+            chapter_id=chapter_id,
+            section_id=section_id,
+            grade_user=grade_user
+        ))
+        super(SectionGradeViewUser, self).get(request=request, course_id=course_id, chapter_id=chapter_id, section_id=section_id, grade_user=grade_user)
+        for chapter in self.course_grade.chapter_grades.values():
+            if chapter['url_name'] == chapter_id:
+                for section in chapter['sections']:
+                    if section.url_name == section_id:
+                        return self.get_section_dict(chapter, section)
+
+       print("Requested chapter_id/section_id/grade_user {chapter_id}/{section_id}/{grade_user} not found.".format(
+            chapter_id=self.chapter_id,
+            section_id=self.section_id,
+            grade_user=grade_user
             ))
