@@ -561,10 +561,10 @@ def calstatela_midterm3_stepwise_patch(data):
     # we're anticipating that for these three problems
     # we're going to see points_possible == 1 whereas it is supposed to be points_possible == 6
     # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
-    if data.points_possible == 1:
+    if data['points_possible'] == 1:
         log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - patching.')
         data['points_possible'] = 6
-        data['score'] = data['score'] * 6
+        data['score'] = float(data['score']) * 6
 
     return data
 
@@ -584,12 +584,12 @@ def calstatela_midterm3_stepwise_patch_column(data):
 
     Payload format:
         data = {
-            'due_date': '2020-04-29T04:59:00+00:00',
-            'description': u'Lesson 4.5',
-            'title': u'Lesson 4.5',
-            'points_possible': 5.0,
-            'type': ,
-            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+            'type': 'activity', 
+            'due_date': '2020-12-07T02:59:00+00:00', 
+            'points_possible': 49.0, 
+            'title': 'Fall 2020 1081 Midterm 3', 
+            'id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
+            'description': 'Fall 2020 1081 Midterm 3'
         }
     """
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - data: {data}'.format(
@@ -601,7 +601,7 @@ def calstatela_midterm3_stepwise_patch_column(data):
 
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - checking to see if we need to patch.')
 
-    if (data['points_possible'] != 54.0):
+    if (float(data['points_possible']) != 54.0):
         log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - patching.')
         data['points_possible'] = 54.0
 
