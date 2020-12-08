@@ -548,19 +548,21 @@ def calstatela_midterm3_stepwise_patch(data):
         }
 
     """
+    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - data: {data}'.format(
+        data=data
+    ))
 
     # we only want to patch this one problem.
     if (data.id != u'59c57949db1411ea83bdf575723d2ea1') :
         return data
 
-    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - data: {data}'.format(
-        data=data
-    ))
+    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - checking to see if we need to patch.')
 
     # we're anticipating that for these three problems
     # we're going to see points_possible == 1 whereas it is supposed to be points_possible == 6
     # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
     if data.points_possible == 1:
+        log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - patching.')
         data.points_possible = 6
         data.score = data.score * 6
 
@@ -590,14 +592,17 @@ def calstatela_midterm3_stepwise_patch_column(data):
             'id': u'd7f67eb52e424909ba5ae7154d767a13'
         }
     """
-    if data.id not in [u'd79c1e0244ff4db180c7bdfce53d9dd8', u'30d1a91174f446c9855cd5f36d394a9a']:
-        return data
-
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - data: {data}'.format(
         data=data
     ))
 
+    if data.id not in [u'd79c1e0244ff4db180c7bdfce53d9dd8', u'30d1a91174f446c9855cd5f36d394a9a']:
+        return data
+
+    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - checking to see if we need to patch.')
+
     if (data.points_possible != 54.0):
+        log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - patching.')
         data.points_possible = 54.0
 
     return data
