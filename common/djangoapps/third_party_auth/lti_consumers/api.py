@@ -553,7 +553,7 @@ def calstatela_midterm3_stepwise_patch(data):
     ))
 
     # we only want to patch this one problem.
-    if (data.id != u'59c57949db1411ea83bdf575723d2ea1') :
+    if (data['id'] != u'59c57949db1411ea83bdf575723d2ea1') :
         return data
 
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - checking to see if we need to patch.')
@@ -563,8 +563,8 @@ def calstatela_midterm3_stepwise_patch(data):
     # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
     if data.points_possible == 1:
         log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - patching.')
-        data.points_possible = 6
-        data.score = data.score * 6
+        data['points_possible'] = 6
+        data['score'] = data['score'] * 6
 
     return data
 
@@ -601,9 +601,9 @@ def calstatela_midterm3_stepwise_patch_column(data):
 
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - checking to see if we need to patch.')
 
-    if (data.points_possible != 54.0):
+    if (data['points_possible'] != 54.0):
         log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - patching.')
-        data.points_possible = 54.0
+        data['points_possible'] = 54.0
 
     return data
 
