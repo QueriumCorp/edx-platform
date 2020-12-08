@@ -451,7 +451,7 @@ class SectionGradeViewUser(AbstractGradesView):
                     if section.url_name == section_id:
                         return self.get_section_dict(chapter, section)
 
-       print("Requested chapter_id/section_id/grade_user {chapter_id}/{section_id}/{grade_user} not found.".format(
+        print("Requested chapter_id/section_id/grade_user {chapter_id}/{section_id}/{grade_user} not found.".format(
             chapter_id=self.chapter_id,
             section_id=self.section_id,
             grade_user=grade_user
