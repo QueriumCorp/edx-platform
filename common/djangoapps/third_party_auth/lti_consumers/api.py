@@ -22,6 +22,11 @@ from .models import LTIExternalCourse
 
 from .exceptions import LTIBusinessRuleError
 
+
+# Querium grades api stuff
+from lms.djangoapps.querium.grades_api.v1.views import SectionGradeView
+
+
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
@@ -538,14 +543,14 @@ def calstatela_midterm3_stepwise_patch(data):
 
     Payload format:
         data = {
-            'activity_id': u'lesson45',
-            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce',
-            'points_possible': 5.0,
-            'score': 0.5,
-            'result_date': '2020-04-24T19:12:19.454723+00:00',
-            'type': 'result',
-            'id': u'd7f67eb52e424909ba5ae7154d767a13'
-        }
+            'score': 39.91666666666667, 
+            'points_possible': 49.0, 
+            'user_id': '5825690d6912727a0a619f588f8ad75d69ebae90', 
+            'result_date': '2020-12-08T00:45:54.606752+00:00', 
+            'activity_id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
+            'type': 'result', 
+            'id': 'd79c1e0244ff4db180c7bdfce53d9dd8:5825690d6912727a0a619f588f8ad75d69ebae90'
+            }
 
     """
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - data: {data}'.format(
@@ -553,7 +558,7 @@ def calstatela_midterm3_stepwise_patch(data):
     ))
 
     # we only want to patch this one problem.
-    if (data['id'] != u'59c57949db1411ea83bdf575723d2ea1') :
+    if (data['id'] != u'd79c1e0244ff4db180c7bdfce53d9dd8:5825690d6912727a0a619f588f8ad75d69ebae90'):
         return data
 
     log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - checking to see if we need to patch.')
@@ -561,9 +566,11 @@ def calstatela_midterm3_stepwise_patch(data):
     # we're anticipating that for these three problems
     # we're going to see points_possible == 1 whereas it is supposed to be points_possible == 6
     # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
-    if data['points_possible'] == 1:
+    if data['points_possible'] == 49:
         log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - patching.')
-        data['points_possible'] = 6
+
+        grades = SectionGradeView
+        data['points_possible'] = 54
         data['score'] = float(data['score']) * 6
 
     return data
@@ -606,4 +613,3 @@ def calstatela_midterm3_stepwise_patch_column(data):
         data['points_possible'] = 54.0
 
     return data
-
