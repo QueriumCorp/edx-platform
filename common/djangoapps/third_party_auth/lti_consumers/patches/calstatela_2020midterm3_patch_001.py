@@ -4,9 +4,6 @@
 import logging
 log = logging.getLogger(__name__)
 
-# Querium grades api stuff
-from lms.djangoapps.querium.grades_api.v1.views import SectionGradeView
-
 CALSTATELA_MIDTERM3_ASSIGNMENTS = [
     'Fall 2020 1081 Midterm 3',
     'Fall 2020 1082 Midterm 3',
