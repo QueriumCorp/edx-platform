@@ -50,16 +50,17 @@ from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactor
 # mcdaniel dec-2020
 # Calstatela Fall 2020 midterm3 patch
 CALSTATELA_MIDTERM3_PATCH = True
-try:
-    from .patches.calstatela_2020midterm3_patch_001 import (
-        CALSTATELA_MIDTERM3_ASSIGNMENTS,
-        CALSTATELA_MIDTERM3_COURSE_KEYS,
-        calstatela_midterm3_patch_column, 
-        calstatela_midterm3_patch_grade
-        )
-except:
-    CALSTATELA_MIDTERM3_PATCH = False
-    pass
+if CALSTATELA_MIDTERM3_PATCH:
+    try:
+        from .patches.calstatela_2020midterm3_patch_001 import (
+            CALSTATELA_MIDTERM3_ASSIGNMENTS,
+            CALSTATELA_MIDTERM3_COURSE_KEYS,
+            calstatela_midterm3_patch_column, 
+            calstatela_midterm3_patch_grade
+            )
+    except:
+        CALSTATELA_MIDTERM3_PATCH = False
+        pass
 
 
 log = logging.getLogger(__name__)

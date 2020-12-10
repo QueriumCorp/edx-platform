@@ -6,9 +6,7 @@ log = logging.getLogger(__name__)
 
 CALSTATELA_MIDTERM3_ASSIGNMENTS = [
     'Fall 2020 1081 Midterm 3',
-    'Fall 2020 1082 Midterm 3',
-    'Fall 2020 1040 Midterm 3',
-    'Fall 2020 1041 Midterm 3'
+    'Fall 2020 1082 Midterm 3'
 ]
 CALSTATELA_MIDTERM3_COURSE_KEYS = [
     'course-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205',
