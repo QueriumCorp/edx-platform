@@ -2,16 +2,7 @@
 """
 
 import logging
-import re
-import datetime
-import dateutil.parser
-import json
-
-from django.conf import settings
-
-
 log = logging.getLogger(__name__)
-DEBUG = settings.ROVER_DEBUG
 
 # Querium grades api stuff
 from lms.djangoapps.querium.grades_api.v1.views import SectionGradeView
