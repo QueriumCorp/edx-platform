@@ -47,6 +47,21 @@ from lms.djangoapps.course_blocks.api import get_course_blocks
 from lms.djangoapps.grades.transformer import GradesTransformer
 from lms.djangoapps.grades.subsection_grade_factory import SubsectionGradeFactory
 
+# mcdaniel dec-2020
+# Calstatela Fall 2020 midterm3 patch
+CALSTATELA_MIDTERM3_PATCH = True
+try:
+    from .patches.calstatela_2020midterm3_patch_001 import (
+        CALSTATELA_MIDTERM3_ASSIGNMENTS,
+        CALSTATELA_MIDTERM3_COURSE_KEYS,
+        calstatela_midterm3_patch_column, 
+        calstatela_midterm3_patch_grade
+        )
+except:
+    CALSTATELA_MIDTERM3_PATCH = False
+    pass
+
+
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
@@ -321,6 +336,13 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
         ))
         return False
 
+    # mcdaniel dec-2020 
+    # Calstatela Fall 2020 midterm3 patch
+    if CALSTATELA_MIDTERM3_PATCH:
+        if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
+            if lti_cached_assignment.display_name in CALSTATELA_MIDTERM3_ASSIGNMENTS:
+                data = calstatela_midterm3_patch_column(data)
+
     if DEBUG: log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
             assignment=lti_cached_assignment.display_name,
             data=data
@@ -383,6 +405,13 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
             err=e
         ))
         return False
+
+    # mcdaniel dec-2020 
+    # Calstatela Fall 2020 midterm3 patch
+    if CALSTATELA_MIDTERM3_PATCH:
+        if course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
+            if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS:
+                data = calstatela_midterm3_patch_grade(data)
 
 
     if DEBUG: log.info('willolabs.tasks.post_grade() - data: {data}'.format(
