@@ -341,7 +341,8 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
     if CALSTATELA_MIDTERM3_PATCH:
         if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
             if lti_cached_assignment.display_name in CALSTATELA_MIDTERM3_ASSIGNMENTS:
-                data = calstatela_midterm3_patch_column(data)
+                if lti_cached_grade.possible_graded != 54.0:
+                    data = calstatela_midterm3_patch_column(data)
 
     if DEBUG: log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
             assignment=lti_cached_assignment.display_name,
@@ -411,7 +412,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     if CALSTATELA_MIDTERM3_PATCH:
         if course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
             if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS:
-                if lti_cached_grade.possible_graded == 1:
+                if lti_cached_grade.possible_graded != 54.0:
                     data = calstatela_midterm3_patch_grade(data)
 
 
