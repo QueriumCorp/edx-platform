@@ -411,7 +411,8 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     if CALSTATELA_MIDTERM3_PATCH:
         if course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
             if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS:
-                data = calstatela_midterm3_patch_grade(data)
+                if lti_cached_grade.possible_graded == 1:
+                    data = calstatela_midterm3_patch_grade(data)
 
 
     if DEBUG: log.info('willolabs.tasks.post_grade() - data: {data}'.format(
