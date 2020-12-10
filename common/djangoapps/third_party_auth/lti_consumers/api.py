@@ -22,11 +22,6 @@ from .models import LTIExternalCourse
 
 from .exceptions import LTIBusinessRuleError
 
-
-# Querium grades api stuff
-from lms.djangoapps.querium.grades_api.v1.views import SectionGradeView
-
-
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
 
@@ -332,10 +327,6 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
         key = 'Content-Type',
         value = 'application/vnd.willolabs.outcome.activity+json'
         )
-
-    # mcdaniel dec-2020: emergency patch for Calstatela midterm3 
-    # DELETE ME!
-    data = calstatela_midterm3_stepwise_patch_column(data)
     data_json = json.dumps(data)
 
     if operation == "post":
@@ -432,11 +423,6 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data):
         key='Content-Type',
         value='application/vnd.willolabs.outcome.result+json'
         )
-
-    # mcdaniel dec-2020: emergency patch for Calstatela midterm3 
-    # DELETE ME!
-    data = calstatela_midterm3_stepwise_patch(data)
-
     data_json = json.dumps(data)
     response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
@@ -530,86 +516,3 @@ def willo_api_headers(key, value):
         ))
 
     return headers
-
-def calstatela_midterm3_stepwise_patch(data):
-    """
-     Dec-2020
-     Emergency patch to adjust point value of 1 stepwise problem that was included in
-     midterm exam 3 at Cal State LA. The URI is
-
-     DELETE ME!
-
-    block-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205+type@swxblock+block@59c57949db1411ea83bdf575723d2ea1
-
-    Payload format:
-        data = {
-            'score': 39.91666666666667, 
-            'points_possible': 49.0, 
-            'user_id': '5825690d6912727a0a619f588f8ad75d69ebae90', 
-            'result_date': '2020-12-08T00:45:54.606752+00:00', 
-            'activity_id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
-            'type': 'result', 
-            'id': 'd79c1e0244ff4db180c7bdfce53d9dd8:5825690d6912727a0a619f588f8ad75d69ebae90'
-            }
-
-    """
-    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - data: {data}'.format(
-        data=data
-    ))
-
-    # we only want to patch this one problem.
-    if (data['id'] != u'd79c1e0244ff4db180c7bdfce53d9dd8:5825690d6912727a0a619f588f8ad75d69ebae90'):
-        return data
-
-    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - checking to see if we need to patch.')
-
-    # we're anticipating that for these three problems
-    # we're going to see points_possible == 1 whereas it is supposed to be points_possible == 6
-    # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
-    if data['points_possible'] == 49:
-        log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch() - patching.')
-
-        grades = SectionGradeView
-        data['points_possible'] = 54
-        data['score'] = float(data['score']) * 6
-
-    return data
-
-
-def calstatela_midterm3_stepwise_patch_column(data):
-    """
-     Dec-2020
-     Emergency patch to adjust point value of 1 stepwise problem that was included in
-     midterm exam 3 at Cal State LA. 
-    
-     this method corrects the overall point value of the grade column
-
-    block-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205+type@sequential+block@d79c1e0244ff4db180c7bdfce53d9dd8
-    block-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205+type@vertical+block@30d1a91174f446c9855cd5f36d394a9a
-
-     DELETE ME!
-
-    Payload format:
-        data = {
-            'type': 'activity', 
-            'due_date': '2020-12-07T02:59:00+00:00', 
-            'points_possible': 49.0, 
-            'title': 'Fall 2020 1081 Midterm 3', 
-            'id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
-            'description': 'Fall 2020 1081 Midterm 3'
-        }
-    """
-    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - data: {data}'.format(
-        data=data
-    ))
-
-    if (data['id'] != u'd79c1e0244ff4db180c7bdfce53d9dd8'):
-        return data
-
-    log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - checking to see if we need to patch.')
-
-    if (float(data['points_possible']) != 54.0):
-        log.info('lti_consumers.api.calstatela_midterm3_stepwise_patch_column() - patching.')
-        data['points_possible'] = 54.0
-
-    return data
