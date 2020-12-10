@@ -411,9 +411,13 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     # mcdaniel dec-2020 
     # Calstatela Fall 2020 midterm3 patch
     if CALSTATELA_MIDTERM3_PATCH:
-        if course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
+        log.info('if CALSTATELA_MIDTERM3_PATCH')
+        if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
+            log.info('if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS')
             if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS:
+                log.info("if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS")
                 if lti_cached_grade.possible_graded != 54.0:
+                    log.info('if lti_cached_grade.possible_graded != 54.0')
                     data = calstatela_midterm3_patch_grade(data)
 
 

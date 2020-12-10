@@ -21,7 +21,6 @@ from lms.djangoapps.querium.rover_ecommerce.models import Configuration, EOPWhit
 
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
-DEBUG = True
 UTC = pytz.UTC
 
 def paywall_should_render(request, context):
@@ -171,10 +170,10 @@ def get_course_id(request, context):
         ## included in the page context for whatever page called this template.
 
         ## attempt to grap the course_id slug, if it exists.
-        logger('get_course_id() context: {context}, course_key: {course_key}'.format(
-            context=context.keys(),
-            course_key=context['course_key']
-        ))
+        ##logger('get_course_id() context: {context}, course_key: {course_key}'.format(
+        ##    context=context.keys(),
+        ##    course_key=context['course_key']
+        ##))
 
         course_id = str(context['course_key'])
         course_key = CourseKey.from_string(course_id)
