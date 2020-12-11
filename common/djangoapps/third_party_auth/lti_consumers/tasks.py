@@ -415,13 +415,13 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         log.info('lti_cached_course.course_id: {course_id}'.format(
             course_id=lti_cached_course.course_id
         ))
-        if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
+        if str(lti_cached_course.course_id) in CALSTATELA_MIDTERM3_COURSE_KEYS:
             log.info('if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS')
-            log.info("homework_assignment_dict.get('section_display_name'): {display_name}".format(
-                display_name=homework_assignment_dict.get('section_display_name')
+            log.info("lti_cached_assignment.display_name: {display_name}".format(
+                display_name=lti_cached_assignment.display_name
             ))
-            if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS:
-                log.info("if homework_assignment_dict.get('section_display_name') in CALSTATELA_MIDTERM3_ASSIGNMENTS")
+            if str(lti_cached_assignment.display_name) in CALSTATELA_MIDTERM3_ASSIGNMENTS:
+                log.info("if lti_cached_assignment.display_name in CALSTATELA_MIDTERM3_ASSIGNMENTS")
                 log.info("lti_cached_grade.possible_graded: {possibe_graded}".format(
                     possible_graded=lti_cached_grade.possible_graded
                 ))
@@ -443,9 +443,6 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
         now = UTC.localize(datetime.datetime.now())
         lti_cached_grade.synched = now
         lti_cached_grade.save()
-
-
-
 
 def get_assignment_grade(course_key,  problem_usage_key, subsection_grade):
     """

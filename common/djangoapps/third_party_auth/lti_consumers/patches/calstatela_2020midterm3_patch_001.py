@@ -5,38 +5,38 @@ import logging
 log = logging.getLogger(__name__)
 
 CALSTATELA_MIDTERM3_ASSIGNMENTS = [
-    'Fall 2020 1081 Midterm 3',
-    'Fall 2020 1082 Midterm 3'
+    u"Fall 2020 1081 Midterm 3",
+    u"Fall 2020 1082 Midterm 3"
 ]
 CALSTATELA_MIDTERM3_COURSE_KEYS = [
-    'course-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205',
-    'course-v1:CalStateLA+MATH1081_26f3+Fall2020_Zhang_TTR1050-1205',
-    'course-v1:CalStateLA+MATH1081_5936+Fall2020_Piapakdee_TTR0800-0915',
-    'course-v1:CalStateLA+MATH1081_6480+Fall2020_Garcia_TTR0800-0915',
-    'course-v1:CalStateLA+MATH1081_6ee5+Fall2020_Hajaiej_TTR1340-1455',
-    'course-v1:CalStateLA+MATH1081_8e34+Fall2020_Yu_TTR1050-1205',
-    'course-v1:CalStateLA+MATH1081_a2fa+Fall2020_Hajaiej_TTR1215-1330',
-    'course-v1:CalStateLA+MATH1081_acb8+Fall2020_Staff_TTR0925-1040',
-    'course-v1:CalStateLA+MATH1081_b8d5+Fall2020_Staff_MW1340-1455',
-    'course-v1:CalStateLA+MATH1081_bbd1+Fall2020_Flores_TTR0925-1040',
-    'course-v1:CalStateLA+MATH1081_ede2+Fall2020_Choi_MW1215-1330',
-    'course-v1:CalStateLA+MATH1081_f1e9+Fall2020_Staff_TTR1340-1455',
-    'course-v1:CalStateLA+MATH1082_15a8+Fall2020_AlFares_MTWTR1530-1608',
-    'course-v1:CalStateLA+MATH1082_20a3+Fall2020_Staff_MWF1600-1650',
-    'course-v1:CalStateLA+MATH1082_2cd3+Fall2020_Saikaly_MWF1000-1050',
-    'course-v1:CalStateLA+MATH1082_3143+Fall2020_Staff_MWF1600-1650',
-    'course-v1:CalStateLA+MATH1082_3b14+Fall2020_Sam_MTWTR1400-1438',
-    'course-v1:CalStateLA+MATH1082_5158+Fall2020_Yamashita_MWF0800-0850',
-    'course-v1:CalStateLA+MATH1082_5800+Fall2020_Yamashita_MWF1000-1050',
-    'course-v1:CalStateLA+MATH1082_65e9+Fall2020_Saikaly_MWF1200-1250',
-    'course-v1:CalStateLA+MATH1082_986f+Fall2020_Staff_MWF0800-0850',
-    'course-v1:CalStateLA+MATH1082_9c69+Fall2020_Sam_MTWTR1230-1308',
-    'course-v1:CalStateLA+MATH1082_9f24+Fall2020_Chan_MTWTR0800-0838',
-    'course-v1:CalStateLA+MATH1082_a36a+Fall2020_PhanYamada_MWF1400-1450',
-    'course-v1:CalStateLA+MATH1082_b530+Fall2020_Yamashita_MWF1200-1250',
-    'course-v1:CalStateLA+MATH1082_c806+Fall2020_AlFares_MTWTR1100-1138',
-    'course-v1:CalStateLA+MATH1082_d15c+Fall2020_Sam_MTWTR1530-1608',
-    'course-v1:CalStateLA+MATH1082_da74+Fall2020_Jeong_MWF1400-1450'
+    u"course-v1:CalStateLA+MATH1081_2513+Fall2020_Chavez_TTR1050-1205",
+    u"course-v1:CalStateLA+MATH1081_26f3+Fall2020_Zhang_TTR1050-1205",
+    u"course-v1:CalStateLA+MATH1081_5936+Fall2020_Piapakdee_TTR0800-0915",
+    u"course-v1:CalStateLA+MATH1081_6480+Fall2020_Garcia_TTR0800-0915",
+    u"course-v1:CalStateLA+MATH1081_6ee5+Fall2020_Hajaiej_TTR1340-1455",
+    u"course-v1:CalStateLA+MATH1081_8e34+Fall2020_Yu_TTR1050-1205",
+    u"course-v1:CalStateLA+MATH1081_a2fa+Fall2020_Hajaiej_TTR1215-1330",
+    u"course-v1:CalStateLA+MATH1081_acb8+Fall2020_Staff_TTR0925-1040",
+    u"course-v1:CalStateLA+MATH1081_b8d5+Fall2020_Staff_MW1340-1455",
+    u"course-v1:CalStateLA+MATH1081_bbd1+Fall2020_Flores_TTR0925-1040",
+    u"course-v1:CalStateLA+MATH1081_ede2+Fall2020_Choi_MW1215-1330",
+    u"course-v1:CalStateLA+MATH1081_f1e9+Fall2020_Staff_TTR1340-1455",
+    u"course-v1:CalStateLA+MATH1082_15a8+Fall2020_AlFares_MTWTR1530-1608",
+    u"course-v1:CalStateLA+MATH1082_20a3+Fall2020_Staff_MWF1600-1650",
+    u"course-v1:CalStateLA+MATH1082_2cd3+Fall2020_Saikaly_MWF1000-1050",
+    u"course-v1:CalStateLA+MATH1082_3143+Fall2020_Staff_MWF1600-1650",
+    u"course-v1:CalStateLA+MATH1082_3b14+Fall2020_Sam_MTWTR1400-1438",
+    u"course-v1:CalStateLA+MATH1082_5158+Fall2020_Yamashita_MWF0800-0850",
+    u"course-v1:CalStateLA+MATH1082_5800+Fall2020_Yamashita_MWF1000-1050",
+    u"course-v1:CalStateLA+MATH1082_65e9+Fall2020_Saikaly_MWF1200-1250",
+    u"course-v1:CalStateLA+MATH1082_986f+Fall2020_Staff_MWF0800-0850",
+    u"course-v1:CalStateLA+MATH1082_9c69+Fall2020_Sam_MTWTR1230-1308",
+    u"course-v1:CalStateLA+MATH1082_9f24+Fall2020_Chan_MTWTR0800-0838",
+    u"course-v1:CalStateLA+MATH1082_a36a+Fall2020_PhanYamada_MWF1400-1450",
+    u"course-v1:CalStateLA+MATH1082_b530+Fall2020_Yamashita_MWF1200-1250",
+    u"course-v1:CalStateLA+MATH1082_c806+Fall2020_AlFares_MTWTR1100-1138",
+    u"course-v1:CalStateLA+MATH1082_d15c+Fall2020_Sam_MTWTR1530-1608",
+    u"course-v1:CalStateLA+MATH1082_da74+Fall2020_Jeong_MWF1400-1450"
 ]
 CALSTATELA_MIDTERM3_SWXBLOCK_GRADES_ORIG = {
     '0c76d3b73d34d6b9e3412ee6f7f679': 1,
@@ -315,10 +315,10 @@ def calstatela_midterm3_patch_grade(data):
         data = {
             'score': 39.91666666666667, 
             'points_possible': 49.0, 
-            'user_id': '5825690d6912727a0a619f588f8ad75d69ebae90', 
-            'result_date': '2020-12-08T00:45:54.606752+00:00', 
-            'activity_id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
-            'type': 'result', 
+            'user_id': '5825690d6912727a0a619f588f8ad75d69ebae90", 
+            'result_date': '2020-12-08T00:45:54.606752+00:00", 
+            'activity_id': 'd79c1e0244ff4db180c7bdfce53d9dd8", 
+            'type': 'result", 
             'id': 'd79c1e0244ff4db180c7bdfce53d9dd8:5825690d6912727a0a619f588f8ad75d69ebae90'
             }
 
@@ -372,11 +372,11 @@ def calstatela_midterm3_patch_column(data):
 
     Payload format:
         data = {
-            'type': 'activity', 
-            'due_date': '2020-12-07T02:59:00+00:00', 
+            'type': 'activity", 
+            'due_date': '2020-12-07T02:59:00+00:00", 
             'points_possible': 49.0, 
-            'title': 'Fall 2020 1081 Midterm 3', 
-            'id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
+            'title': 'Fall 2020 1081 Midterm 3", 
+            'id': 'd79c1e0244ff4db180c7bdfce53d9dd8", 
             'description': 'Fall 2020 1081 Midterm 3'
         }
     """
