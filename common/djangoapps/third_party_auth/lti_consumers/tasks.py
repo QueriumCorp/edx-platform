@@ -422,7 +422,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
             ))
             if str(lti_cached_assignment.display_name) in CALSTATELA_MIDTERM3_ASSIGNMENTS:
                 log.info("if lti_cached_assignment.display_name in CALSTATELA_MIDTERM3_ASSIGNMENTS")
-                log.info("lti_cached_grade.possible_graded: {possibe_graded}".format(
+                log.info("lti_cached_grade.possible_graded: {possible_graded}".format(
                     possible_graded=lti_cached_grade.possible_graded
                 ))
                 if lti_cached_grade.possible_graded != 54.0:
