@@ -393,7 +393,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
 
     try:
         lti_username = lti_cached_enrollment.user.username
-        log.info('willolabs.tasks.post_grade() - lti_username={u}'.format(u=my_username))
+        log.info('willolabs.tasks.post_grade() - lti_username={u}'.format(u=lti_username))
     except Exception as e:
         log.error('willolabs.tasks.post_grade() - error lti_cached_enrollment.user.username: {err}'.format(
             err=e
