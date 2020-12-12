@@ -844,7 +844,7 @@ u'_677265_': 0.666666666666666
 }
 
 
-def calstatela_midterm3_patch_grade(data):
+def calstatela_midterm3_patch_grade(username,data):
     """
      Dec-2020
      Emergency patch to adjust point value of 1 stepwise problem that was included in
@@ -856,18 +856,20 @@ def calstatela_midterm3_patch_grade(data):
        b.) add the correct grossed up point (a value between 0 and 6)
 
     Payload format:
+        username = '_123456_',
         data = {
             'score': 39.91666666666667, 
             'points_possible': 49.0, 
-            'user_id': '5825690d6912727a0a619f588f8ad75d69ebae90", 
-            'result_date': '2020-12-08T00:45:54.606752+00:00", 
-            'activity_id': 'd79c1e0244ff4db180c7bdfce53d9dd8", 
+            'user_id': '5825690d6912727a0a619f588f8ad75d69ebae90', 
+            'result_date': '2020-12-08T00:45:54.606752+00:00', 
+            'activity_id': 'd79c1e0244ff4db180c7bdfce53d9dd8', 
             'type': 'result", 
             'id': 'd79c1e0244ff4db180c7bdfce53d9dd8:5825690d6912727a0a619f588f8ad75d69ebae90'
             }
 
     """
-    log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - data: {data}'.format(
+    log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - username: {u} data: {data}'.format(
+        u=username,
         data=data
     ))
 
@@ -875,11 +877,9 @@ def calstatela_midterm3_patch_grade(data):
     # we're going to see points_possible == 1 whereas it is supposed to be points_possible == 6
     # assuming that this is the case, we need to amplify the earned score by a multiple of 6.
     if data['points_possible'] == 49:
-        log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - patching.')
-
-
-        # the score 
-        username = data['user_id']
+        log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - patching username {u}.'.format(
+            u=username
+        ))
 
         # the awarded score for the midterm exam
         score = float(data['score'])
@@ -889,7 +889,9 @@ def calstatela_midterm3_patch_grade(data):
             points_awarded = float(CALSTATELA_MIDTERM3_SWXBLOCK_GRADES_ORIG[username])
         except:
             # anomoly assumed to be caused by staff generating grade data prior to the exam date.
-            log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - aborting. Did not find any assignment-level grade data for the SWXblock problem.')
+            log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - aborting. Did not find any assignment-level orig grade data for the SWXblock problem for username {u}.'.format(
+                u=username
+            ))
             return data
 
         # this list considers course sections in which the instructor elected to 
@@ -898,7 +900,9 @@ def calstatela_midterm3_patch_grade(data):
             points_adjusted = float(CALSTATELA_MIDTERM3_SWXBLOCK_GRADES_ADJUSTED[username])
         except:
             # anomoly assumed to be caused by staff generating grade data prior to the exam date.
-            log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - aborting. Did not find any assignment-level grade data for the SWXblock problem.')
+            log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - aborting. Did not find any assignment-level adjusted grade data for the SWXblock problem for username {u}.'.format(
+                u=username
+            ))
             return data
 
         # subtract the original point value awarded 
@@ -910,7 +914,8 @@ def calstatela_midterm3_patch_grade(data):
         data['score'] = score
         data['points_possible'] = 54
 
-        log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - patched results: {data}'.format(
+        log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - patched results for username {u}: {data}'.format(
+            u=username,
             data=data
         ))
     return data
@@ -946,4 +951,3 @@ def calstatela_midterm3_patch_column(data):
         data=data
     ))
     return data
-
