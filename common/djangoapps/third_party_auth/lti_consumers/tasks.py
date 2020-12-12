@@ -389,6 +389,17 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
     """
     if DEBUG: log.info('willolabs.tasks.post_grade()')
 
+    log.info('willolabs.tasks.post_grade(). lti_cached_enrollment={e}'.format(e=lti_cached_enrollment))
+
+    try:
+        lti_username = lti_cached_enrollment.user.username
+        log.info('willolabs.tasks.post_grade() - lti_username={u}'.format(u=my_username))
+    except Exception as e:
+        log.error('willolabs.tasks.post_grade() - error lti_cached_enrollment.user.username: {err}'.format(
+            err=e
+        ))
+        lti_username = 'NONE'
+
     try:
 
         willo_id = willo_id_from_url(lti_cached_assignment.url) + ":" + lti_cached_enrollment.lti_user_id
@@ -427,10 +438,11 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
                 ))
                 if lti_cached_grade.possible_graded != 54.0:
                     log.info('if lti_cached_grade.possible_graded != 54.0')
-                    data = calstatela_midterm3_patch_grade(data)
+                    data = calstatela_midterm3_patch_grade(lti_username,data)
 
 
-    if DEBUG: log.info('willolabs.tasks.post_grade() - data: {data}'.format(
+    if DEBUG: log.info('willolabs.tasks.post_grade() - lti_username: {lti_username} data: {data}'.format(
+            lti_username=lti_username,
             data=data
         ))
 
@@ -524,4 +536,3 @@ def _calc_grade_percentage(earned, possible):
     if possible != 0:
         f_grade = float(earned) / float(possible)
     return f_grade
-
