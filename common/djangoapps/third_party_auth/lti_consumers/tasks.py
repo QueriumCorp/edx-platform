@@ -342,8 +342,14 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
     if CALSTATELA_MIDTERM3_PATCH:
         if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
             if lti_cached_assignment.display_name in CALSTATELA_MIDTERM3_ASSIGNMENTS:
-                if lti_cached_grade.possible_graded != 54.0:
-                    data = calstatela_midterm3_patch_column(data)
+                if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS:
+                    log.info('willolabs.tasks.create_column() - skipping {c}'.format(
+                        c=lti_cached_course.course_id
+                    ))
+                    return False
+                else:
+                    if lti_cached_grade.possible_graded != 54.0:
+                        data = calstatela_midterm3_patch_column(data)
 
     if DEBUG: log.info('willolabs.tasks.create_column() - assignment: {assignment} data: {data}'.format(
             assignment=lti_cached_assignment.display_name,
@@ -436,9 +442,15 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
                 log.info("lti_cached_grade.possible_graded: {possible_graded}".format(
                     possible_graded=lti_cached_grade.possible_graded
                 ))
-                if lti_cached_grade.possible_graded != 54.0:
-                    log.info('if lti_cached_grade.possible_graded != 54.0')
-                    data = calstatela_midterm3_patch_grade(lti_username,data)
+                if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS:
+                    log.info('willolabs.tasks.post_grade() - skipping {c}'.format(
+                        c=lti_cached_course.course_id
+                    ))
+                    return False
+                else:
+                    if lti_cached_grade.possible_graded != 54.0:
+                        log.info('if lti_cached_grade.possible_graded != 54.0')
+                        data = calstatela_midterm3_patch_grade(lti_username,data)
 
 
     if DEBUG: log.info('willolabs.tasks.post_grade() - lti_username: {lti_username} data: {data}'.format(
