@@ -65,6 +65,8 @@ if CALSTATELA_MIDTERM3_PATCH:
 
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
+## dec-2020 DELETE ME.
+DEBUG = True
 
 UTC = pytz.UTC
 
@@ -340,9 +342,15 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
     # mcdaniel dec-2020 
     # Calstatela Fall 2020 midterm3 patch
     if CALSTATELA_MIDTERM3_PATCH:
-        if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_KEYS:
-            if lti_cached_assignment.display_name in CALSTATELA_MIDTERM3_ASSIGNMENTS:
-                if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS:
+        if str(lti_cached_course.course_id) in CALSTATELA_MIDTERM3_COURSE_KEYS:
+            log.info('willolabs.tasks.create_column() - lti_cached_course.course_id {course_id} is a course key that might need patching.'.format(
+                course_id=str(lti_cached_course.course_id)
+            ))
+            if str(lti_cached_assignment.display_name) in CALSTATELA_MIDTERM3_ASSIGNMENTS:
+                log.info('willolabs.tasks.create_column() - lti_cached_assignment.display_name {display_name} is an assignment that might need patching.'.format(
+                    display_name=str(lti_cached_assignment.display_name)
+                ))
+                if str(lti_cached_course.course_id) in CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS:
                     log.info('willolabs.tasks.create_column() - skipping {c}'.format(
                         c=lti_cached_course.course_id
                     ))
@@ -442,7 +450,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
                 log.info("lti_cached_grade.possible_graded: {possible_graded}".format(
                     possible_graded=lti_cached_grade.possible_graded
                 ))
-                if lti_cached_course.course_id in CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS:
+                if str(lti_cached_course.course_id) in CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS:
                     log.info('willolabs.tasks.post_grade() - skipping {c}'.format(
                         c=lti_cached_course.course_id
                     ))

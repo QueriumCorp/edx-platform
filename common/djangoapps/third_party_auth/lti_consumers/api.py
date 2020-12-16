@@ -24,6 +24,8 @@ from .exceptions import LTIBusinessRuleError
 
 log = logging.getLogger(__name__)
 DEBUG = settings.ROVER_DEBUG
+## dec-2020 DELETE ME.
+DEBUG = True
 
 
 def willo_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
