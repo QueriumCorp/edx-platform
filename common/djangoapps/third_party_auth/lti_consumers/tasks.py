@@ -55,6 +55,7 @@ if CALSTATELA_MIDTERM3_PATCH:
         from .patches.calstatela_2020midterm3_patch_001 import (
             CALSTATELA_MIDTERM3_ASSIGNMENTS,
             CALSTATELA_MIDTERM3_COURSE_KEYS,
+            CALSTATELA_MIDTERM3_COURSE_SKIP_KEYS,
             calstatela_midterm3_patch_column, 
             calstatela_midterm3_patch_grade
             )
