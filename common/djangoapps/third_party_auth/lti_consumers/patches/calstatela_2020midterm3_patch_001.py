@@ -1938,6 +1938,8 @@ def calstatela_midterm3_patch_grade(username,data):
             u=username
         ))
 
+        data['points_possible'] = 54
+
         # the awarded score for the midterm exam
         score = float(data['score'])
 
@@ -1988,7 +1990,6 @@ def calstatela_midterm3_patch_grade(username,data):
 
 
         data['score'] = score
-        data['points_possible'] = 54
 
         log.info('lti_consumers.patches.calstatela_2020midterm3_patch_001.calstatela_midterm3_patch_grade() - patched results for username {u}: {data}'.format(
             u=username,
