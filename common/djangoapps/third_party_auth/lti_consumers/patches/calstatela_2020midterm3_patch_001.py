@@ -910,11 +910,19 @@ def calstatela_midterm3_patch_grade(username,data):
             ))
             return data
 
-        # subtract the original point value awarded 
-        score -= points_awarded
+        if points_awarded <= 1.0:
+            # subtract the original point value awarded 
+            score -= points_awarded
 
-        # add the grossed up point value
-        score += (points_adjusted * 6)
+            # add the grossed up point value
+            score += (points_adjusted * 6)
+        else:
+            # subtract the original point value awarded, grossed down by a multiple of 6
+            score -= points_awarded / 6
+
+            # add the real adjusted score
+            score += points_adjusted
+
 
         data['score'] = score
         data['points_possible'] = 54
