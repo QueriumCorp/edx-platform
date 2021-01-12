@@ -77,7 +77,7 @@ class Command(BaseCommand):
             return None
 
         for lti_internal_course in lti_internal_courses:
-            course_id = str(lti_internal_course.course_fk.id)
+            course_id = str(lti_internal_course.course.id)
             lti_cache = LTICacheManager(course_id=course_id, user=user)
             try:
                 lti_cache.verify(quiet)

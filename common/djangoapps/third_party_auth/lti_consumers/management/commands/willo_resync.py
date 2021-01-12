@@ -20,6 +20,10 @@ u"""
 """
 from django.conf import settings
 from django.core.management.base import BaseCommand
+
+# open edx stuff
+from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
+
 from common.djangoapps.third_party_auth.lti_consumers.tasks import post_grades
 from common.djangoapps.third_party_auth.lti_consumers.models import (
     LTIInternalCourse,
@@ -29,8 +33,6 @@ from common.djangoapps.third_party_auth.lti_consumers.models import (
     LTIExternalCourseEnrollmentGrades
 )
 
-# open edx stuff
-from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 
 from ...utils import get_lti_courses
 
@@ -99,7 +101,7 @@ class Command(BaseCommand):
             return None
 
         for lti_internal_course in lti_internal_courses:
-            course_id = str(lti_internal_course.course_fk.id)
+            course_id = str(lti_internal_course.course.id)
             try:
                 self.resync_course(str(lti_internal_course.course_id), dry_run, force_resync)
             except:
@@ -147,7 +149,9 @@ class Command(BaseCommand):
                         ))
 
                         # send this grade to Celery
-                        if not dry_run: post_grades(username=username, course_id=course_id, usage_id=usage_id)
+                        if not dry_run: 
+                            cached_results = not force_resync
+                            post_grades(username=username, course_id=course_id, usage_id=usage_id, cached_results=cached_results)
                         else: self.console_output('DRY RUN: Grade data was not sent to Willo Labs.')
                 else:
                     print('No cached grade found for user {username}, assignment {display_name}'.format(

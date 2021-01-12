@@ -130,21 +130,12 @@ class LTIInternalCourse(TimeStampedModel):
         (STX, 'South Texas'),
     ]
 
-    course_id = CourseKeyField(
-        max_length=255,
+    course = models.ForeignKey(
+        CourseOverview,
         help_text="Rover Course Key (Opaque Key). " \
             "Based on Institution, Course, Section identifiers. Example: course-v1:edX+DemoX+Demo_Course",
-        blank=False,
-        default=None,
-        primary_key=True
-        )
-
-    course_fk = models.ForeignKey(
-        CourseOverview,
         db_index=True,
-        unique=True,
-        null=True,
-        db_constraint=False,
+        primary_key=True,
         on_delete=models.CASCADE,
     )
 
@@ -193,27 +184,7 @@ class LTIInternalCourse(TimeStampedModel):
         #unique_together = [['lti_external_course_key1', 'lti_external_course_key2', 'lti_external_course_key3']]
 
     def __str__(self):
-        return self.course_id.html_id()
-
-    def clean(self, *args, **kwargs):
-        """Improvising a way to do a Fk constraint on the course_id
-
-        mcdaniel july-2020: this raises a funky error inside of OpaqueKey.
-        Appears that we might be trying to validate an already-validated key.
-
-        Raises:
-            ValidationError: [description]
-        """
-        super(LTIInternalCourse, self).clean(*args, **kwargs)
-        """
-        try:
-            log.info('LTIInternalCourse.clean() - {course_id}'.format(
-                course_id=self.course_id
-            ))
-            is_this_a_valid_course_key = CourseKey.from_string(self.course_id)
-        except InvalidKeyError:
-            raise ValidationError('Not a valid course key.')
-        """
+        return str(self.course.id)
 
 """
 ---------------------------------------------------------------------------------------------------------

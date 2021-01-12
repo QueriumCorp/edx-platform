@@ -54,7 +54,7 @@ class Command(BaseCommand):
                 continue
 
             course_overview = CourseOverview.get_from_id(course.id)
-            lti_internal_course = LTIInternalCourse.objects.filter(course_fk=course_overview).first()
+            lti_internal_course = LTIInternalCourse.objects.filter(course=course_overview).first()
             if lti_internal_course:
                 print('verified course run {course_run}'.format(
                     course_run=str(course.id)
@@ -67,7 +67,7 @@ class Command(BaseCommand):
 
                 lti_internal_course = LTIInternalCourse(
                     course_id=str(course.id),   # course.id: opaque_keys.edx.locator.CourseLocator
-                    course_fk=course_overview,
+                    course=course_overview,
                     enabled=False,
                     lti_configuration=lti_configuration,
                     matching_function='TPA_NEXT'

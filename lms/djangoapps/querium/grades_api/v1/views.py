@@ -338,7 +338,7 @@ class InternalLTICourses(AbstractGradesView):
         courses_list = []
         courses = LTIInternalCourse.objects.all()
         for course in courses:
-            course = course.course_fk
+            course = course.course
 
             course_dict = {}
             course_dict.course_id = str(course.course_id)

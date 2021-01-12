@@ -27,10 +27,10 @@ class LTIInternalCourseAdmin(admin.ModelAdmin):
     """
     LTI Grade Sync - Internal Course
     """
-    search_fields = ('course_id', 'lti_external_course_key1', 'lti_external_course_key2', 'lti_external_course_key3')
+    search_fields = ('course', 'lti_external_course_key1', 'lti_external_course_key2', 'lti_external_course_key3')
 
     list_display = (
-        'course_id',
+        'course',
         'lti_external_course_key1',
         'lti_external_course_key2',
         'lti_external_course_key3',

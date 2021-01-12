@@ -49,7 +49,7 @@ class Command(BaseCommand):
         for course in lti_internal_courses:
             print('{cmd} {course_key}'.format(
                 cmd=cmd,
-                course_key=str(course.course_fk)
+                course_key=str(course.course)
             ))
             course.enabled = enabled
             course.save()

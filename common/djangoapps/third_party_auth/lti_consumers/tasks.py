@@ -37,8 +37,8 @@ from .utils import willo_id_from_url, get_subsection_chapter
 from .api import (
     willo_api_post_grade,
     willo_api_create_column,
-    willo_activity_id_from_string,
-    willo_date
+    willo_api_activity_id_from_string,
+    willo_api_date
     )
 
 # to retrieve assignment grade
@@ -96,17 +96,18 @@ MAX_RETRIES = 1
     task_time_limit=TASK_TIME_LIMIT,
     task_soft_time_limit=TASK_SOFT_TIME_LIMIT,
     )
-def post_grades(self, username, course_id, usage_id):
+def post_grades(self, username, course_id, usage_id, cached_results=True):
     """ see docstring for _post_grades() """
 
     _post_grades(
         self,
         username=username,
         course_id=course_id,
-        usage_id=usage_id
+        usage_id=usage_id,
+        cached_results=cached_results
     )
 
-def _post_grades(self, username, course_id, usage_id):
+def _post_grades(self, username, course_id, usage_id, cached_results=True):
     """
     username: a string representing the User.username of the student
     course_id: a string identifier for a CourseKey
@@ -216,7 +217,8 @@ def _post_grades(self, username, course_id, usage_id):
                 lti_cached_course=lti_cached_course,
                 lti_cached_enrollment=lti_cached_enrollment,
                 lti_cached_assignment=lti_cached_assignment,
-                lti_cached_grade=lti_cached_grade
+                lti_cached_grade=lti_cached_grade,
+                cached_results=cached_results
                 )
 
         return retval
@@ -372,7 +374,7 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
         )
 
 
-def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade):
+def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assignment, lti_cached_grade, cached_results=True):
     """
     Willo Grade Sync api. Post grade scored for one student, for one homework assignment.
     Willo api returns 200 if the grade was posted. Example ext_wl_outcome_service_url:
@@ -400,7 +402,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
 
 
     Obsoleted:
-        "activity_id": willo_activity_id_from_string(lti_cached_assignment.display_name),
+        "activity_id": willo_api_activity_id_from_string(lti_cached_assignment.display_name),
     """
     if DEBUG: log.info('willolabs.tasks.post_grade()')
 
@@ -423,7 +425,7 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
             "id": willo_id,
             "activity_id": willo_id_from_url(lti_cached_assignment.url),
             "user_id": lti_cached_enrollment.lti_user_id,
-            "result_date": willo_date(lti_cached_grade.created),
+            "result_date": willo_api_date(lti_cached_grade.created),
             "score": lti_cached_grade.earned_graded,
             "points_possible": lti_cached_grade.possible_graded
         }
@@ -469,7 +471,8 @@ def post_grade(self, lti_cached_course, lti_cached_enrollment, lti_cached_assign
 
     response_code = willo_api_post_grade(
         ext_wl_outcome_service_url=lti_cached_course.ext_wl_outcome_service_url,
-        data=data
+        data=data,
+        cached_results=cached_results
         )
 
     if 200 <= response_code <= 299:

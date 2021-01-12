@@ -20,10 +20,11 @@ from .exceptions import LTIBusinessRuleError
 from .models import LTIExternalCourse
 from .utils import is_valid_course_id, willo_id_from_url
 from .api import (
-    willo_activity_id_from_string,
-    willo_date,
+    willo_api_activity_id_from_string,
+    willo_api_date,
     willo_api_post_grade,
-    willo_api_create_column
+    willo_api_create_column,
+    WILLO_API_POST_GRADE_SKIPPED
 )
 from .lti_params import (
     get_ext_wl_outcome_service_url,
@@ -67,11 +68,13 @@ class LTIGradeSync:
     course_id = None        # a string. Example: course-v1:ABC+OS9471721_9626+01
     course_key = None       # a opaque_keys.edx.keys.CourseKey
     context_id = None       # LTI consumer course identifier. Only used in cases where course_id is not unique. Example: e14751571da04dd3a2c71a311dda2e1b
+    cached_results = True
 
-    def __init__(self, course_id=None):
+    def __init__(self, course_id=None, cached_results=True):
         if course_id is not None:
             self.course_id = course_id
             self.course_key = self.get_validated_coursekey()
+            self.cached_results = cached_results
 
     def iterate_courses(self):
         """
@@ -196,13 +199,22 @@ class LTIGradeSync:
         data = {
             "type": "result",
             "id": willo_id_from_url(section.get('section_url')),
-            "activity_id": willo_activity_id_from_string(section.get('section_display_name')),
+            "activity_id": willo_api_activity_id_from_string(section.get('section_display_name')),
             "user_id": lti_user_id,
-            "result_date": willo_date(result_date),
+            "result_date": willo_api_date(result_date),
             "score": section_grade.get('section_grade_earned'),
             "points_possible": section_grade.get('section_grade_possible')
         }
-        retval = willo_api_post_grade(ext_wl_outcome_service_url=url, data=data)
+        retval = willo_api_post_grade(ext_wl_outcome_service_url=url, data=data, cached_results=self.cached_results)
+        if retval == WILLO_API_POST_GRADE_SKIPPED:
+            msg = color.CYAN + color.BOLD + '    SKIPPED: ' + color.END + color.END
+            msg += u'skipped grade sync for {user} / {assignment}'.format(
+                user=student.username,
+                assignment=section.get('section_display_name')
+            )
+            self.console_output(msg)
+            return True
+
         if 200 <= retval <= 299:
             msg = color.GREEN + color.BOLD + '    SUCCESS: ' + color.END + color.END
             msg += u'syncd grade for {user} / {assignment}'.format(
@@ -232,10 +244,10 @@ class LTIGradeSync:
         url = get_ext_wl_outcome_service_url(self.course_id, self.context_id)
         data = {
             "type": "activity",
-            "id": willo_activity_id_from_string(section.get('section_display_name')),
+            "id": willo_api_activity_id_from_string(section.get('section_display_name')),
             "title": section.get('section_display_name'),
             "description": section.get('section_display_name'),
-            "due_date": willo_date(section.get('section_due_date')),
+            "due_date": willo_api_date(section.get('section_due_date')),
             "points_possible": section_grade.get('section_grade_possible')
         }
         retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data, operation="post")
