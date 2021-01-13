@@ -4,24 +4,24 @@ Willo api enhancements
 
 API calls:
 ------------------
-willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
-willo_api_post_grade(ext_wl_outcome_service_url, data):
-willo_api_get_outcome(url, assignment_id, user_id):
+willo_api_create_column(ext_wl_outcome_service_url, data, operation="post")
+willo_api_post_grade(ext_wl_outcome_service_url, data)
+willo_api_get_outcome(url, assignment_id, user_id)
 
 Utils:
 ------------------
-- willo_api_check_column_should_post():
-- willo_api_check_column_does_exist(ext_wl_outcome_service_url, data):
-(PENDING) willo_api_column_due_date_has_changed(response, data):
-(PENDING) willo_api_column_point_value_has_changed(response, data):
-- willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
-x willo_api_activity_id_from_string(activity_string):
-x willo_api_headers(key, value):
+- willo_api_check_column_should_post()
+- willo_api_check_column_does_exist(ext_wl_outcome_service_url, data)
+(PENDING) willo_api_column_due_date_has_changed(response, data)
+(PENDING) willo_api_column_point_value_has_changed(response, data)
+- willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f')
+x willo_api_activity_id_from_string(activity_string)
+x willo_api_headers(key, value)
 
-- _float_value(val):
-- _cache_pk(user_id=None, activity_id=None, id=None):
-- _cache_get(user_id=None, activity_id=None, id=None):
-- _cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None):
+- _float_value(val)
+- _cache_pk(user_id=None, activity_id=None, id=None)
+- _cache_get(user_id=None, activity_id=None, id=None)
+- _cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None)
 
 To run tests:
 ------------------------------------------------
@@ -35,7 +35,7 @@ cd edx-platform
 ./manage.py lms shell
 
 2. import this module to the shell, then execute test()
-from common.djangoapps.third_party_auth.lti_consumers.willolabs.tests.willo_api import test
+from common.djangoapps.third_party_auth.lti_consumers.tests.willo_api import test
 retval = test()
 """
 
@@ -87,11 +87,15 @@ def test_float():
         val=flt
     ))
 
-    flt = _float_value("ABC")
-    print("Test 3: type of flt is {tpe}. value of flt is {val}".format(
-        tpe=type(flt),
-        val=flt
-    ))
+    try:
+        flt = _float_value("ABC")
+        print("Test 3: type of flt is {tpe}. value of flt is {val}".format(
+            tpe=type(flt),
+            val=flt
+        ))
+    except:
+        print("Test 3: broke.")
+
     print("test_float() - END")
 
 def test_cache():
@@ -105,15 +109,15 @@ def test_cache():
     }
 
     pk = _cache_pk(user_id=user_id, activity_id=activity_id, id=id)
-    print("pk={pk}".format(pk=pk))
+    print("Test 1: pk={pk}".format(pk=pk))
 
     _cache_set(data=data, user_id=user_id, activity_id=activity_id, id=id)
     cached_data = _cache_get(user_id=user_id, activity_id=activity_id, id=id)
-    print("after setting cache cached_data={cached_data}".format(cached_data=cached_data))
+    print("Test 2: after setting cache cached_data={cached_data}".format(cached_data=json.dumps(cached_data, indent=2)))
 
     _cache_clear(user_id=user_id, activity_id=activity_id, id=id)
     cached_data = _cache_get(user_id=user_id, activity_id=activity_id, id=id)
-    print("after clearing cache cached_data={cached_data}".format(cached_data=cached_data))
+    print("Test 3: after clearing cache cached_data={cached_data}".format(cached_data=json.dumps(cached_data, indent=2)))
     print("test_cache() - END")
 
 def test_willo_api_date():
@@ -185,33 +189,34 @@ def test_willo_api_check_column_does_exist():
         'description': u'Lesson 4.5',
         'title': u'Lesson 4.5',
         'points_possible': 5.0,
-        'type': ,
+        'type': 'whatever',
         'id': u'd7f67eb52e424909ba5ae7154d767a13'
     }
 
     ext_wl_outcome_service_url_good = "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/"
     ext_wl_outcome_service_url_bad = "https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995XXXXXBAD-DATA/"
 
-    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_good, good_data, cached_results=True):
+    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_good, data=data, cached_results=True)
     print("test 1 - expecting True, returned {retval}".format(
         retval=retval
     ))
-    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_good, good_data, cached_results=False):
+    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_good, data=data, cached_results=False)
     print("test 2 - expecting True, returned {retval}".format(
         retval=retval
     ))
 
-    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_bad, bad_data, cached_results=True):
+    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_bad, data=data, cached_results=True)
     print("test 3 - expecting False, returned {retval}".format(
         retval=retval
     ))
-    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_bad, bad_data, cached_results=False):
+    retval = willo_api_check_column_does_exist(ext_wl_outcome_service_url=ext_wl_outcome_service_url_bad, data=data, cached_results=False)
     print("test 4 - expecting False, returned {retval}".format(
         retval=retval
     ))
     print("test_willo_api_check_column_does_exist() - END")
 
 def test_willo_api_get_outcome():
+    print("test_willo_api_get_outcome() - BEGIN")
     data = {
         "activity_id": "d7f67eb52e424909ba5ae7154d767a13",
         "id": "block-v1:OpenStax+PCL101+2020_Tmpl_RevY+type@problem+block@669e8abe089b4a69b3a2565402d27cad",
@@ -228,3 +233,4 @@ def test_willo_api_get_outcome():
     print("test_willo_api_get_outcome() - retval={retval}".format(
         retval=retval
     ))
+    print("test_willo_api_get_outcome() - END")

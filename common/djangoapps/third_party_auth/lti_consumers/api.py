@@ -667,8 +667,11 @@ def _float_value(val):
     return a floating point equivalent to val
     """
     if val is None: return float(0)
+    if type(val) == float: return val
     if type(val) == int: return float(val)
-    if isinstance(val, str) or isinstance(val, unicode): return float(val)
+    if isinstance(val, str): 
+        if val.isnumeric(): return float(val)
+        else: return float(0.0)
 
     raise TypeError("invalid input type {value_type}".format(
         value_type=type(val)
@@ -705,7 +708,9 @@ def _cache_get(user_id=None, activity_id=None, id=None):
     cached_data = cache.get(key=cache_key, default=None, version=CACHE_VERSION)
     if cached_data:
         if DEBUG: log.info('lti_consumers.willolabs.api._cache_get() - cache hit: Yay! :)')
-        return json.loads(cached_data)
+        if type(cached_data) == dict: return cached_data
+        if isinstance(cached_data, str): return json.loads(cached_data)
+        raise TypeError('Did not know how to handle return type {t}'.format(t=type(cached_data)))
     else:
         if DEBUG: log.info('lti_consumers.willolabs.api._cache_get() - cache miss: Boo :(')
     return None
