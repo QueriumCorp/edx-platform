@@ -111,7 +111,7 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
 
     ## check for cached results. if any exist then determine if its actually necesary
     ## to post this grade data to Willo.
-    willo_outcome = willo_api_get_outcome(url=url, assignment_id=assignment_id, user_id=user_id, cached_results=cached_results):
+    willo_outcome = willo_api_get_outcome(url=url, assignment_id=assignment_id, user_id=user_id, cached_results=cached_results)
     if not willo_api_check_column_should_post(
                 rover_date=data_json.get('result_date'), 
                 rover_grade=data_json.get('score'), 
