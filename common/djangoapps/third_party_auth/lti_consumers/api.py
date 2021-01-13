@@ -111,6 +111,8 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
 
     ## check for cached results. if any exist then determine if its actually necesary
     ## to post this grade data to Willo.
+    assignment_id=data_json.get('activity_id')
+    user_id=data_json.get('user_id')
     willo_outcome = willo_api_get_outcome(url=url, assignment_id=assignment_id, user_id=user_id, cached_results=cached_results)
     if not willo_api_check_column_should_post(
                 rover_date=data_json.get('result_date'), 
@@ -338,6 +340,13 @@ def willo_api_check_column_should_post(rover_date, rover_grade, willo_date, will
     willo_date = willo_api_date(willo_date)
     willo_grade = _float_value(willo_grade)
 
+    if DEBUG:
+        log.info('lti_consumers.willolabs.api.willo_api_check_column_should_post() - rover_date={rover_date}, rover_grade={rover_grade}, willo_date={willo_date}, willo_grade={willo_grade}'.format(
+            rover_date=rover_date,
+            rover_grade=rover_grade,
+            willo_date=willo_date,
+            willo_grade=willo_grade
+        ))
     ## if any of the grade data is missing in Willo then we definitely 
     ## should post our data.
     if willo_date is None or willo_grade is None: return True 
@@ -497,19 +506,20 @@ def willo_api_column_due_date_has_changed(response, data):
     Returns: boolean
     """
     try:
-        log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - check due date')
+        if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - check due date')
         response_json = response.content.decode("utf-8")
         their_json = json.loads(response_json)
         their_due_date = willo_api_date(their_json.get('due_date'))
         our_due_date = willo_api_date(data.get('due_date'))
 
         if our_due_date != their_due_date:
-            log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - NEED TO UPDATE DUE DATE.')
-            log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - our_due_date: {our_due_date}, their_due_date: {their_due_date}, their_json: {their_json}'.format(
-                our_due_date=our_due_date,
-                their_due_date=their_due_date,
-                their_json=their_json
-            ))
+            if DEBUG: 
+                log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - NEED TO UPDATE DUE DATE.')
+                log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - our_due_date: {our_due_date}, their_due_date: {their_due_date}, their_json: {their_json}'.format(
+                    our_due_date=our_due_date,
+                    their_due_date=their_due_date,
+                    their_json=their_json
+                ))
             return True
 
 
@@ -552,21 +562,23 @@ def willo_api_column_point_value_has_changed(response, data):
         their_json = json.loads(response_json)
         their_points = _float_value(their_json.get('points_possible'))
         our_points = _float_value(data.get('points_possible'))
-        log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - check point value. Their points {their_points}, our points: {our_points}'.format(
-            their_points=their_json.get('points_possible'),
-            our_points=data.get('points_possible')
-        ))
+        if DEBUG:
+            log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - check point value. Their points {their_points}, our points: {our_points}'.format(
+                their_points=their_json.get('points_possible'),
+                our_points=data.get('points_possible')
+            ))
         if their_points != our_points:
-            log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - NEED TO UPDATE POINT VALUE.')
-            log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - our_points: {our_points}, their_points: {their_points}, their_json: {their_json}'.format(
-                our_points=our_points,
-                their_points=their_points,
-                their_json=their_json
-            ))
-            log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - point value has changed. Their points: {their_points}, our points: {our_points}'.format(
-                their_points=their_points,
-                our_points=our_points
-            ))
+            if DEBUG: 
+                log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - NEED TO UPDATE POINT VALUE.')
+                log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - our_points: {our_points}, their_points: {their_points}, their_json: {their_json}'.format(
+                    our_points=our_points,
+                    their_points=their_points,
+                    their_json=their_json
+                ))
+                log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - point value has changed. Their points: {their_points}, our points: {our_points}'.format(
+                    their_points=their_points,
+                    our_points=our_points
+                ))
             return True
 
 
@@ -605,6 +617,9 @@ def willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
 
         if type(retval) == datetime.datetime:
             retval = retval - datetime.timedelta(microseconds=retval.microsecond)
+            if DEBUG: log.info("lti_consumers.willolabs.api.willo_api_date() - retval={retval}".format(
+                retval=retval
+            ))
             return retval
         else:
             log.error('willo_api_date() - error converting string value {dte} to a datetime object. got value {retval} with type {tpe}'.format(
@@ -640,9 +655,9 @@ def willo_api_headers(key, value):
         )
     headers[key] = value
 
-    if DEBUG: log.info('willo_api_headers() - {headers}'.format(
-            headers = json.dumps(headers)
-        ))
+    #if DEBUG: log.info('willo_api_headers() - {headers}'.format(
+    #        headers = json.dumps(headers)
+    #    ))
 
     return headers
 
@@ -680,15 +695,30 @@ def _cache_get(user_id=None, activity_id=None, id=None):
     Query the cache using any combination of module data identifiers
     """
     cache_key = _cache_pk(user_id, activity_id, id)
+    if DEBUG: log.info('lti_consumers.willolabs.api._cache_get() - user_id={user_id}, activity_id={activity_id}, id={id}, cache_key={cache_key}'.format(
+        user_id=user_id,
+        activity_id=activity_id,
+        id=id,
+        cache_key=cache_key
+    ))
     cached_data = cache.get(key=cache_key, default=None, version=CACHE_VERSION)
     if cached_data:
+        if DEBUG: log.info('lti_consumers.willolabs.api._cache_get() - cache hit: Yay! :)')
         return json.loads(cached_data)
+    else:
+        if DEBUG: log.info('lti_consumers.willolabs.api._cache_get() - cache miss: Boo :(')
     return None
 
 def _cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None):
     """
     Clear cache of any existing data and reset with a new cache expiration
     """
+    if DEBUG: log.info('lti_consumers.willolabs.api._cache_set() - user_id={user_id}, activity_id={activity_id}, id={id}, data={data}'.format(
+        data=data,
+        user_id=user_id,
+        activity_id=activity_id,
+        id=id
+    ))
     cache_key = _cache_pk(user_id, activity_id, id)
     cache.delete(key=cache_key, version=CACHE_VERSION)
     cache.set(key=cache_key, value=data, timeout=timeout, version=CACHE_VERSION)
@@ -697,5 +727,6 @@ def _cache_clear(user_id=None, activity_id=None, id=None):
     """
     Clear cache of any existing data and reset with a new cache expiration
     """
+    if DEBUG: log.info('lti_consumers.willolabs.api._cache_clear()')
     cache_key = _cache_pk(user_id, activity_id, id)
     cache.delete(key=cache_key, version=CACHE_VERSION)
