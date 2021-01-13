@@ -347,6 +347,7 @@ def willo_api_check_column_should_post(rover_date, rover_grade, willo_date, will
             willo_date=willo_date,
             willo_grade=willo_grade
         ))
+        
     ## if any of the grade data is missing in Willo then we definitely 
     ## should post our data.
     if willo_date is None or willo_grade is None: return True 

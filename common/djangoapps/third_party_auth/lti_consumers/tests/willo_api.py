@@ -4,36 +4,55 @@ Willo api enhancements
 
 API calls:
 ------------------
-def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
-def willo_api_post_grade(ext_wl_outcome_service_url, data):
-def willo_api_get_outcome(url, assignment_id, user_id):
+willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
+willo_api_post_grade(ext_wl_outcome_service_url, data):
+willo_api_get_outcome(url, assignment_id, user_id):
 
 Utils:
 ------------------
-- def willo_api_check_column_should_post():
-- def willo_api_check_column_does_exist(ext_wl_outcome_service_url, data):
-(PENDING) def willo_api_column_due_date_has_changed(response, data):
-(PENDING) def willo_api_column_point_value_has_changed(response, data):
-- def willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
-x def willo_api_activity_id_from_string(activity_string):
-x def willo_api_headers(key, value):
+- willo_api_check_column_should_post():
+- willo_api_check_column_does_exist(ext_wl_outcome_service_url, data):
+(PENDING) willo_api_column_due_date_has_changed(response, data):
+(PENDING) willo_api_column_point_value_has_changed(response, data):
+- willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
+x willo_api_activity_id_from_string(activity_string):
+x willo_api_headers(key, value):
 
-- def _float_value(val):
-- def _cache_pk(user_id=None, activity_id=None, id=None):
-- def _cache_get(user_id=None, activity_id=None, id=None):
-- def _cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None):
+- _float_value(val):
+- _cache_pk(user_id=None, activity_id=None, id=None):
+- _cache_get(user_id=None, activity_id=None, id=None):
+- _cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None):
 
+To run tests:
+------------------------------------------------
+1. open an Open edX Django shell, as follows:
+
+sudo -H -u edxapp bash
+cd ~
+source edxapp_env
+source venvs/edxapp/bin/activate
+cd edx-platform
+./manage.py lms shell
+
+2. import this module to the shell, then execute test()
+from common.djangoapps.third_party_auth.lti_consumers.willolabs.tests.willo_api import test
+retval = test()
 """
+
 import datetime
 import json
 
 from ..api import (
+    # api methods
     willo_api_get_outcome,
+
+    # mid-level utility methods
     willo_api_check_column_should_post,
     willo_api_check_column_does_exist,
     willo_api_column_due_date_has_changed,
     willo_api_column_point_value_has_changed,
 
+    # low-level utility methods
     willo_api_date,
     willo_api_activity_id_from_string,
     _float_value,
