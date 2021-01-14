@@ -248,7 +248,9 @@ class LTIGradeSync:
             "title": section.get('section_display_name'),
             "description": section.get('section_display_name'),
             "due_date": willo_api_date(section.get('section_due_date')),
-            "points_possible": section_grade.get('section_grade_possible')
+            "points_possible": section_grade.get('section_grade_possible'),
+            "canvas_assignment_group": "Rover Assignments",
+            "canvas_assignment_group_weight": 10
         }
         retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data, operation="post")
         if 200 <= retval <= 299:

@@ -17,6 +17,7 @@ cms/envs/private.py
 *.pyc
 
 ### Editor and IDE artifacts
+.venv/
 *~
 *.swp
 *.orig

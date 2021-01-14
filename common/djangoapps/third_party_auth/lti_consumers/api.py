@@ -70,16 +70,15 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
         The URL endpoint to use when posting/syncing results from Rover to the host LMS.
         example: https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
 
-
     Payload format:
         data = {
+            'type': 'result',
+            'id': u'd7f67eb52e424909ba5ae7154d767a13',
             'activity_id': u'lesson45',
             'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce',
-            'points_possible': 5.0,
-            'score': 0.5,
             'result_date': '2020-04-24T19:12:19.454723+00:00',
-            'type': 'result',
-            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+            'score': 0.5,
+            'points_possible': 5.0
         }
 
     Curl equivalent: (effective 25-Apr-2020 per conversation with Matt Hanger)
@@ -89,13 +88,13 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
         -H "Authorization: Token replaceaccesstokenhere" \
         -d \
         '{
-            "activity_id": "d7f67eb52e424909ba5ae7154d767a13",
-            "id": "block-v1:OpenStax+PCL101+2020_Tmpl_RevY+type@problem+block@669e8abe089b4a69b3a2565402d27cad",
-            "points_possible": 5.0,
-            "result_date": "2020-04-24T19:12:19.454723+00:00",
-            "score": 0.5,
-            "type": "result",
-            "user_id": "7010d877b3b74f39a6cbf89f9c3819ce"
+            'type': 'result',
+            'id': u'd7f67eb52e424909ba5ae7154d767a13',
+            'activity_id': u'lesson45',
+            'user_id': u'7010d877b3b74f39a6cbf89f9c3819ce',
+            'result_date': '2020-04-24T19:12:19.454723+00:00',
+            'score': 0.5,
+            'points_possible': 5.0
         }'
 
     """
@@ -121,6 +120,15 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
                 willo_grade=willo_outcome[0].get('score')
                 ):
         return WILLO_API_POST_GRADE_SKIPPED
+
+    # verify integrity of the dict that was passed.
+    if not "type" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "type". Cannot continue.')
+    if not "id" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "id". Cannot continue.')
+    if not "activity_id" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "activity_id". Cannot continue.')
+    if not "user_id" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "user_id". Cannot continue.')
+    if not "result_date" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "result_date". Cannot continue.')
+    if not "score" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "score". Cannot continue.')
+    if not "points_possible" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "points_possible". Cannot continue.')
 
     headers = willo_api_headers(key='Content-Type', value='application/vnd.willolabs.outcome.result+json')
     response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
@@ -228,30 +236,34 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
         example:  https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/
 
     Payload format:
-        data = {
-            'due_date': '2020-04-29T04:59:00+00:00',
-            'description': u'Lesson 4.5',
-            'title': u'Lesson 4.5',
-            'points_possible': 5.0,
-            'type': ,
-            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+    data = {
+        'type': "activity",
+        'id': u'd7f67eb52e424909ba5ae7154d767a13',
+        'title': u'Lesson 4.5',
+        'description': u'Lesson 4.5',
+        'due_date': '2020-04-29T04:59:00+00:00',
+        'points_possible': 5.0,
+        "canvas_assignment_group": "Rover Assignments",
+        "canvas_assignment_group_weight": 10
         }
 
     operation: "post" or "patch"
 
     Curl equivalent:
     -------------------------
-    curl -v -X POST https://app.willolabs.com/api/v1/outcomes/DKGSf3/e42f27081648428f8995b1bca2e794ad/ \
+    curl -v -X POST https://stage.willolabs.com/api/v1/outcomes/xW6w6N/e5e96b2726984abb948d58cb51387eb8/ \
         -H "Content-Type: application/vnd.willolabs.outcome.activity+json" \
-        -H "Authorization: Token sampleaccesstoken" \
+        -H "Authorization: Token accesstokenhere" \
         -d \
     '{
-            'due_date': '2020-04-29T04:59:00+00:00',
-            'description': u'Lesson 4.5',
-            'title': u'Lesson 4.5',
-            'points_possible': 5.0,
-            'type': 'activity',
-            'id': u'd7f67eb52e424909ba5ae7154d767a13'
+        "type": "activity",
+        "id": "tutorial-avoiding-plagiarism",
+        "title": "Tutorial: Avoiding Plagiarism",
+        "description": "sample description",
+        "due_date": "2019-06-01T00:00:00+04:00",
+        "points_possible": 100,
+        "canvas_assignment_group": "Rover Assignments",
+        "canvas_assignment_group_weight": 10
     }'
 
     """
@@ -273,6 +285,16 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
             url=ext_wl_outcome_service_url
         ))
         ext_wl_outcome_service_url += '/'
+
+    # verify integrity of the dict that was passed.
+    if not "type" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "type". Cannot continue.')
+    if not "id" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "id". Cannot continue.')
+    if not "title" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "title". Cannot continue.')
+    if not "description" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "description". Cannot continue.')
+    if not "due_date" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "due_date". Cannot continue.')
+    if not "points_possible" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "points_possible". Cannot continue.')
+    if not "canvas_assignment_group" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "canvas_assignment_group". Cannot continue.')
+    if not "canvas_assignment_group_weight" in data: raise LTIBusinessRuleError('api.willo_api_create_column() - internal error: data dict is missing required key, "canvas_assignment_group_weight". Cannot continue.')
 
     headers = willo_api_headers(
         key = 'Content-Type',

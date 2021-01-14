@@ -332,7 +332,9 @@ def create_column(self, lti_cached_course, lti_cached_assignment, lti_cached_gra
             "title": lti_cached_assignment.display_name,	        ## example: Getting to Know Rover Review Assignment
             "description": lti_cached_assignment.display_name,	    ## example: Getting to Know Rover Review Assignment
             "due_date": due_date,                                   ## Rover assignment due_date in ISO string format: 2019-06-01T00:00:00+04:00
-            "points_possible": lti_cached_grade.possible_graded     ## int. example: 11
+            "points_possible": lti_cached_grade.possible_graded,     ## int. example: 11
+            "canvas_assignment_group": "Rover Assignments",
+            "canvas_assignment_group_weight": 10
         }
 
     except Exception as err:
