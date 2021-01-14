@@ -4,24 +4,25 @@ Code samples: https://gist.github.com/matthanger-willo/36b8ca40bd0d30f795a63531b
 
 API calls:
 ------------------
-def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
-def willo_api_post_grade(ext_wl_outcome_service_url, data):
-def willo_api_get_outcome(url, assignment_id, user_id):
+willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
+willo_api_post_grade(ext_wl_outcome_service_url, data):
+willo_api_get_outcome(url, assignment_id, user_id):
 
 Utils:
 ------------------
-def willo_api_check_column_should_post():
-def willo_api_check_column_does_exist(ext_wl_outcome_service_url, data):
-def willo_api_column_due_date_has_changed(response, data):
-def willo_api_column_point_value_has_changed(response, data):
-def willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
-def willo_api_activity_id_from_string(activity_string):
-def willo_api_headers(key, value):
+willo_api_check_column_should_post():
+willo_api_check_column_does_exist(ext_wl_outcome_service_url, data):
+willo_api_column_due_date_has_changed(response, data):
+willo_api_column_point_value_has_changed(response, data):
+willo_api_date(dte, format='%Y-%m-%d %H:%M:%S.%f'):
+willo_api_activity_id_from_string(activity_string):
+willo_api_headers(key, value):
+willo_canvas_assignment_group(key):
 
-def _float_value(val):
-def _cache_pk(user_id=None, activity_id=None, id=None):
-def _cache_get(user_id=None, activity_id=None, id=None):
-def _cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None):
+_float_value(val):
+_cache_pk(user_id=None, activity_id=None, id=None):
+_cache_get(user_id=None, activity_id=None, id=None):
+_cache_set(data, timeout=CACHE_DEFAULT_EXPIRATION, user_id=None, activity_id=None, id=None):
 """
 
 # python stuff
@@ -683,6 +684,20 @@ def willo_api_headers(key, value):
     #    ))
 
     return headers
+
+def willo_canvas_assignment_group(key):
+    """
+    kluge was to populate new Willo api column attributes 
+    canvas_assignment_group and canvas_assignment_group_weight
+    """
+    if not isinstance(key, str): LTIBusinessRuleError("input value 'key' should be a string.")
+    
+    if key == "": return "" 10.0
+    if key == "": return "" 10.0
+    if key == "": return "" 10.0
+    if key == "": return "" 10.0
+
+    return "Rover Assignments" 10.0
 
 def _float_value(val):
     """

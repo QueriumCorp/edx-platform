@@ -24,6 +24,7 @@ from .api import (
     willo_api_date,
     willo_api_post_grade,
     willo_api_create_column,
+    willo_canvas_assignment_group,
     WILLO_API_POST_GRADE_SKIPPED
 )
 from .lti_params import (
@@ -242,6 +243,7 @@ class LTIGradeSync:
         section_grade = section.get('section_grade')
 
         url = get_ext_wl_outcome_service_url(self.course_id, self.context_id)
+        canvas_assignment_group, canvas_assignment_group_weight = willo_canvas_assignment_group(key=lti_cached_assignment.display_name)
         data = {
             "type": "activity",
             "id": willo_api_activity_id_from_string(section.get('section_display_name')),
@@ -249,8 +251,8 @@ class LTIGradeSync:
             "description": section.get('section_display_name'),
             "due_date": willo_api_date(section.get('section_due_date')),
             "points_possible": section_grade.get('section_grade_possible'),
-            "canvas_assignment_group": "Rover Assignments",
-            "canvas_assignment_group_weight": 10
+            "canvas_assignment_group": canvas_assignment_group,                 ## example: "Rover Assignments",
+            "canvas_assignment_group_weight": canvas_assignment_group_weight    ## example: 10
         }
         retval = willo_api_create_column(ext_wl_outcome_service_url=url, data=data, operation="post")
         if 200 <= retval <= 299:
