@@ -107,31 +107,25 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
         ))
         ext_wl_outcome_service_url += '/'
 
-    # mcdaniel jan-2021: we shouldn't be converting from sjon to string
-    #data_json = json.dumps(data)
-    data_json = data
-    log.info('data_json: {t},  {data_json}'.format(
-      data_json=data_json,
-      t=type(data_json)
-    ))
+    if DEBUG: log.info('data: {t},  {data}'.format(data=data, t=type(data)))
 
     ## check for cached results. if any exist then determine if its actually necesary
     ## to post this grade data to Willo.
-    assignment_id=data_json.get('activity_id')
-    user_id=data_json.get('user_id')
+    assignment_id=data.get('activity_id')
+    user_id=data.get('user_id')
 
     # try to get user's grade from Willo, if it exists.
     willo_outcome = willo_api_get_outcome(url=ext_wl_outcome_service_url, assignment_id=assignment_id, user_id=user_id, cached_results=cached_results)
 
     willo_date=None
     willo_grade=None
-    if willo_outcome is not None:
+    if willo_outcome is not None and type(willo_outcome) is list:
         willo_date=willo_outcome[0].get('timestamp'),
         willo_grade=willo_outcome[0].get('score')
 
     if not willo_api_check_column_should_post(
-                rover_date=data_json.get('result_date'), 
-                rover_grade=data_json.get('score'), 
+                rover_date=data.get('result_date'), 
+                rover_grade=data.get('score'), 
                 willo_date=willo_date,
                 willo_grade=willo_grade
                 ):
@@ -147,6 +141,8 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
     if not "points_possible" in data: raise LTIBusinessRuleError('api.willo_api_post_grade() - internal error: data dict is missing required key, "points_possible". Cannot continue.')
 
     headers = willo_api_headers(key='Content-Type', value='application/vnd.willolabs.outcome.result+json')
+    data_json = json.dumps(data)
+
     response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     if 200 <= response.status_code <= 299:
         if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_post_grade() - successfully posted grade data: {grade_data}'.format(
