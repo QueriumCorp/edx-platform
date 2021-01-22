@@ -149,7 +149,7 @@ _AUTH_ENTRY_CHOICES = frozenset([
 
 USER_FIELDS = ['username', 'email']
 
-
+DEBUG = False
 logger = getLogger(__name__)
 
 
@@ -224,7 +224,7 @@ def get_idp_logout_url_from_running_pipeline(request):
                 # mcdaniel aug-2020: had to broaden this exception type bc LTI configurations
                 # do not have a logout_url setting.
                 except:
-                    logger.info(u'[THIRD_PARTY_AUTH] idP [%s] logout_url setting not defined', tpa_provider.name)
+                    logger.error(u'[THIRD_PARTY_AUTH] idP [%s] logout_url setting not defined', tpa_provider.name)
 
 
 def get_real_social_auth_object(request):
@@ -812,14 +812,14 @@ def set_id_verification_status(auth_entry, strategy, details, user=None, *args, 
     # try to extract and synch the faculty_status from the backend, if the backend is openstax
     faculty_status = "Unassigned"
     backend_name = strategy.request.backend.name
-    logger.info('set_id_verification_status() - backend: {}'.format(backend_name))
+    if DEBUG: logger.info('set_id_verification_status() - backend: {}'.format(backend_name))
     if (backend_name in ("roverbyopenstax", "openstax", "lti")):
         try:
             faculty_status = details['faculty_status']
         except ValueError:
             pass
 
-    logger.info('set_id_verification_status() - set faculty status: {}'.format(faculty_status))
+    if DEBUG: logger.info('set_id_verification_status() - set faculty status: {}'.format(faculty_status))
     profile = student.models.UserProfile.objects.get(user=user)
     profile.faculty_status = faculty_status
     profile.save()
@@ -881,8 +881,7 @@ def get_username(strategy, details, backend, user=None, *args, **kwargs):
         while not final_username or len(final_username) < min_length or user_exists({'username': final_username}):
             username = short_username + uuid4().hex[:uuid_length]
             final_username = slug_func(clean_func(username[:max_length]))
-            logger.info(u'[THIRD_PARTY_AUTH] New username generated. Username: {username}'.format(
-                username=final_username))
+            if DEBUG: logger.info(u'[THIRD_PARTY_AUTH] New username generated. Username: {username}'.format(username=final_username))
     else:
         final_username = storage.user.get_username(user)
     return {'username': final_username}
@@ -902,10 +901,8 @@ def lti_consumer_provisioner(auth_entry, strategy, details, user=None, *args, **
             #   a) for instructors: map LTI context_id to Rover course_id
             #   b) for students: auto enroll students in Rover course corresponding to context_id
             #----------------------------------------------------------------------
-            logger.info('lti_consumer_provisioner() - Willo LTI authentication detected. Initializing ...')
-            logger.info('lti_consumer_provisioner() - details: {details}'.format(
-                details=details
-            ))
+            if DEBUG: logger.info('lti_consumer_provisioner() - Willo LTI authentication detected. Initializing ...')
+            if DEBUG: logger.info('lti_consumer_provisioner() - details: {details}'.format(details=details))
             # strategy.request.user
             course_provisioner = CourseProvisioner(user=user, lti_params=lti_params)
             course_provisioner.check_enrollment()

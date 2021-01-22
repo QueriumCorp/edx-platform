@@ -12,6 +12,7 @@ from course_modes.models import CourseMode
 from xmodule.partitions.partitions import ENROLLMENT_TRACK_PARTITION_ID
 from xmodule.partitions.partitions_service import PartitionService
 
+DEBUG = False
 log = logging.getLogger(__name__)
 
 def verified_upgrade_deadline_link(user, course=None, course_id=None):
@@ -84,7 +85,7 @@ def can_show_verified_upgrade(user, enrollment, course=None):
     #    return False
 
     # Show the summary if user enrollment is in which allow user to upsell
-    log.info('can_show_verified_upgrade() - return value is based on our custom logic of enrollment.is_active: {is_active}, enrollment.mode: {mode}'.format(
+    if DEBUG: log.info('can_show_verified_upgrade() - return value is based on our custom logic of enrollment.is_active: {is_active}, enrollment.mode: {mode}'.format(
         is_active=enrollment.is_active,
         mode=enrollment.mode.upper()
     ))
