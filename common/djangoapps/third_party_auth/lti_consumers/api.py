@@ -698,17 +698,18 @@ def willo_api_headers(key, value):
 
 def willo_canvas_assignment_group(key):
     """
-    kluge was to populate new Willo api column attributes 
-    canvas_assignment_group and canvas_assignment_group_weight
+    Evaluate the Assignment Group name that we should send to
+    the Willo api. Note that we return the Assignment Group 
+    name and the grade weight.
     """
     if not isinstance(key, str): LTIBusinessRuleError("input value 'key' should be a string.")
     
-    if key == "": return "", 10.0
-    if key == "": return "", 10.0
-    if key == "": return "", 10.0
-    if key == "": return "", 10.0
+    if "study guide" in key.lower(): return "Study Guides", 0.0
+    if "midterm exam" in key.lower(): return "Midterms", 30.0
+    if "final exam" in key.lower(): return "Final", 20.0
 
-    return "Rover Assignments", 10.0
+    # the default Assignment Group is Homework.
+    return "Homework", 10.0
 
 def _float_value(val):
     """
