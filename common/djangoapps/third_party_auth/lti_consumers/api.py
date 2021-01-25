@@ -48,8 +48,16 @@ from .exceptions import LTIBusinessRuleError
 log = logging.getLogger(__name__)
 WILLO_API_POST_IF_LOWER = False                     # True if Rover should post a grade to Willo that is lower than what Willo has on record.
 WILLO_API_POST_GRADE_SKIPPED = -1                   # return value if Rover decides to not post a grade to Willo api
-WILLO_API_PROPAGATION_DELAY_THRESHOLD = 10000       # max estimated difference between Rover grade timestamp Vs that of Willo api
-CACHE_VERSION = 1
+
+WILLO_API_PROPAGATION_DELAY_THRESHOLD = 10000       # max allowable difference in miliseconds between Rover grade timestamp Vs that of Willo api
+                                                    # the difference in timestamp values is attributable to processing time beginning from the 
+                                                    # moment LTI grade sync caches a new grade outcome in Rover LTI Cache until this same grade
+                                                    # has been posted to Willo api.
+
+CACHE_VERSION = 1                                   # refers to memcached which we use to cache responses from Willo api
+                                                    # gets in order to economize superfluous gets to the Willo api,
+                                                    # particularly when checking for existence of grade columns.
+                                                    
 CACHE_DEFAULT_EXPIRATION = 600                      # elapsed seconds before items in memcached are invalidated
 DEBUG = settings.ROVER_DEBUG
 
