@@ -120,7 +120,7 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
     willo_date=None
     willo_grade=None
     if willo_outcome is not None and type(willo_outcome) is list:
-        willo_date=willo_outcome[0].get('timestamp'),
+        willo_date=willo_outcome[0].get('timestamp')
         willo_grade=willo_outcome[0].get('score')
 
     if not willo_api_check_column_should_post(
@@ -148,7 +148,7 @@ def willo_api_post_grade(ext_wl_outcome_service_url, data, cached_results=True):
         if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_post_grade() - successfully posted grade data: {grade_data}'.format(
             grade_data = data_json
         ))
-        _cache_clear(user_id=user_id, activity_id=assignment_id, id=url)
+        _cache_clear(user_id=user_id, activity_id=assignment_id, id=ext_wl_outcome_service_url)
     else:
         log.error('lti_consumers.willolabs.api.willo_api_post_grade() - encountered an error while attempting to post a grade. url: {ext_wl_outcome_service_url}, headers: {headers}, data: {grade_column_data}, which generated the following response: {response}. Msg: {msg} Text: {text}'.format(
             ext_wl_outcome_service_url=ext_wl_outcome_service_url,
@@ -407,6 +407,7 @@ def willo_api_check_column_should_post(rover_date, rover_grade, willo_date, will
         return False
 
     ## otherwise lets assume that we should post our data.
+    if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column_should_post() - No reason to not send the grade, so, returning True.')
     return True
 
 def willo_api_check_column_does_exist(ext_wl_outcome_service_url, data, cached_results=True):
@@ -757,7 +758,7 @@ def _cache_get(user_id=None, activity_id=None, id=None):
     cached_data = cache.get(key=cache_key, default=None, version=CACHE_VERSION)
     if cached_data:
         if DEBUG: log.info('lti_consumers.willolabs.api._cache_get() - cache hit: Yay! :)')
-        if type(cached_data) == dict: return cached_data
+        if type(cached_data) == dict or type(cached_data) == list: return cached_data
         if isinstance(cached_data, str): return json.loads(cached_data)
         raise TypeError('Did not know how to handle return type {t}'.format(t=type(cached_data)))
     else:
