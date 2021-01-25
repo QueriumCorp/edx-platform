@@ -46,10 +46,11 @@ from .exceptions import LTIBusinessRuleError
 
 # module constants
 log = logging.getLogger(__name__)
-WILLO_API_POST_IF_LOWER = False
-WILLO_API_POST_GRADE_SKIPPED = -1
+WILLO_API_POST_IF_LOWER = False                     # True if Rover should post a grade to Willo that is lower than what Willo has on record.
+WILLO_API_POST_GRADE_SKIPPED = -1                   # return value if Rover decides to not post a grade to Willo api
+WILLO_API_PROPAGATION_DELAY_THRESHOLD = 10000       # max estimated difference between Rover grade timestamp Vs that of Willo api
 CACHE_VERSION = 1
-CACHE_DEFAULT_EXPIRATION = 600
+CACHE_DEFAULT_EXPIRATION = 600                      # elapsed seconds before items in memcached are invalidated
 DEBUG = settings.ROVER_DEBUG
 
 ## dec-2020 DELETE ME.
@@ -315,11 +316,11 @@ def willo_api_create_column(ext_wl_outcome_service_url, data, operation="post"):
     data_json = json.dumps(data)
 
     if operation == "post":
-        log.info('willo_api_create_column() - posting grade column')
+        if DEBUG: log.info('willo_api_create_column() - posting grade column')
         response = requests.post(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
     else:
         if operation == "patch":
-            log.info('willo_api_create_column() - patching grade column')
+            if DEBUG: log.info('willo_api_create_column() - patching grade column')
             response = requests.patch(url=ext_wl_outcome_service_url, data=data_json, headers=headers)
 
     if 200 <= response.status_code <= 299:
@@ -402,8 +403,9 @@ def willo_api_check_column_should_post(rover_date, rover_grade, willo_date, will
 
     ## otherwise if the Willo timestamp is later than our the we definitely
     ## should post our data.
-    if willo_date > rover_date: 
-        if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column_should_post() - willo_date > rover_date. returning False.')
+    comp_date = willo_date - datetime.timedelta(milliseconds=WILLO_API_PROPAGATION_DELAY_THRESHOLD)
+    if comp_date > rover_date: 
+        if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column_should_post() - adjusted willo_date > rover_date. returning False.')
         return False
 
     ## otherwise lets assume that we should post our data.
@@ -498,7 +500,7 @@ def willo_api_check_column_does_exist(ext_wl_outcome_service_url, data, cached_r
         changed = willo_api_column_due_date_has_changed(response, data)
         changed = changed or willo_api_column_point_value_has_changed(response, data)
         if changed:
-            log.info('lti_consumers.willolabs.api.willo_api_check_column_does_exist() - grade column has changed.')
+            if DEBUG: log.info('lti_consumers.willolabs.api.willo_api_check_column_does_exist() - grade column has changed.')
             willo_api_create_column(
                 ext_wl_outcome_service_url=ext_wl_outcome_service_url,
                 data=data,
@@ -560,7 +562,7 @@ def willo_api_column_due_date_has_changed(response, data):
 
 
     except Exception as e:
-        log.info('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - error checking dates: {e}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_column_due_date_has_changed() - error checking dates: {e}'.format(
             e=str(e)
         ))
         pass
@@ -619,7 +621,7 @@ def willo_api_column_point_value_has_changed(response, data):
 
 
     except Exception as e:
-        log.info('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - error checking point values: {e}'.format(
+        log.error('lti_consumers.willolabs.api.willo_api_column_point_value_has_changed() - error checking point values: {e}'.format(
             e=str(e)
         ))
         pass
@@ -691,10 +693,7 @@ def willo_api_headers(key, value):
         )
     headers[key] = value
 
-    #if DEBUG: log.info('willo_api_headers() - {headers}'.format(
-    #        headers = json.dumps(headers)
-    #    ))
-
+    if DEBUG: log.info('willo_api_headers() - {headers}'.format(headers = json.dumps(headers)))
     return headers
 
 def willo_canvas_assignment_group(key):

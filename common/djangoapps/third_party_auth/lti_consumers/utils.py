@@ -376,5 +376,5 @@ def get_lti_courses(course):
     if course is None:
         return LTIInternalCourse.objects.all()
     else:
-        return LTIInternalCourse.objects.filter(course_fk__in=course)
+        return LTIInternalCourse.objects.filter(course__in=course)
 
