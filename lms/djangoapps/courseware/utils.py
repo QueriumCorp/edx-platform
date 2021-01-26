@@ -54,6 +54,7 @@ def can_show_verified_upgrade(user, enrollment, course=None):
     """
     # Return `true` if user is not enrolled in course
     if enrollment is None:
+        if DEBUG: log.info('can_show_verified_upgrade() - not enrolled. returning False.')
         return False
     partition_service = PartitionService(enrollment.course.id, course=course)
     enrollment_track_partition = partition_service.get_user_partition(ENROLLMENT_TRACK_PARTITION_ID)
@@ -69,6 +70,7 @@ def can_show_verified_upgrade(user, enrollment, course=None):
     upgradable_mode = not current_mode or current_mode in CourseMode.UPSELL_TO_VERIFIED_MODES
 
     if not upgradable_mode:
+        if DEBUG: log.info('can_show_verified_upgrade() - not upgradable_mode. returning False.')
         return False
 
     #---------------------------------------------------------------------------------------
@@ -85,8 +87,9 @@ def can_show_verified_upgrade(user, enrollment, course=None):
     #    return False
 
     # Show the summary if user enrollment is in which allow user to upsell
-    if DEBUG: log.info('can_show_verified_upgrade() - return value is based on our custom logic of enrollment.is_active: {is_active}, enrollment.mode: {mode}'.format(
+    if DEBUG: log.info('can_show_verified_upgrade() - return value is based on our custom logic of enrollment.is_active: {is_active}, enrollment.mode: {mode}, upsell modes: {upsell_modes}'.format(
         is_active=enrollment.is_active,
-        mode=enrollment.mode.upper()
+        mode=enrollment.mode,
+        upsell_modes=CourseMode.UPSELL_TO_VERIFIED_MODES
     ))
-    return enrollment.is_active and enrollment.mode.upper() in CourseMode.UPSELL_TO_VERIFIED_MODES
+    return enrollment.is_active and enrollment.mode in CourseMode.UPSELL_TO_VERIFIED_MODES
